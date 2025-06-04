@@ -39,9 +39,10 @@ SPDX-License-Identifier: BSD-3-Clause
 <span style="color:#999">interface for deterministic logic // parseable by human + AI</span>  
 <span style="color:#999">command layer for scalable, readable, sovereign systems</span>
 
-<span style="color:#ff33cc">:: legacy handle :</span> <span style="color:#66ff66">cyburdine</span>  
-<span style="color:#ff33cc">established :</span> <span style="color:#999">1999 // one-of-one lexical construct</span>  
-<span style="color:#ff33cc">function :</span> <span style="color:#666">encrypted identity layer</span>
+<span style="color:#ff33cc">:: online presence :</span>  
+<span style="color:#ff33cc">CV</span> <span style="color:#66ff66"><a href="https://www.linkedin.com/in/cyburdine/" target="_blank" rel="noopener">LinkedIn</a></span>  
+<span style="color:#ff33cc">AI art:</span> <span style="color:#66ff66"><a href="https://www.youtube.com/@InfiniteVolumes" target="_blank" rel="noopener">Infinite Volumes [YT]</a></span>
+<span style="color:#ff33cc">films:</span> <span style="color:#66ff66"><a href="https://www.imdb.com/name/nm0120984/" target="_blank" rel="noopener">IMDB</a></span>
 
 <span style="color:#999" >// NOTICE  </span>
 <span style="color:#999">fragmented_echoes_persist(protocol);
