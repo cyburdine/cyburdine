@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y protobuf-compiler libprotobuf-dev build-essential zlib1g-dev cmake pkg-config ruby-dev
+          sudo apt-get install -y zlib1g-dev cmake pkg-config ruby-dev
       - name: Setup Ruby
         # https://github.com/ruby/setup-ruby/releases/tag/v1.207.0
         uses: ruby/setup-ruby@4a9ddd6f338a97768b8006bf671dfbad383215f4
@@ -46,8 +46,6 @@ jobs:
           cache-version: 0 # Increment this number if you need to re-download cached gems
       - name: Update Bundler
         run: gem install bundler
-      - name: Install google-protobuf manually
-        run: gem install google-protobuf -v '3.25.8'
       - name: Debugging Information
         run: |
           ruby --version
