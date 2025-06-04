@@ -76,7 +76,6 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  google-protobuf (~> 3.21)
   jekyll (~> 4.4)
   jekyll-feed (~> 0.17)
 
