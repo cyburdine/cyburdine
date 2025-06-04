@@ -1,0 +1,34 @@
+<!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ page.title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Noto+Sans+JP&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <div class="terminal-container">
+    <div class="terminal-screen">
+	  <canvas id="glitchCanvas"></canvas>
+      {% include header.html %}
+        <main>
+          {{ content }}
+        </main>
+	  {% include footer.html %}      
+    </div>
+      <!-- FRAME OVERLAY sits on top -->
+    <img src="/assets/images/terminal-full.webp" alt="Terminal Frame" class="terminal-frame" />
+  </div>
+
+
+<!-- site javascripts -->
+  <script src="{{ '/assets/js/decode.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/video_glitch.js' | relative_url }}"></script>
+</body>
+</html>

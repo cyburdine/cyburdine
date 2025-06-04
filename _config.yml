@@ -1,0 +1,15 @@
+# Site settings (optional but recommended)
+title: Cyburdine
+description: digital portfolio
+baseurl: ""  
+url: ""      
+
+# Tell Jekyll to process files in _projects/ as a collection
+collections:
+  projects:
+    output: true
+    permalink: /projects/:path/
+
+# If you use any plugins (e.g. jekyll-feed), list them here:
+plugins:
+  - jekyll-feed
