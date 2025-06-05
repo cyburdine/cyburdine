@@ -11,7 +11,7 @@ html, body {
   background: #000; /* black behind frame if viewport is larger */
   overflow-x: hidden;
   color: #15ff00;
-  font-family: 'VT373', monospace;
+  font-family: 'VT323', monospace;
 }
 
 /* Console text defaults */
@@ -55,7 +55,7 @@ body::before {
     transparent 2px
   );
   pointer-events: none;
-  z-index: 1000;
+  z-index: 1005;
   mix-blend-mode: overlay;
   animation: flicker 1s infinite;
 }
@@ -89,7 +89,7 @@ body::before {
 }
 
 .char {
-  font-family: 'VT373', monospace;
+  font-family: 'VT323', monospace;
   display: inline;
   transition: font-family 0.15s ease;
     text-shadow:
@@ -190,18 +190,17 @@ body::before {
     transparent 1px        /* total cycle = 4px (1px line + 3px gap) */
   );
   pointer-events: none; /* let clicks/pass-through go to the text below */
-  z-index: 1;           /* sits above the background but below the text */
+  z-index: 1002;           /* sits above the background but below the text */
 }
 
 /* 3) NEON‐GLOW FOR WHATEVER LIVES INSIDE .terminal-screen */
 /*    Here we assume your terminal text uses the existing .console class */
 .terminal-screen .console {
   position: relative;
-  z-index: 2; /* ensure it sits above the scanlines (::before is z-index:1) */
   text-shadow:
     0 0 4px currentColor,  /* small inner glow using each element’s own color */
     0 0 8px currentColor;  /* larger outer glow */
-  /* font-family, color, etc., are inherited from your existing .console rules */
+	z-index: 1003; /* ensure it sits above the scanlines (::before is z-index:1) */
 }
 
 /* Keep console formatting inside screen */
@@ -292,6 +291,18 @@ nav.console a:hover {
     0 0 8px currentColor;
 }
 
+.project {
+  /* keep whatever font/color you already have */
+  text-shadow:
+    0 0 4px currentColor,
+    0 0 8px currentColor;
+  text-align: justify;
+  text-justify: inter-word;
+  width: 1020px;
+  white-space: pre-wrap;         /* respect existing line breaks, but wrap long lines */
+  overflow-wrap: break-word;     /* break words if they’re too long to fit */
+}
+
 /* make sure .terminal-screen is positioned for its overlay */
 .terminal-screen {
   position: relative;
@@ -307,7 +318,7 @@ nav.console a:hover {
   border: 0px solid #ff33cc;
   border-radius: 8px 0px 8px 0px;
   box-shadow: 0 0 12px rgba(255, 51, 204, 0.6);
-  z-index: 9999;
+  z-index: 1010;
   padding: 0;
   overflow: hidden;
   display: flex;

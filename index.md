@@ -17,8 +17,4 @@ SPDX-License-Identifier: BSD-3-Clause
 :: <a href="/projects">[projects]</a> → forge.node  
 :: <a href="/blog">[blog]</a> → consiousness.stream  
 :: <a href="/about">[about]</a> → origin.trace
-
-// NOTICE  
-unauthorized queries will be logged  
-echoes remain even after disconnect
 </pre>
