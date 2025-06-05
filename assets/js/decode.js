@@ -2,7 +2,7 @@
 SPDX-License-Identifier: BSD-3-Clause
 */
 (function () {
-  const foreignFonts = ["'Noto Sans JP', sans-serif"];
+  const foreignFonts = ["'Noto Sans JP', monospace"];
   const selectedFont = foreignFonts[0];
   const primaryFont = "'VT323', monospace";
 
@@ -72,7 +72,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
   window.addEventListener('load', () => {
     wrapCharacters();
-    // Pause 500ms before starting the decrypt effect
+    // Pause Xms before starting the decrypt effect
     setTimeout(decryptCharacters, 750);
   });
 })();
