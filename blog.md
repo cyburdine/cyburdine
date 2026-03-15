@@ -7,7 +7,7 @@ SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
 SPDX-License-Identifier: BSD-3-Clause
 -->
 <div class="glow">
-<h3 style="color:#33ffcc">CYBURDINE.com :: [consiousness.stream]</h3>
+<h3 style="color:#33ffcc">CYBURDINE.com :: [consciousness.stream]</h3>
 <div class="search-bar">
   <input type="text" id="searchInput" placeholder="// enter query">
   <select id="tagFilter">
@@ -27,3 +27,4 @@ SPDX-License-Identifier: BSD-3-Clause
   {% endfor %}
 </ul>
 </div>
+<script src="{{ '/assets/js/blog_filter.js' | relative_url }}"></script>

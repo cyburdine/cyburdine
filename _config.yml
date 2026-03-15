@@ -10,6 +10,18 @@ collections:
     output: true
     permalink: /projects/:path/
 
+# Include dotfile directories that must be served
+include:
+  - .well-known
+
+# Exclude backup and non-production files from the build
+exclude:
+  - "*.bak"
+  - Gemfile
+  - Gemfile.lock
+  - LICENSE
+  - CLAUDE.md
+
 # If you use any plugins (e.g. jekyll-feed), list them here:
 plugins:
   - jekyll-feed

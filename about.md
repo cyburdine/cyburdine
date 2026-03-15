@@ -13,12 +13,12 @@ SPDX-License-Identifier: BSD-3-Clause
 <span style="color:#ff33cc">:: status :</span> <span>Technologist</span> // <span>Artist</span> // <span>Versatilist</span>  
 
 <span style="color:#ff33cc">:: profile:</span>  
-<span style="color:#999">— location sequence :</span> <span>CA:NM:CA:NC:TX:PA:IN:CA:MI:UT:</span> <span style="color:#999">[TX] <=current known loacation</span>  
+<span style="color:#999">— location sequence :</span> <span>CA:NM:CA:NC:TX:PA:IN:CA:MI:UT:</span> <span style="color:#999">[TX] <=current known location</span>  
 <span style="color:#999">— primary traits :</span> <span>system thinker</span>, <span>creative synthesist</span>, <span>visual hacker</span>, <span>meta creator</span>  
 <span style="color:#999">— active synthesis loop :</span> <span>technology <==> art</span>
 
 <span style="color:#999">// early imprints :</span> <span>programming</span>, <span>hardware hacking</span>, <span>visual effects</span>, <span>problem solving</span>  
-<span style="color:#999">// exposure vector :</span> <span>*nix terminals + hollywood backlots + cutting ege technologies</span>  
+<span style="color:#999">// exposure vector :</span> <span>*nix terminals + hollywood backlots + cutting edge technologies</span>  
 <span style="color:#999">// mutation pattern :</span> <span>code + cinema fusion</span>  
 
 <span style="color:#ff33cc">:: notable activity:</span>  

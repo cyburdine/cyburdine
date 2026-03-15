@@ -15,6 +15,6 @@ SPDX-License-Identifier: BSD-3-Clause
 
 :: ENTER  
 :: <a href="/projects">[projects]</a> → forge.node  
-:: <a href="/blog">[blog]</a> → consiousness.stream  
+:: <a href="/blog">[blog]</a> → consciousness.stream  
 :: <a href="/about">[about]</a> → origin.trace
 </pre>
