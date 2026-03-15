@@ -7,10 +7,11 @@ SPDX-License-Identifier: BSD-3-Clause
       const canvas = document.getElementById('glitchCanvas');
       const ctx = canvas.getContext('2d');
 
-      // resize canvas to match viewport
+      // resize canvas to match terminal screen
       function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        const parent = canvas.parentElement;
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
       }
       window.addEventListener('resize', resize);
       resize();
