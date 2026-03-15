@@ -1,8 +1,25 @@
-/* 
+/*
 Description: cyburdine cyberpunk terminal site stylesheet
 SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
 SPDX-License-Identifier: BSD-3-Clause
 */
+
+/* Self-hosted fonts (avoids third-party CDN dependency) */
+@font-face {
+  font-family: 'VT323';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/VT323.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Noto Sans JP';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/NotoSansJP-subset.ttf') format('truetype');
+}
 
 html, body {
   margin: 0;
@@ -73,18 +90,21 @@ body::before {
 @keyframes decrypt-glow {
   0% {
     color: #FF0000;
-    0 0 4px currentColor,  /* small inner glow using each element’s own color */
-    0 0 8px currentColor;
+    text-shadow:
+      0 0 4px currentColor,
+      0 0 8px currentColor;
   }
   50% {
     color: #ffffff;
-    0 0 4px currentColor,  /* small inner glow using each element’s own color */
-    0 0 8px currentColor;
+    text-shadow:
+      0 0 4px currentColor,
+      0 0 8px currentColor;
   }
   100% {
     color: inherit;
-    0 0 4px currentColor,  /* small inner glow using each element’s own color */
-    0 0 8px currentColor;
+    text-shadow:
+      0 0 4px currentColor,
+      0 0 8px currentColor;
   }
 }
 
@@ -372,3 +392,52 @@ nav.console a:hover {
   text-shadow: 0 0 4px #15ff00, 0 0 8px #15ff00;
 }
 
+/* ─── RESPONSIVE WRAPPER ─── */
+
+.terminal-wrapper {
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+/* ─── RESPONSIVE FONT COUNTER-SCALING ─── */
+/* Font size formula: baseSize * (3000 / viewportWidth)
+   Using vw: 1vw = viewportWidth/100, so we use calc(30 * Xvw)
+   to achieve an effective ~16px at any scale.
+   30 = 3000/100, the constant multiplier. */
+
+/* Tablet: 768px–1023px (scale ~0.26–0.34) */
+@media (max-width: 1023px) {
+  .terminal-screen {
+    font-size: calc(30 * 0.55vw);
+    line-height: 1.5;
+  }
+
+  nav.console {
+    padding-left: 1rem;
+  }
+
+  nav.console a {
+    margin-right: 12px;
+  }
+}
+
+/* Mobile: <768px (scale ~0.125–0.26) — more aggressive counter-scaling */
+@media (max-width: 767px) {
+  .terminal-screen {
+    font-size: calc(30 * 0.75vw);
+    line-height: 1.5;
+  }
+
+  nav.console {
+    padding-left: 0.5rem;
+  }
+
+  nav.console a {
+    margin-right: 8px;
+  }
+
+  .user-widget {
+    display: none;
+  }
+}
