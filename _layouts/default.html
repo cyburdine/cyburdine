@@ -12,6 +12,7 @@ SPDX-License-Identifier: BSD-3-Clause
   <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
+  <div class="terminal-wrapper">
   <div class="terminal-container">
     <div class="terminal-screen">
 	  <canvas id="glitchCanvas"></canvas>
@@ -24,11 +25,13 @@ SPDX-License-Identifier: BSD-3-Clause
       <!-- FRAME OVERLAY sits on top -->
     <img src="/assets/images/terminal-full.webp" alt="Terminal Frame" class="terminal-frame" />
   </div>
+  </div>
 
 
 <!-- site javascripts -->
   <script src="{{ '/assets/js/decode.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/video_glitch.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/visitor_metadata.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/responsive.js' | relative_url }}"></script>
 </body>
 </html>
