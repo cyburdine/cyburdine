@@ -318,7 +318,7 @@ nav.console a:hover {
     0 0 8px currentColor;
   text-align: justify;
   text-justify: inter-word;
-  width: 1020px;
+  max-width: 100%;
   white-space: pre-wrap;         /* respect existing line breaks, but wrap long lines */
   overflow-wrap: break-word;     /* break words if they’re too long to fit */
 }
