@@ -355,10 +355,9 @@ nav.console a:hover {
    responsive.js publishes the live scale as --cy-scale. */
 .terminal-screen {
   /* Counter-scale to ~16px effective, but cap the unscaled size so long lines
-     still fit on heavily down-scaled phones (otherwise the text gets too wide
-     for the narrow screen and clips). The cap shrinks the effective size on
-     small phones just enough to keep content on-screen. */
-  font-size: min(calc(16px / var(--cy-scale, 1)), 52px);
+     still fit the visible screen. responsive.js sets --cy-fontcap per layout
+     (tighter on phones, where we zoom into the narrower CRT glass). */
+  font-size: min(calc(16px / var(--cy-scale, 1)), var(--cy-fontcap, 52px));
 }
 
 /* Tablet: 768px–1023px */
@@ -589,10 +588,14 @@ html.cy-booting body {
   .boot-console.logo-in .boot-logo-wrap { animation: none; }
 }
 .boot-logo-img {
-  height: 5.5em;                    /* scales with the counter-scaled font */
+  height: 9em;                      /* header size; scales with the font */
   width: auto;
-  image-rendering: pixelated;       /* keep the 16-shade banding crisp */
-  filter: drop-shadow(0 0 6px rgba(21, 255, 0, 0.6));
+  transition: height 0.6s ease;     /* shrinks as it slides up to the top */
+  filter: drop-shadow(0 0 8px rgba(21, 255, 0, 0.55));
+}
+/* Bigger "hero" size while centered, before the slide. */
+.boot-console.intro .boot-logo-img {
+  height: 18em;
 }
 .boot-logo-text {
   font-size: 1.8em;

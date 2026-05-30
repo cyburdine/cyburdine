@@ -13,6 +13,10 @@ SPDX-License-Identifier: BSD-3-Clause
   var FRAME_WIDTH = 3000;   /* full console image, used by the boot wide shot */
   var FRAME_HEIGHT = 1688;
 
+  /* The visible CRT glass within the frame (measured from the image alpha).
+     On phones we zoom into this so the green screen fills the width. */
+  var GLASS_LEFT = 67, GLASS_TOP = 72, GLASS_WIDTH = 1059, GLASS_HEIGHT = 1015;
+
   var locked = false;       /* boot.js locks this while it drives the zoom */
 
   /* Final resting transform: pin the monitor to the top-left of the viewport
@@ -29,9 +33,31 @@ SPDX-License-Identifier: BSD-3-Clause
     return Math.max(0, (window.innerHeight - FRAME_HEIGHT * scale) / 2);
   }
 
+  /* Phones in portrait: zoom into the CRT glass so the green screen fills the
+     viewport width (centered), instead of fitting the whole bezel and leaving
+     big black bars. A tighter font cap keeps content inside the narrower glass. */
+  function glassTransform() {
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var scale = Math.min(vw / GLASS_WIDTH, vh / GLASS_HEIGHT);
+    var tx = (vw - GLASS_WIDTH * scale) / 2 - GLASS_LEFT * scale;
+    var ty = (vh - GLASS_HEIGHT * scale) / 2 - GLASS_TOP * scale;
+    return {
+      scale: scale,
+      x: tx,
+      y: ty,
+      css: 'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')',
+      wrapperHeight: vh,
+      fontcap: 38
+    };
+  }
+
   function finalTransform() {
     var vw = window.innerWidth;
     var vh = window.innerHeight;
+    /* Portrait (phones): frame the glass so the screen fills the width. */
+    if (vh > vw) return glassTransform();
+    /* Landscape / desktop: contain the whole monitor, pinned to the top-left. */
     var scale = Math.min(vw / MONITOR_WIDTH, vh / MONITOR_HEIGHT);
     var ty = centerY(scale);
     return {
@@ -39,7 +65,8 @@ SPDX-License-Identifier: BSD-3-Clause
       x: 0,
       y: ty,
       css: 'translate(0px, ' + ty + 'px) scale(' + scale + ')',
-      wrapperHeight: vh
+      wrapperHeight: vh,
+      fontcap: 52
     };
   }
 
@@ -64,8 +91,10 @@ SPDX-License-Identifier: BSD-3-Clause
     container.style.transform = t.css;
     container.style.transformOrigin = 'top left';
     wrapper.style.height = t.wrapperHeight + 'px';
-    /* Publish the live scale so the in-screen font can counter-scale exactly. */
+    /* Publish the live scale + font cap so the in-screen font counter-scales
+       and stays inside the visible screen. */
     document.documentElement.style.setProperty('--cy-scale', t.scale);
+    document.documentElement.style.setProperty('--cy-fontcap', t.fontcap + 'px');
   }
 
   /* Public hooks for boot.js */
