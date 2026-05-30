@@ -153,7 +153,7 @@ body::before {
   background-size: auto;
   overflow: hidden;
   box-sizing: border-box;
-  margin: 0 auto; /* center if viewport wider than 3000px */
+  margin: 0;
   z-index: 1000;
 }
 
@@ -168,6 +168,19 @@ body::before {
   pointer-events: none; /* clicks pass through */
 }
 
+/* Easter egg: an invisible, clickable link over the "4" key on the keypad
+   (percentages of the 3000×1688 frame, so it scales with the container).
+   Clicking it replays the boot sequence — see boot.js. */
+.cy-egg {
+  position: absolute;
+  left: 47.8%;
+  top: 39%;
+  width: 6.2%;
+  height: 10.5%;
+  z-index: 1002;          /* above the frame, so it receives clicks */
+  cursor: pointer;
+}
+
 /* Inner “screen” window */
 .terminal-screen {
   position: absolute;
@@ -178,9 +191,8 @@ body::before {
   z-index: 1000;
   overflow-y: auto;
   overflow-x: auto;
-  /* add a textured background */
-  background: url('/assets/images/terminal_noise.png') repeat;
-  background-color: rgba(0, 0, 0, 0.5);
+  /* phosphor-green CRT screen (matches the boot console) */
+  background: var(--crt-bg);
   color: #15ff00;
   padding: 1rem;
   box-sizing: border-box;
@@ -328,70 +340,6 @@ nav.console a:hover {
   position: relative;
 }
 
-.user-widget {
-  position: absolute;
-  width: 500px;
-  font-size: 0.75rem;
-  font-family: 'VT323', monospace;
-  background: rgba(0, 0, 0, 0.7);
-  color: #15ff00;
-  border: 0px solid #ff33cc;
-  border-radius: 8px 0px 8px 0px;
-  box-shadow: 0 0 12px rgba(255, 51, 204, 0.6);
-  z-index: 1010;
-  padding: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  pointer-events: auto;
-}
-
-.widget-header {
-  background: #444;
-  padding: 0.25rem 0.5rem;
-  height: 7px;
-  font-size: .8rem;
-  font-weight: bold;
-  color: #ff33cc;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: grab;
-  user-select: none;
-  text-shadow: 0 0 4px #ff33cc, 0 0 8px #ff33cc;
-  flex-shrink: 0;
-}
-
-.widget-header .close-btn {
-  background: transparent;
-  border: none;
-  color: #ff33cc;
-  font-size: 1.2rem;
-  cursor: pointer;
-  text-shadow: 0 0 4px #ff33cc, 0 0 8px #ff33cc;
-}
-
-.widget-header .close-btn:hover {
-  color: white;
-}
-
-.widget-content {
-  padding: .25rem;
-  line-height: 1;
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-.key-label {
-  color: #ff33cc;
-  text-shadow: 0 0 4px #ff33cc, 0 0 8px #ff33cc;
-}
-
-.key-value {
-  color: #15ff00;
-  text-shadow: 0 0 4px #15ff00, 0 0 8px #15ff00;
-}
-
 /* ─── RESPONSIVE WRAPPER ─── */
 
 .terminal-wrapper {
@@ -401,18 +349,20 @@ nav.console a:hover {
 }
 
 /* ─── RESPONSIVE FONT COUNTER-SCALING ─── */
-/* Font size formula: baseSize * (3000 / viewportWidth)
-   Using vw: 1vw = viewportWidth/100, so we use calc(30 * Xvw)
-   to achieve an effective ~16px at any scale.
-   30 = 3000/100, the constant multiplier. */
+/* The container is scaled by responsive.js via transform: scale(S), which also
+   shrinks the in-screen text. To keep text a roughly constant on-screen size at
+   any zoom, counter-scale the font by 1/S: rendered = (16px / S) * S = 16px.
+   responsive.js publishes the live scale as --cy-scale. */
+.terminal-screen {
+  /* Counter-scale to ~16px effective, but cap the unscaled size so long lines
+     still fit on heavily down-scaled phones (otherwise the text gets too wide
+     for the narrow screen and clips). The cap shrinks the effective size on
+     small phones just enough to keep content on-screen. */
+  font-size: min(calc(16px / var(--cy-scale, 1)), 52px);
+}
 
-/* Tablet: 768px–1023px (scale ~0.26–0.34) */
+/* Tablet: 768px–1023px */
 @media (max-width: 1023px) {
-  .terminal-screen {
-    font-size: calc(30 * 0.55vw);
-    line-height: 1.5;
-  }
-
   nav.console {
     padding-left: 1rem;
   }
@@ -422,13 +372,8 @@ nav.console a:hover {
   }
 }
 
-/* Mobile: <768px (scale ~0.125–0.26) — more aggressive counter-scaling */
+/* Mobile: <768px */
 @media (max-width: 767px) {
-  .terminal-screen {
-    font-size: calc(30 * 0.75vw);
-    line-height: 1.5;
-  }
-
   nav.console {
     padding-left: 0.5rem;
   }
@@ -436,8 +381,262 @@ nav.console a:hover {
   nav.console a {
     margin-right: 8px;
   }
+}
 
-  .user-widget {
-    display: none;
-  }
+/* ════════════════════════════════════════════════════════════════
+   BOOT SEQUENCE  (landing page, first visit only — see boot.js)
+   Cold start → wide shot → zoom into monitor → CRT power-on →
+   Cyburdine Systems boot log → handoff to the live site.
+   ════════════════════════════════════════════════════════════════ */
+
+/* The .terminal-screen element is wider than the visible transparent screen
+   "hole" in the frame art — it extends ~27.8% further right, under the bezel.
+   These insets describe the actual CRT glass within .terminal-screen so the
+   boot overlays line up with (and center inside) the visible screen.
+   Measured from the frame image's alpha channel. */
+.terminal-screen {
+  --glass-top: 1.5%;
+  --glass-left: 0.14%;
+  --glass-right: 27.8%;
+  --glass-bottom: 3.55%;
+  /* The CRT "phosphor green" screen background — shared by the boot console
+     and the live site so the screen always glows green inside the tube. */
+  --crt-bg: radial-gradient(ellipse at center,
+            rgba(8, 26, 12, 0.96) 0%,
+            rgba(2, 10, 4, 0.99) 100%);
+}
+
+/* Set synchronously by boot.js (on <html>) before first paint, so the
+   final zoomed-in view never flashes before the wide shot is positioned. */
+html.cy-booting,
+html.cy-booting body {
+  overflow: hidden;
+  height: 100%;
+}
+.cy-booting .terminal-wrapper {
+  background: #000;
+}
+.cy-booting .terminal-container {
+  opacity: 0;     /* JS fades this to 1 during the cold start */
+}
+
+/* Black field that covers the whole viewport during the cold start +
+   wide shot, so nothing leaks before the camera pushes in. */
+.boot-active .terminal-wrapper {
+  background: #000;
+}
+
+/* The container transform is driven by boot.js; this just makes the
+   zoom interpolate smoothly. boot.js toggles the transition on/off. */
+.terminal-container.boot-zoom {
+  transition: transform 1.5s cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+/* ── CRT "off" layer: an opaque black sheet over the screen during the
+   wide shot, hiding the boot console until the tube powers on. ── */
+.crt-off {
+  position: absolute;
+  top: var(--glass-top); left: var(--glass-left);
+  right: var(--glass-right); bottom: var(--glass-bottom);
+  background: #000;
+  z-index: 90000;       /* above boot console, below glitch canvas */
+  pointer-events: none;
+}
+
+/* ── The power-on flash: a white sheet that snaps from a center line to
+   a full-screen bloom, mimicking an old CRT energising. ── */
+.crt-flash {
+  position: absolute;
+  top: var(--glass-top); left: var(--glass-left);
+  right: var(--glass-right); bottom: var(--glass-bottom);
+  background: #eafff0;
+  transform-origin: center center;
+  transform: scaleY(0);
+  opacity: 0;
+  z-index: 90001;
+  pointer-events: none;
+  box-shadow: 0 0 60px 20px rgba(180, 255, 200, 0.8);
+}
+
+.crt-flash.fire {
+  animation: crt-power-on 0.62s ease-out forwards;
+}
+
+@keyframes crt-power-on {
+  0%   { transform: scaleY(0) scaleX(1);     opacity: 1; }
+  10%  { transform: scaleY(0.006) scaleX(1.25); opacity: 1; }   /* hairline */
+  28%  { transform: scaleY(0.012) scaleX(1.1);  opacity: 1; }   /* line holds */
+  55%  { transform: scaleY(1) scaleX(1);     opacity: 1; }      /* bloom */
+  75%  { transform: scaleY(1) scaleX(1);     opacity: 0.85; }
+  100% { transform: scaleY(1) scaleX(1);     opacity: 0; }      /* settle */
+}
+
+/* Subtle on-settle flicker for the screen as the tube stabilises. */
+@keyframes crt-settle-flicker {
+  0%   { opacity: 0.2; }
+  20%  { opacity: 1; }
+  35%  { opacity: 0.6; }
+  50%  { opacity: 1; }
+  70%  { opacity: 0.85; }
+  100% { opacity: 1; }
+}
+
+/* ── The boot console: the green CRT screen showing the logo + log. ── */
+.boot-console {
+  position: absolute;
+  top: var(--glass-top); left: var(--glass-left);
+  right: var(--glass-right); bottom: var(--glass-bottom);
+  z-index: 80000;       /* above page content, below crt-off/flash */
+  background: var(--crt-bg);
+  color: #15ff00;
+  font-family: 'VT323', monospace;
+  padding: 1.4rem 1.6rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  text-shadow: 0 0 4px currentColor, 0 0 8px currentColor;
+}
+
+/* Intro: only the logo, centered in the monitor. When the logo slides up,
+   `.intro` is removed (flex-start) but the body stays hidden until
+   `.show-body` is added a beat later. */
+.boot-console.intro {
+  justify-content: center;
+}
+
+/* Boot body (BIOS header + log) — hidden until revealed under the logo. */
+.boot-body {
+  display: none;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.boot-console.show-body .boot-body {
+  display: flex;
+  opacity: 1;
+}
+
+.boot-console.powered {
+  animation: crt-settle-flicker 0.7s ease-out;
+}
+
+.boot-console.fading {
+  transition: opacity 1s ease-out;
+  opacity: 0;
+}
+
+/* "Screen goes blank": the logo + boot log clear and the tube holds a black
+   screen (monitor still on) before the site is brought up. */
+.boot-console.blank {
+  background: #000;
+}
+.boot-console.blank.logo-in .boot-logo-wrap,
+.boot-console.blank.show-body .boot-body {
+  transition: opacity 0.35s ease-out;
+  opacity: 0;
+}
+
+/* Main page is held hidden during boot; the blank black console fades away
+   (see .boot-console.fading) to reveal it from black. */
+.boot-active main,
+.boot-active footer {
+  visibility: hidden;
+}
+
+/* BIOS-style header strip. Boot console fonts use `em` so they inherit the
+   screen's counter-scaled (and phone-capped) size — otherwise fixed rem text
+   becomes unreadably tiny when the monitor is scaled down on a phone. */
+.boot-bios {
+  font-size: 1.1em;
+  line-height: 1.25;
+  color: #aaffcc;
+  white-space: pre-wrap;
+  margin-bottom: 0.4rem;
+}
+.boot-bios .hl { color: #33ffcc; }
+
+/* Logo block — image when present, styled text as graceful fallback.
+   align-self:center keeps it horizontally centered while the boot body
+   below it stretches full-width (left-aligned log lines). */
+.boot-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin: 0.3rem 0 0.6rem;
+  align-self: center;
+  opacity: 0;                 /* hidden until the tube "warms up" */
+}
+/* Logo fades in like a CRT warming up — a dim flicker rising to full glow.
+   No `forwards`: opacity rests at 1 via the rule, so the blank state can
+   still fade it out later. */
+.boot-console.logo-in .boot-logo-wrap {
+  opacity: 1;
+  animation: logo-warmup 1.4s ease-out;
+}
+@keyframes logo-warmup {
+  0%   { opacity: 0;    filter: brightness(0.25); }
+  35%  { opacity: 0.5;  filter: brightness(0.7); }
+  48%  { opacity: 0.28; filter: brightness(0.5); }   /* warm-up flicker */
+  70%  { opacity: 0.9;  filter: brightness(0.9); }
+  100% { opacity: 1;    filter: brightness(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-console.logo-in .boot-logo-wrap { animation: none; }
+}
+.boot-logo-img {
+  height: 5.5em;                    /* scales with the counter-scaled font */
+  width: auto;
+  image-rendering: pixelated;       /* keep the 16-shade banding crisp */
+  filter: drop-shadow(0 0 6px rgba(21, 255, 0, 0.6));
+}
+.boot-logo-text {
+  font-size: 1.8em;
+  line-height: 1;
+  letter-spacing: 2px;
+  color: #15ff00;
+}
+.boot-logo-text small {
+  display: block;
+  font-size: 0.7em;
+  letter-spacing: 6px;
+  color: #33ffcc;
+}
+
+/* The scrolling boot log — 1em matches the site text, so it fits wherever the
+   site content fits (including the phone cap above). */
+.boot-log {
+  flex: 1 1 auto;
+  font-size: 1em;
+  line-height: 1.3;
+  white-space: pre-wrap;
+  overflow: hidden;
+}
+.boot-log .ok   { color: #33ffcc; }
+.boot-log .warn { color: #ffcc33; }
+.boot-log .dim  { color: #0aa000; }
+.boot-log .bar  { color: #15ff00; }
+
+/* Blinking cursor used while the log "types" */
+.boot-cursor::after {
+  content: "█";
+  margin-left: 2px;
+  animation: boot-blink 0.7s steps(1) infinite;
+}
+@keyframes boot-blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+/* Honour reduced-motion: boot.js skips the cinematics, but make sure no
+   stray animation runs if these classes are applied. */
+@media (prefers-reduced-motion: reduce) {
+  .terminal-container.boot-zoom { transition: none; }
+  .crt-flash.fire,
+  .boot-console.powered,
+  .boot-cursor::after { animation: none; }
 }

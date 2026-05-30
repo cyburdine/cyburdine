@@ -24,14 +24,17 @@ SPDX-License-Identifier: BSD-3-Clause
     </div>
       <!-- FRAME OVERLAY sits on top -->
     <img src="/assets/images/terminal-full.webp" alt="Terminal Frame" class="terminal-frame" />
+    <!-- Easter egg: invisible link over the "4" key replays the boot sequence -->
+    <a href="#" class="cy-egg" aria-label="Reboot terminal"></a>
   </div>
   </div>
 
 
 <!-- site javascripts -->
+  <!-- boot.js first: sets the pre-paint guard + boot flag before others parse -->
+  <script src="{{ '/assets/js/boot.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/decode.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/video_glitch.js' | relative_url }}"></script>
-  <script src="{{ '/assets/js/visitor_metadata.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/responsive.js' | relative_url }}"></script>
 </body>
 </html>

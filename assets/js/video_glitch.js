@@ -106,5 +106,17 @@ SPDX-License-Identifier: BSD-3-Clause
         requestAnimationFrame(drawGlitch);
       }
 
-      requestAnimationFrame(drawGlitch);
+      // Start the glitch animation. Exposed so boot.js can hold the lines back
+      // until the CRT has powered on (no glitch on a dark/off monitor).
+      let started = false;
+      function startGlitch() {
+        if (started) return;
+        started = true;
+        requestAnimationFrame(drawGlitch);
+      }
+      window.CyGlitch = { start: startGlitch };
+
+      // When a boot sequence is pending it owns the timing and calls
+      // CyGlitch.start() at power-on. Otherwise, start immediately.
+      if (!window.__CY_BOOT_PENDING__) startGlitch();
     })();
