@@ -401,13 +401,13 @@ SPDX-License-Identifier: BSD-3-Clause
     ready(function () { playBoot(false); });
   }
 
-  /* Easter egg: an invisible link over the "4" key replays the sequence.
-     Also exposed as window.CyBoot.replay(). Available on every page/visit. */
+  /* Easter eggs: invisible links over keypad keys replay the sequence. Also
+     exposed as window.CyBoot.replay(). Available on every page/visit. */
   window.CyBoot = { replay: function () { playBoot(true); } };
   ready(function () {
-    var egg = document.querySelector('.cy-egg');
-    if (egg) {
-      egg.addEventListener('click', function (e) {
+    var eggs = document.querySelectorAll('.cy-egg');
+    for (var i = 0; i < eggs.length; i++) {
+      eggs[i].addEventListener('click', function (e) {
         e.preventDefault();
         playBoot(true);
       });

@@ -34,14 +34,15 @@ SPDX-License-Identifier: BSD-3-Clause
   }
 
   /* Phones in portrait: zoom into the CRT glass so the green screen fills the
-     viewport width (centered), instead of fitting the whole bezel and leaving
-     big black bars. A tighter font cap keeps content inside the narrower glass. */
+     viewport width, pinned to the top-left (so the screen sits in the corner
+     and the lower keypad shows beneath it). A tighter font cap keeps content
+     inside the narrower glass. */
   function glassTransform() {
     var vw = window.innerWidth;
     var vh = window.innerHeight;
     var scale = Math.min(vw / GLASS_WIDTH, vh / GLASS_HEIGHT);
-    var tx = (vw - GLASS_WIDTH * scale) / 2 - GLASS_LEFT * scale;
-    var ty = (vh - GLASS_HEIGHT * scale) / 2 - GLASS_TOP * scale;
+    var tx = -GLASS_LEFT * scale;     /* glass top-left → viewport top-left */
+    var ty = -GLASS_TOP * scale;
     return {
       scale: scale,
       x: tx,

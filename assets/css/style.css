@@ -168,18 +168,18 @@ body::before {
   pointer-events: none; /* clicks pass through */
 }
 
-/* Easter egg: an invisible, clickable link over the "4" key on the keypad
-   (percentages of the 3000×1688 frame, so it scales with the container).
-   Clicking it replays the boot sequence — see boot.js. */
+/* Easter eggs: invisible, clickable links over keypad buttons (percentages of
+   the 3000×1688 frame, so they scale with the container). Clicking one replays
+   the boot sequence — see boot.js. */
 .cy-egg {
   position: absolute;
-  left: 47.8%;
-  top: 39%;
-  width: 6.2%;
-  height: 10.5%;
   z-index: 1002;          /* above the frame, so it receives clicks */
   cursor: pointer;
 }
+/* "4" key — middle keypad, top-left */
+.cy-egg--four { left: 47.8%; top: 39%;   width: 6.2%; height: 10.5%; }
+/* "D" key — lower-left keypad, top row, 3rd from left (reachable on phones) */
+.cy-egg--d    { left: 20%;   top: 76.5%; width: 4.6%; height: 9.5%; }
 
 /* Inner “screen” window */
 .terminal-screen {
