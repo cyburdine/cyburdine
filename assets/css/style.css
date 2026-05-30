@@ -520,6 +520,24 @@ html.cy-booting body {
   opacity: 1;
 }
 
+/* CRT scanlines across the whole boot screen (logo + text), so the logo reads
+   as the same phosphor display as the letters. em-based so the line spacing is
+   consistent at any scale. */
+.boot-console::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.38) 0,
+    rgba(0, 0, 0, 0.38) 0.045em,
+    transparent 0.045em,
+    transparent 0.16em
+  );
+}
+
 .boot-console.powered {
   animation: crt-settle-flicker 0.7s ease-out;
 }
@@ -591,6 +609,7 @@ html.cy-booting body {
   height: 9em;                      /* header size; scales with the font */
   width: auto;
   transition: height 0.6s ease;     /* shrinks as it slides up to the top */
+  image-rendering: pixelated;       /* chunky low-res pixels, like the CRT text */
   filter: drop-shadow(0 0 8px rgba(21, 255, 0, 0.55));
 }
 /* Bigger "hero" size while centered, before the slide. */
