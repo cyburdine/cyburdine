@@ -1,1 +1,1 @@
-![Claude Code token usage](https://tokenator.cyburdine.com/justin/badges/tokens.svg)
+![Claude Code token usage](https://tokenator.cyburdine.com/cyburdine/badges/tokens.svg)
