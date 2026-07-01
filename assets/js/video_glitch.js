@@ -110,6 +110,7 @@ SPDX-License-Identifier: BSD-3-Clause
       // until the CRT has powered on (no glitch on a dark/off monitor).
       let started = false;
       function startGlitch() {
+        if (document.documentElement.classList.contains('cy-clean')) return;  /* CRT-only effect */
         if (started) return;
         started = true;
         requestAnimationFrame(drawGlitch);

@@ -61,9 +61,12 @@ SPDX-License-Identifier: BSD-3-Clause
     logoShowHold:   2000,   /* logo centered (incl. warm-up) before it slides up */
     slideDur:        600,   /* logo slide-to-top duration */
     preTextGap:     1000,   /* logo reaches top → boot text begins */
-    holdAfterBoot:  3000,   /* finished boot held before going blank */
-    blankHold:      1000,   /* tube sits blank (black) before the site appears */
-    siteFade:        900    /* main-page text fade-in (from black) */
+    holdAfterBoot:  3200,   /* finished boot held before the push begins */
+    pushDur:        1600,   /* push through the glass (scanlines/phosphor grow) */
+    staticHold:      450,   /* electric static covers the frame at contact */
+    cleanFade:       900,   /* clean page fades up as the static clears */
+    blankHold:      1000,   /* (legacy) tube blank hold — reduced-motion path */
+    siteFade:        900    /* (legacy) main-page fade-in */
   };
 
   /* ── DOM helpers ───────────────────────────────────────────────── */
@@ -196,22 +199,80 @@ SPDX-License-Identifier: BSD-3-Clause
       runBootLog(consoleEl, endSequence);
     }
 
-    /* Pause on the finished boot screen → blank the tube → bring up the site. */
+    /* Boot log finished → hold on it, then push the camera through the glass. */
     function endSequence() {
-      setTimeout(function () {
-        consoleEl.classList.add('blank');            /* screen goes blank (black) */
-        setTimeout(revealSite, T.blankHold);
-      }, T.holdAfterBoot);
+      setTimeout(pushThroughGlass, T.holdAfterBoot);
     }
 
-    /* Bring up the real page and fade the text in from black. The live site
-       (green screen + text) is made visible behind the blank black console,
-       then the black console fades away so the site emerges from black. */
-    function revealSite() {
-      document.body.classList.remove('boot-active');     /* main/footer visible */
-      triggerDecode();                                   /* decode reveal (start or replay) */
-      consoleEl.classList.add('fading');                 /* black fades → reveals green site */
-      setTimeout(function () { finish(consoleEl, off, flash); }, T.siteFade + 200);
+    /* Drive the deeper zoom while the phosphor/scanline mask grows over the
+       (enlarging) boot text — the "right up to a real monitor" move. */
+    function pushThroughGlass() {
+      var R = window.CyResponsive;
+
+      /* Phosphor + fat-scanline mask fades/grows in over the boot text. */
+      var phosphor = el('div', 'crt-phosphor');
+      screen.appendChild(phosphor);
+      requestAnimationFrame(function () { phosphor.classList.add('grow'); });
+
+      /* Keep driving the container transform deeper into the glass. */
+      container.style.transition =
+        'transform ' + T.pushDur + 'ms cubic-bezier(0.5, 0, 0.9, 1)';
+      requestAnimationFrame(function () {
+        if (R && R.throughTransform) container.style.transform = R.throughTransform().css;
+      });
+
+      /* At contact: bloom into electric static, swap to the clean site. */
+      setTimeout(function () { fireStatic(phosphor); }, T.pushDur);
+    }
+
+    /* Electric static bloom → swap the world to clean underneath → fade the
+       static out so we emerge onto the readable page. */
+    function fireStatic(phosphor) {
+      var canvas = el('canvas', 'crt-static');
+      screen.appendChild(canvas);
+      var handle = paintStatic(canvas);
+      canvas.classList.add('fire');
+
+      setTimeout(function () {
+        /* Become the real (clean) site while the static is opaque. */
+        document.documentElement.classList.add('cy-clean');
+        document.body.classList.remove('boot-active');
+        if (consoleEl) consoleEl.style.display = 'none';
+        canvas.classList.add('clear');               /* fade static → reveal clean */
+
+        setTimeout(function () {
+          if (handle) cancelAnimationFrame(handle.id);
+          if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+          if (phosphor && phosphor.parentNode) phosphor.parentNode.removeChild(phosphor);
+          finish(consoleEl, off, flash);
+        }, T.cleanFade);
+      }, T.staticHold);
+    }
+
+    /* Electric stylized static: white-noise with a blue-white tint and green
+       flecks. Runs in the browser (Math.random is fine here). */
+    function paintStatic(canvas) {
+      var ctx = canvas.getContext('2d');
+      var rect = canvas.getBoundingClientRect();
+      var w = canvas.width  = Math.max(160, Math.floor(rect.width  / 3));
+      var h = canvas.height = Math.max(120, Math.floor(rect.height / 3));
+      var handle = { id: 0 };
+      (function frame() {
+        var img = ctx.createImageData(w, h);
+        var d = img.data;
+        for (var i = 0; i < d.length; i += 4) {
+          var v = (Math.random() * 255) | 0;
+          if (Math.random() < 0.08) {                /* green flecks */
+            d[i] = 40; d[i + 1] = 255; d[i + 2] = 120;
+          } else {                                   /* blue-white electric noise */
+            d[i] = v; d[i + 1] = v; d[i + 2] = Math.min(255, v + 40);
+          }
+          d[i + 3] = 235;
+        }
+        ctx.putImageData(img, 0, 0);
+        handle.id = requestAnimationFrame(frame);
+      })();
+      return handle;
     }
 
     var frame = document.querySelector('.terminal-frame');
@@ -227,6 +288,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
   /* ── Reduced motion: skip the cinematics, reveal immediately. ───── */
   function reducedReveal(consoleEl, off, flash) {
+    document.documentElement.classList.add('cy-clean');   /* straight to the real site */
     if (off) off.parentNode && off.parentNode.removeChild(off);
     if (flash) flash.parentNode && flash.parentNode.removeChild(flash);
     if (consoleEl) consoleEl.parentNode && consoleEl.parentNode.removeChild(consoleEl);
@@ -252,11 +314,13 @@ SPDX-License-Identifier: BSD-3-Clause
     if (window.CyResponsive) window.CyResponsive.unlock();   /* final layout */
     markBooted();
 
-    /* Ensure the live effects are running. Glitch.start is idempotent;
-       triggerDecode is a no-op if the reveal already fired it. Covers the
-       reduced-motion / missing-DOM paths. */
-    if (window.CyGlitch && window.CyGlitch.start) window.CyGlitch.start();
-    triggerDecode();
+    /* Ensure the live CRT effects are running — but NOT in clean mode, where
+       glow/scanlines/glitch/decode are all stripped. Covers the reduced-motion
+       / missing-DOM paths. */
+    if (!document.documentElement.classList.contains('cy-clean')) {
+      if (window.CyGlitch && window.CyGlitch.start) window.CyGlitch.start();
+      triggerDecode();
+    }
 
     running = false;       /* allow the easter egg to replay */
   }
@@ -399,6 +463,10 @@ SPDX-License-Identifier: BSD-3-Clause
     window.__CY_BOOT_PENDING__ = true;
     document.documentElement.classList.add('cy-booting');
     ready(function () { playBoot(false); });
+  } else {
+    /* Not booting → render the real (clean) site. Set before first paint so the
+       CRT never flashes for returning visitors or first-time deep links. */
+    document.documentElement.classList.add('cy-clean');
   }
 
   /* Easter eggs: invisible links over keypad keys replay the sequence. Also
@@ -412,5 +480,18 @@ SPDX-License-Identifier: BSD-3-Clause
         playBoot(true);
       });
     }
+
+    /* In clean mode the keypad is hidden, so the "D" keyboard key replays the
+       whole cinematic (drop back into the CRT, run boot, emerge clean again). */
+    document.addEventListener('keydown', function (e) {
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      var tag = (e.target && e.target.tagName) || '';
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) ||
+          (e.target && e.target.isContentEditable)) return;
+      if (e.key === 'd' || e.key === 'D') {
+        document.documentElement.classList.remove('cy-clean');
+        playBoot(true);
+      }
+    });
   });
 })();
