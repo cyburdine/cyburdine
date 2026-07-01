@@ -698,7 +698,7 @@ html.cy-booting body {
       rgba(0,255,120,0.20) 2px, rgba(0,255,120,0.20) 4px,
       rgba(60,120,255,0.20) 4px, rgba(60,120,255,0.20) 6px);
   background-size: 100% 100%, 6px 6px;
-  transition: opacity 0.5s ease-in, background-size 1.6s cubic-bezier(0.5,0,0.9,1);
+  transition: opacity 0.7s ease-in, background-size 1.9s cubic-bezier(0.5,0,0.85,0.35);
 }
 /* Fat scanlines + big phosphor cells as we push right up to the tube. */
 .crt-phosphor.grow {
@@ -706,21 +706,22 @@ html.cy-booting body {
   background-size: 100% 22px, 42px 42px;
 }
 
-/* Electric static bloom canvas — fired at contact, then fades to reveal clean.
-   <canvas> is a REPLACED element: with insets + width:auto it renders at its
-   intrinsic bitmap size, not stretched. So fill the whole .terminal-screen
-   explicitly; the area outside the glass is hidden behind the bezel frame
-   (z-index 1001 paints above the screen's z-index 1000). */
+/* Electric static bloom — lives on <body>, viewport-fixed (100vw/vh, since a
+   <canvas> is a replaced element and won't stretch on insets). Blooms in eased
+   with a brightness flash rather than a hard cut, then `.clear` fades it out to
+   reveal the clean page. z-index sits above the frame + scanline overlays. */
 .crt-static {
-  position: absolute;
+  position: fixed;
   top: 0; left: 0;
-  width: 100%; height: 100%;
-  z-index: 90003;
+  width: 100vw; height: 100vh;
+  z-index: 100001;
   pointer-events: none;
   opacity: 0;
+  filter: brightness(2.4);
+  transition: opacity 0.32s ease-out, filter 0.45s ease-out;
 }
-.crt-static.fire { opacity: 1; }
-.crt-static.clear { transition: opacity 0.9s ease-out; opacity: 0; }
+.crt-static.fire { opacity: 1; filter: brightness(1); }   /* eased electric bloom-in */
+.crt-static.clear { transition: opacity 0.85s ease-out; opacity: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .crt-phosphor, .crt-static { display: none; }

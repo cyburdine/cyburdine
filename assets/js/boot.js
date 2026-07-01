@@ -61,10 +61,11 @@ SPDX-License-Identifier: BSD-3-Clause
     logoShowHold:   2000,   /* logo centered (incl. warm-up) before it slides up */
     slideDur:        600,   /* logo slide-to-top duration */
     preTextGap:     1000,   /* logo reaches top → boot text begins */
-    holdAfterBoot:  3200,   /* finished boot held before the push begins */
-    pushDur:        1600,   /* push through the glass (scanlines/phosphor grow) */
-    staticHold:      450,   /* electric static covers the frame at contact */
-    cleanFade:       900,   /* clean page fades up as the static clears */
+    holdAfterBoot:  2400,   /* finished boot held before the push begins */
+    pushDur:        1900,   /* push through the glass (scanlines/phosphor grow) */
+    staticLead:      300,   /* static begins blooming this long before the push ends */
+    staticHold:      260,   /* fully-bloomed static held before the clean swap */
+    cleanFade:       850,   /* static fades out over this, revealing clean */
     blankHold:      1000,   /* (legacy) tube blank hold — reduced-motion path */
     siteFade:        900    /* (legacy) main-page fade-in */
   };
@@ -205,48 +206,51 @@ SPDX-License-Identifier: BSD-3-Clause
     }
 
     /* Drive the deeper zoom while the phosphor/scanline mask grows over the
-       (enlarging) boot text — the "right up to a real monitor" move. */
+       (enlarging) boot text — the "right up to a real monitor" move. The static
+       begins blooming BEFORE the push finishes (T.staticLead) so the camera
+       never stops dead — it rushes the glass and dissolves straight into the
+       flash, one continuous motion. */
     function pushThroughGlass() {
       var R = window.CyResponsive;
 
-      /* Phosphor + fat-scanline mask fades/grows in over the boot text. */
       var phosphor = el('div', 'crt-phosphor');
       screen.appendChild(phosphor);
       requestAnimationFrame(function () { phosphor.classList.add('grow'); });
 
-      /* Keep driving the container transform deeper into the glass. */
       container.style.transition =
-        'transform ' + T.pushDur + 'ms cubic-bezier(0.5, 0, 0.9, 1)';
+        'transform ' + T.pushDur + 'ms cubic-bezier(0.5, 0, 0.85, 0.35)';
       requestAnimationFrame(function () {
         if (R && R.throughTransform) container.style.transform = R.throughTransform().css;
       });
 
-      /* At contact: bloom into electric static, swap to the clean site. */
-      setTimeout(function () { fireStatic(phosphor); }, T.pushDur);
+      setTimeout(function () { fireStatic(phosphor); }, T.pushDur - T.staticLead);
     }
 
-    /* Electric static bloom → swap the world to clean underneath → fade the
-       static out so we emerge onto the readable page. */
+    /* Electric static blooms in over the rushing screen (eased, not a hard cut),
+       holds briefly, then the world swaps to clean underneath and the static
+       fades out — so we emerge onto the readable page smoothly. The canvas lives
+       on <body> (viewport-fixed, outside the zoomed container) so the layout
+       swap under it never shifts or rescales it. */
     function fireStatic(phosphor) {
       var canvas = el('canvas', 'crt-static');
-      screen.appendChild(canvas);
+      document.body.appendChild(canvas);
       var handle = paintStatic(canvas);
-      canvas.classList.add('fire');
+      requestAnimationFrame(function () { canvas.classList.add('fire'); });   /* eased bloom-in */
 
       setTimeout(function () {
-        /* Become the real (clean) site while the static is opaque. */
+        /* Become the real (clean) site while the static is fully opaque. */
         document.documentElement.classList.add('cy-clean');
         document.body.classList.remove('boot-active');
         if (consoleEl) consoleEl.style.display = 'none';
+        if (phosphor && phosphor.parentNode) phosphor.parentNode.removeChild(phosphor);
         canvas.classList.add('clear');               /* fade static → reveal clean */
 
         setTimeout(function () {
           if (handle) cancelAnimationFrame(handle.id);
           if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
-          if (phosphor && phosphor.parentNode) phosphor.parentNode.removeChild(phosphor);
           finish(consoleEl, off, flash);
         }, T.cleanFade);
-      }, T.staticHold);
+      }, T.staticLead + T.staticHold);
     }
 
     /* Electric stylized static: white-noise with a blue-white tint and green
