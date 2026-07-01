@@ -21,6 +21,22 @@ SPDX-License-Identifier: BSD-3-Clause
   src: url('/assets/fonts/NotoSansJP-subset.ttf') format('truetype');
 }
 
+/* Clean-mode body font — readable monospace once you're "through the screen". */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/IBMPlexMono-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/assets/fonts/IBMPlexMono-Medium.woff2') format('woff2');
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -662,3 +678,146 @@ html.cy-booting body {
   .boot-console.powered,
   .boot-cursor::after { animation: none; }
 }
+
+/* ── Push-through: a phosphor/aperture mask + fat scanlines that grow in over
+   the enlarging boot text as the camera drives into the glass. Confined to the
+   glass via the --glass-* insets. ── */
+.crt-phosphor {
+  position: absolute;
+  top: var(--glass-top); left: var(--glass-left);
+  right: var(--glass-right); bottom: var(--glass-bottom);
+  z-index: 90002;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    repeating-linear-gradient(to bottom,
+      rgba(0,0,0,0.55) 0, rgba(0,0,0,0.55) 2px,
+      transparent 2px, transparent 6px),
+    repeating-linear-gradient(to right,
+      rgba(255,0,80,0.20) 0, rgba(255,0,80,0.20) 2px,
+      rgba(0,255,120,0.20) 2px, rgba(0,255,120,0.20) 4px,
+      rgba(60,120,255,0.20) 4px, rgba(60,120,255,0.20) 6px);
+  background-size: 100% 100%, 6px 6px;
+  transition: opacity 0.5s ease-in, background-size 1.6s cubic-bezier(0.5,0,0.9,1);
+}
+/* Fat scanlines + big phosphor cells as we push right up to the tube. */
+.crt-phosphor.grow {
+  opacity: 1;
+  background-size: 100% 22px, 42px 42px;
+}
+
+/* Electric static bloom canvas — fired at contact, then fades to reveal clean.
+   <canvas> is a REPLACED element: with insets + width:auto it renders at its
+   intrinsic bitmap size, not stretched. So fill the whole .terminal-screen
+   explicitly; the area outside the glass is hidden behind the bezel frame
+   (z-index 1001 paints above the screen's z-index 1000). */
+.crt-static {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 90003;
+  pointer-events: none;
+  opacity: 0;
+}
+.crt-static.fire { opacity: 1; }
+.crt-static.clear { transition: opacity 0.9s ease-out; opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-phosphor, .crt-static { display: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CLEAN MODE — the real site once you've come "through the screen".
+   No CRT frame, scanlines, glow, or glitch. Readable centered column.
+   Gated entirely behind html.cy-clean so the CRT rules are untouched.
+   ════════════════════════════════════════════════════════════════ */
+html.cy-clean,
+html.cy-clean body {
+  height: auto;
+  overflow: visible;
+  background: #05070a;
+  color: #7dffb0;                    /* softer, high-contrast green */
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* Kill the fixed CRT stage + frame + scanlines + glitch. */
+html.cy-clean .terminal-frame,
+html.cy-clean #glitchCanvas,
+html.cy-clean .cy-egg,
+html.cy-clean body::before,
+html.cy-clean .terminal-screen::before { display: none !important; }
+
+html.cy-clean .terminal-wrapper {
+  height: auto !important;
+  background: #05070a;
+  overflow: visible;
+}
+html.cy-clean .terminal-container {
+  position: static;
+  width: 100%;
+  height: auto;
+  transform: none !important;
+  overflow: visible;
+  z-index: auto;
+}
+html.cy-clean .terminal-screen {
+  position: static;
+  top: auto; left: auto;
+  width: 100%;
+  max-width: 72ch;
+  height: auto;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  background: transparent;
+  overflow: visible;
+  font-size: 18px;                   /* no counter-scaling in clean mode */
+  line-height: 1.6;
+}
+
+/* Body copy lives inside <pre> — the UA stylesheet forces `monospace`, so pin
+   IBM Plex Mono explicitly to reach the actual content. */
+html.cy-clean pre,
+html.cy-clean .console,
+html.cy-clean main {
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* Strip all neon glow. */
+html.cy-clean .glow,
+html.cy-clean .console,
+html.cy-clean .project,
+html.cy-clean .char,
+html.cy-clean .char.foreign,
+html.cy-clean a,
+html.cy-clean a:hover { text-shadow: none !important; }
+
+/* Readable links + accents (palette kept, glow removed). */
+html.cy-clean a { color: #33ffcc; }
+html.cy-clean a:hover { color: #ffffff; text-decoration: underline; }
+
+/* Headings keep the VT323 identity. */
+html.cy-clean h1, html.cy-clean h2, html.cy-clean h3,
+html.cy-clean .boot-logo-text {
+  font-family: 'VT323', monospace;
+  letter-spacing: 1px;
+  color: #33ffcc;
+}
+
+/* Nav: flat readable bar (the real nav is `.glow`, not `.console`), glow off. */
+html.cy-clean nav {
+  box-shadow: none;
+  text-shadow: none;
+  display: flex;
+  gap: 1.5rem;
+  padding: 0 0 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #123;
+}
+html.cy-clean nav a { color: #33ffcc; margin-right: 0; }
+html.cy-clean nav a:hover { color: #ffffff; }
+
+/* Let long pre content wrap so it stays readable without horizontal scroll. */
+html.cy-clean pre,
+html.cy-clean .console { white-space: pre-wrap; overflow-wrap: anywhere; }
