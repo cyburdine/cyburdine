@@ -700,31 +700,52 @@ html.cy-booting body {
   background-size: 100% 100%, 6px 6px;
   transition: opacity 0.7s ease-in, background-size 1.9s cubic-bezier(0.5,0,0.85,0.35);
 }
-/* Fat scanlines + big phosphor cells as we push right up to the tube. */
-.crt-phosphor.grow {
-  opacity: 1;
-  background-size: 100% 22px, 42px 42px;
+/* Grow-then-melt as the camera drives up to the glass and pushes through — you
+   see the scanlines/pixels swell, then they dissolve. Duration MUST match
+   T.pushDur in boot.js (1500ms). Driven under .cy-dissolve. */
+html.cy-dissolve .crt-phosphor { animation: phosphor-through 1500ms ease-in-out forwards; }
+@keyframes phosphor-through {
+  0%   { opacity: 0; background-size: 100% 100%, 6px 6px; }
+  45%  { opacity: 1; background-size: 100% 16px, 30px 30px; }
+  100% { opacity: 0; background-size: 100% 30px, 54px 54px; }
 }
 
-/* Electric static bloom — lives on <body>, viewport-fixed (100vw/vh, since a
-   <canvas> is a replaced element and won't stretch on insets). Blooms in eased
-   with a brightness flash rather than a hard cut, then `.clear` fades it out to
-   reveal the clean page. z-index sits above the frame + scanline overlays. */
-.crt-static {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  z-index: 100001;
-  pointer-events: none;
-  opacity: 0;
-  filter: brightness(2.4);
-  transition: opacity 0.32s ease-out, filter 0.45s ease-out;
+/* ════════════════════════════════════════════════════════════════
+   THROUGH-THE-SCREEN — seamless two-stage dissolve (no static).
+   Stage 1 (cy-reveal): the real site shows IN the tube, already in the clean
+   font (so nothing re-typesets later), CRT skin still on.
+   Stage 2 (cy-dissolve): the CRT skin (glow, scanlines, bezel) melts away as
+   the camera pushes in. The screen bg is already near-black, so only the glow,
+   lines and frame need to fade — a true dissolve. Then boot.js FLIP-settles the
+   same text into the clean column.
+   ════════════════════════════════════════════════════════════════ */
+
+/* Shared clean font from the reveal onward ⇒ no font swap mid-transition, so
+   the FLIP settle is a pure scale and the text lines up. */
+html.cy-reveal main, html.cy-reveal pre, html.cy-reveal .console,
+html.cy-dissolve main, html.cy-dissolve pre, html.cy-dissolve .console {
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
-.crt-static.fire { opacity: 1; filter: brightness(1); }   /* eased electric bloom-in */
-.crt-static.clear { transition: opacity 0.85s ease-out; opacity: 0; }
+
+/* Stage 2 dissolve: melt the CRT skin. */
+html.cy-dissolve .terminal-frame { opacity: 0; transition: opacity 1s ease-out; }
+html.cy-dissolve #glitchCanvas   { opacity: 0; transition: opacity 0.5s ease-out; }
+html.cy-dissolve .terminal-screen::before { opacity: 0; transition: opacity 0.9s ease-out; }
+/* Global scanlines run a flicker animation; animation overrides plain opacity,
+   so stop it AND fade out. */
+html.cy-dissolve body::before { animation: none !important; opacity: 0 !important; transition: opacity 0.6s ease-out; }
+html.cy-dissolve .terminal-screen { background: #05070a; }   /* near-black already */
+html.cy-dissolve .glow, html.cy-dissolve .console, html.cy-dissolve pre,
+html.cy-dissolve nav.glow, html.cy-dissolve nav a, html.cy-dissolve a,
+html.cy-dissolve .char {
+  text-shadow: none !important;
+  transition: text-shadow 0.7s ease-out, color 1s ease-out;
+}
+html.cy-dissolve pre, html.cy-dissolve .glow { color: #7dffb0; }
 
 @media (prefers-reduced-motion: reduce) {
-  .crt-phosphor, .crt-static { display: none; }
+  .crt-phosphor { display: none; }
+  html.cy-dissolve .crt-phosphor { animation: none; }
 }
 
 /* ════════════════════════════════════════════════════════════════

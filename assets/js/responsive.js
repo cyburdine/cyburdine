@@ -92,7 +92,7 @@ SPDX-License-Identifier: BSD-3-Clause
   function throughTransform() {
     var base = finalTransform();
     var vw = window.innerWidth, vh = window.innerHeight;
-    var PUSH = 5;                                  /* how far past resting we drive */
+    var PUSH = 3;                                  /* how far past resting we drive */
     var scale = base.scale * PUSH;
     var gcx = GLASS_LEFT + GLASS_WIDTH / 2;        /* glass center, unscaled coords */
     var gcy = GLASS_TOP + GLASS_HEIGHT / 2;

@@ -61,11 +61,13 @@ SPDX-License-Identifier: BSD-3-Clause
     logoShowHold:   2000,   /* logo centered (incl. warm-up) before it slides up */
     slideDur:        600,   /* logo slide-to-top duration */
     preTextGap:     1000,   /* logo reaches top → boot text begins */
-    holdAfterBoot:  2400,   /* finished boot held before the push begins */
-    pushDur:        1900,   /* push through the glass (scanlines/phosphor grow) */
-    staticLead:      300,   /* static begins blooming this long before the push ends */
-    staticHold:      260,   /* fully-bloomed static held before the clean swap */
-    cleanFade:       850,   /* static fades out over this, revealing clean */
+    holdAfterBoot:  1500,   /* boot log held before your site loads into the tube */
+    revealFade:      800,   /* boot console fades out → your site shows in the tube */
+    sitePrehold:    1000,   /* your site shown in the tube (CRT skin) before the push */
+    pushDur:        1500,   /* push through the glass while the CRT skin dissolves
+                               (MUST match the phosphor-through animation in CSS) */
+    throughHold:     450,   /* held "through" (clean, still zoomed) before settling */
+    settleDur:       950,   /* FLIP settle into the clean readable column */
     blankHold:      1000,   /* (legacy) tube blank hold — reduced-motion path */
     siteFade:        900    /* (legacy) main-page fade-in */
   };
@@ -200,83 +202,105 @@ SPDX-License-Identifier: BSD-3-Clause
       runBootLog(consoleEl, endSequence);
     }
 
-    /* Boot log finished → hold on it, then push the camera through the glass. */
+    /* Boot log finished → hold, then load the real site INTO the tube. */
     function endSequence() {
-      setTimeout(pushThroughGlass, T.holdAfterBoot);
+      setTimeout(loadSiteInTube, T.holdAfterBoot);
     }
 
-    /* Drive the deeper zoom while the phosphor/scanline mask grows over the
-       (enlarging) boot text — the "right up to a real monitor" move. The static
-       begins blooming BEFORE the push finishes (T.staticLead) so the camera
-       never stops dead — it rushes the glass and dissolves straight into the
-       flash, one continuous motion. */
-    function pushThroughGlass() {
-      var R = window.CyResponsive;
+    /* Stage 1 — "load my site first": reveal the real homepage inside the tube,
+       already in the clean font (so nothing re-typesets later) but still wearing
+       the CRT skin (glow, scanlines, bezel). The boot console fades out over it. */
+    function loadSiteInTube() {
+      document.documentElement.classList.add('cy-reveal');   /* clean font, CRT skin on */
+      document.body.classList.remove('boot-active');         /* real main/footer visible */
+      if (consoleEl) {
+        consoleEl.classList.add('fading');                   /* boot log fades away */
+        setTimeout(function () {
+          if (consoleEl.parentNode) consoleEl.parentNode.removeChild(consoleEl);
+        }, T.revealFade + 120);
+      }
+      setTimeout(pushAndDissolve, T.revealFade + T.sitePrehold);
+    }
 
+    /* Stage 2 — push through the glass while the CRT skin dissolves (no static,
+       pure dissolve). Same text, de-skinned in place. The push zooms INTO the
+       text's own centre (scale K× about that point) so the content stays put and
+       enlarges — rather than drifting toward the glass centre and off-screen. */
+    function pushAndDissolve() {
+      var R = window.CyResponsive;
+      var content = screen.querySelector('main') || screen;
+
+      /* "See the pixels/scanlines" grow-then-melt as we hit the glass. */
       var phosphor = el('div', 'crt-phosphor');
       screen.appendChild(phosphor);
-      requestAnimationFrame(function () { phosphor.classList.add('grow'); });
+
+      document.documentElement.classList.add('cy-dissolve');  /* melt glow/scanlines/bezel */
+
+      /* Dive into the text anchored at its TOP-LEFT: keep that corner pinned
+         while the text scales K× and grows down-right, so the line beginnings
+         stay on-screen with a clean left margin (the text is left-aligned). The
+         settle then just shrinks it into the column. Derived from the current
+         (finalTransform, top-left origin) placement: keep viewport (Lx,Ty) fixed. */
+      var ft = R ? R.finalTransform() : { scale: 1, x: 0, y: 0 };
+      var rect = content.getBoundingClientRect();
+      var Lx = rect.left, Ty = rect.top;
+      var K = 2.4;                                            /* how hard we push in */
+      var ns  = ft.scale * K;
+      var tnx = Lx - K * (Lx - ft.x);
+      var tny = Ty - K * (Ty - ft.y);
 
       container.style.transition =
-        'transform ' + T.pushDur + 'ms cubic-bezier(0.5, 0, 0.85, 0.35)';
+        'transform ' + T.pushDur + 'ms cubic-bezier(0.42, 0, 0.7, 0.55)';
       requestAnimationFrame(function () {
-        if (R && R.throughTransform) container.style.transform = R.throughTransform().css;
+        container.style.transform = 'translate(' + tnx + 'px,' + tny + 'px) scale(' + ns + ')';
       });
 
-      setTimeout(function () { fireStatic(phosphor); }, T.pushDur - T.staticLead);
+      /* Stage 3 hold, then settle. Phosphor is removed at settle (it lives in
+         the screen and would otherwise re-flow with the clean layout). */
+      setTimeout(function () {
+        if (phosphor.parentNode) phosphor.parentNode.removeChild(phosphor);
+        settleToColumn();
+      }, T.pushDur + T.throughHold);
     }
 
-    /* Electric static blooms in over the rushing screen (eased, not a hard cut),
-       holds briefly, then the world swaps to clean underneath and the static
-       fades out — so we emerge onto the readable page smoothly. The canvas lives
-       on <body> (viewport-fixed, outside the zoomed container) so the layout
-       swap under it never shifts or rescales it. */
-    function fireStatic(phosphor) {
-      var canvas = el('canvas', 'crt-static');
-      document.body.appendChild(canvas);
-      var handle = paintStatic(canvas);
-      requestAnimationFrame(function () { canvas.classList.add('fire'); });   /* eased bloom-in */
+    /* Stage 4 — FLIP the same text block from its zoomed position down into the
+       clean centered column. Same DOM + same font ⇒ it lines up and just glides
+       into place (a gentle settle), rather than swapping to a new screen. */
+    function settleToColumn() {
+      var content = screen.querySelector('main') || screen;
+      var header  = screen.querySelector('header');
+
+      var first = content.getBoundingClientRect();            /* zoomed (F) */
+
+      document.documentElement.classList.add('cy-clean');     /* real clean layout */
+      document.documentElement.classList.remove('cy-reveal', 'cy-dissolve');
+      container.style.transition = 'none';
+      container.style.transform  = 'none';
+
+      var last = content.getBoundingClientRect();             /* clean column (L) */
+      var s  = last.width ? first.width / last.width : 1;
+      var dx = first.left - last.left;
+      var dy = first.top  - last.top;
+
+      content.style.transformOrigin = 'top left';
+      content.style.transition = 'none';
+      content.style.transform  = 'translate(' + dx + 'px,' + dy + 'px) scale(' + s + ')';
+      if (header) header.style.opacity = '0';                 /* nav fades in with the settle */
+
+      requestAnimationFrame(function () {
+        content.style.transition = 'transform ' + T.settleDur + 'ms cubic-bezier(0.22, 0.61, 0.36, 1)';
+        content.style.transform  = 'none';
+        if (header) {
+          header.style.transition = 'opacity ' + T.settleDur + 'ms ease';
+          header.style.opacity = '1';
+        }
+      });
 
       setTimeout(function () {
-        /* Become the real (clean) site while the static is fully opaque. */
-        document.documentElement.classList.add('cy-clean');
-        document.body.classList.remove('boot-active');
-        if (consoleEl) consoleEl.style.display = 'none';
-        if (phosphor && phosphor.parentNode) phosphor.parentNode.removeChild(phosphor);
-        canvas.classList.add('clear');               /* fade static → reveal clean */
-
-        setTimeout(function () {
-          if (handle) cancelAnimationFrame(handle.id);
-          if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
-          finish(consoleEl, off, flash);
-        }, T.cleanFade);
-      }, T.staticLead + T.staticHold);
-    }
-
-    /* Electric stylized static: white-noise with a blue-white tint and green
-       flecks. Runs in the browser (Math.random is fine here). */
-    function paintStatic(canvas) {
-      var ctx = canvas.getContext('2d');
-      var rect = canvas.getBoundingClientRect();
-      var w = canvas.width  = Math.max(160, Math.floor(rect.width  / 3));
-      var h = canvas.height = Math.max(120, Math.floor(rect.height / 3));
-      var handle = { id: 0 };
-      (function frame() {
-        var img = ctx.createImageData(w, h);
-        var d = img.data;
-        for (var i = 0; i < d.length; i += 4) {
-          var v = (Math.random() * 255) | 0;
-          if (Math.random() < 0.08) {                /* green flecks */
-            d[i] = 40; d[i + 1] = 255; d[i + 2] = 120;
-          } else {                                   /* blue-white electric noise */
-            d[i] = v; d[i + 1] = v; d[i + 2] = Math.min(255, v + 40);
-          }
-          d[i + 3] = 235;
-        }
-        ctx.putImageData(img, 0, 0);
-        handle.id = requestAnimationFrame(frame);
-      })();
-      return handle;
+        content.style.transition = content.style.transform = content.style.transformOrigin = '';
+        if (header) { header.style.transition = header.style.opacity = ''; }
+        finish(consoleEl, off, flash);
+      }, T.settleDur + 80);
     }
 
     var frame = document.querySelector('.terminal-frame');
@@ -304,7 +328,7 @@ SPDX-License-Identifier: BSD-3-Clause
     [consoleEl, off, flash].forEach(function (n) {
       if (n && n.parentNode) n.parentNode.removeChild(n);
     });
-    document.documentElement.classList.remove('cy-booting');
+    document.documentElement.classList.remove('cy-booting', 'cy-reveal', 'cy-dissolve');
     document.body.classList.remove('boot-active');
     document.documentElement.style.height = '';
     document.body.style.height = '';
