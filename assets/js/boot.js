@@ -334,6 +334,15 @@ SPDX-License-Identifier: BSD-3-Clause
         }, 820);
       }, zin);
 
+      /* The chrome (nav) re-lays-out between the tube and the clean column, so
+         fade it out over the end of the zoom-out; only `main` (which lands
+         exactly) carries through the swap, then the chrome fades back in. This
+         is what turns the landing from a jump-cut into a seamless arrival. */
+      setTimeout(function () {
+        var nav = screen.querySelector('header');
+        if (nav) { nav.style.transition = 'opacity 450ms ease'; nav.style.opacity = '0'; }
+      }, total - 480);
+
       setTimeout(function () { landCleanChar(landT); }, total + 60);   /* zoom-out done → clean layout at rest */
     }
 
@@ -351,6 +360,22 @@ SPDX-License-Identifier: BSD-3-Clause
       document.documentElement.classList.remove('cy-reveal', 'cy-dissolve');
       container.style.transform  = 'none';
       container.style.willChange = '';
+
+      /* Fade the chrome (nav + footer) into their clean positions so their
+         layout change is never a visible jump. */
+      var nav = screen.querySelector('header');
+      var foot = document.querySelector('footer');
+      [nav, foot].forEach(function (n) {
+        if (!n) return;
+        n.style.transition = 'none';
+        n.style.opacity = '0';
+        requestAnimationFrame(function () {
+          n.style.transition = 'opacity 700ms ease';
+          n.style.opacity = '1';
+          setTimeout(function () { n.style.transition = n.style.opacity = ''; }, 760);
+        });
+      });
+
       finish(consoleEl, off, flash);
     }
 

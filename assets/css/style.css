@@ -794,6 +794,8 @@ html.cy-dissolve .terminal-screen::before { opacity: 0; transition: opacity 0.9s
    so stop it AND fade out. */
 html.cy-dissolve body::before { animation: none !important; opacity: 0 !important; transition: opacity 0.6s ease-out; }
 html.cy-dissolve .terminal-screen { background: #05070a; }   /* near-black already */
+/* Match the clean background everywhere so the landing swap has no bg edge. */
+html.cy-dissolve, html.cy-dissolve body, html.cy-dissolve .terminal-wrapper { background: #05070a; }
 html.cy-dissolve .glow, html.cy-dissolve .console, html.cy-dissolve pre,
 html.cy-dissolve nav.glow, html.cy-dissolve nav a, html.cy-dissolve a,
 html.cy-dissolve .char {
