@@ -680,68 +680,65 @@ html.cy-booting body {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   THROUGH-THE-GLASS FX — viewport-fixed layers that create the depth of
-   punching through the CRT plane. Appended to <body> by boot.js during the
-   push, all emanating from centre. Durations are coupled to T.pushDur (1600ms).
-   ── cy-glass: the glass surface (scanlines + phosphor + curvature) rushes
-      toward the camera and blows past the edges — you pass through the pane.
-   ── cy-warp: radial light streaks tunnel outward from centre (into-the-screen).
-   ── cy-bloom: a bright light burst at the moment you break through.
+   THROUGH-THE-SCREEN via a SINGLE CHARACTER (driven by boot.js charZoom):
+   zoom up on one glyph → electronic distortion (going through the screen) →
+   it resolves to a clean letter → gently zoom back out to reveal the page.
+   The stage is a full-viewport dark sheet holding one big glyph; the glyph
+   scale is animated by JS (WAAPI), the distortion + resolve by these classes.
    ════════════════════════════════════════════════════════════════ */
-/* will-change promotes each layer to its own GPU layer (only transform/opacity
-   animate, so no per-frame repaint). No mix-blend-mode: over the near-black page
-   `screen` blending ≈ normal, and dropping it avoids costly per-frame
-   compositing (a big source of stutter). Timed to peak at the deepest push
-   (~1930ms into the 4200ms flight). */
-.cy-fx {
+.cy-charfx {
   position: fixed; inset: 0; z-index: 100000;
-  pointer-events: none; transform-origin: 50% 50%;
-  will-change: transform, opacity;
+  display: flex; align-items: center; justify-content: center;
+  background: #05070a;                 /* the dark "other side" (matches clean bg) */
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 500ms ease-out;
+}
+.cy-charfx.in { opacity: 1; }
+
+.cy-glyph {
+  font-family: 'VT323', monospace;     /* the on-screen (CRT) letter */
+  font-size: 46vmin;
+  line-height: 1;
+  color: #33ffcc;
+  text-shadow: 0 0 0.05em currentColor, 0 0 0.2em currentColor, 0 0 0.5em rgba(21,255,0,0.45);
+  transform: scale(0.28);
+  will-change: transform, clip-path, opacity;
+  position: relative;
+}
+/* CRT scanlines riding over the glyph while it's still "on the screen". */
+.cy-glyph::after {
+  content: "";
+  position: absolute; inset: -25%;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom,
+    transparent 0, transparent 0.055em,
+    rgba(0,0,0,0.6) 0.055em, rgba(0,0,0,0.6) 0.11em);
+  transition: opacity 0.4s ease-out;
 }
 
-.cy-glass {
-  background:
-    repeating-linear-gradient(to bottom,
-      rgba(0,0,0,0.45) 0, rgba(0,0,0,0.45) 2px, transparent 2px, transparent 5px),
-    repeating-linear-gradient(to right,
-      rgba(0,255,120,0.12) 0, rgba(0,255,120,0.12) 2px, transparent 2px, transparent 5px),
-    radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,0.7) 100%);
-  opacity: 0;
-  animation: glass-rush 1900ms cubic-bezier(0.5, 0, 0.85, 0.35) 250ms forwards;
-}
-@keyframes glass-rush {
-  0%   { transform: scale(1);    opacity: 0; }
-  14%  { opacity: 0.9; }
-  70%  { opacity: 0.8; }
-  100% { transform: scale(13);   opacity: 0; }
+/* Electronic distortion — RGB channel split + slice tearing + flicker. Stepped
+   so it reads as digital/electronic, not a smooth tween. No transform here (JS
+   owns the scale), so nothing fights the zoom. */
+.cy-glyph.glitch { animation: glyph-glitch 0.72s steps(1, end) both; }
+@keyframes glyph-glitch {
+  0%   { text-shadow: 0.05em 0 rgba(255,0,90,0.9), -0.05em 0 rgba(0,220,255,0.9); clip-path: inset(0 0 0 0); opacity: 1; }
+  14%  { text-shadow: -0.03em 0 rgba(255,0,90,0.9), 0.03em 0 rgba(0,220,255,0.9); clip-path: inset(6% 0 64% 0); opacity: 0.95; }
+  28%  { text-shadow: -0.1em 0 rgba(255,0,90,0.95), 0.1em 0 rgba(0,220,255,0.95); clip-path: inset(52% 0 16% 0); opacity: 0.8; }
+  42%  { text-shadow: 0.08em 0 rgba(255,0,90,0.9), -0.08em 0 rgba(0,220,255,0.9); clip-path: inset(28% 0 42% 0); opacity: 1; }
+  56%  { text-shadow: -0.06em 0 rgba(255,0,90,0.9), 0.06em 0 rgba(0,220,255,0.9); clip-path: inset(0 0 0 0); opacity: 0.7; }
+  70%  { text-shadow: 0.09em 0 rgba(255,0,90,0.95), -0.09em 0 rgba(0,220,255,0.95); clip-path: inset(74% 0 6% 0); opacity: 1; }
+  85%  { text-shadow: 0.02em 0 rgba(255,0,90,0.8), -0.02em 0 rgba(0,220,255,0.8); clip-path: inset(0 0 0 0); opacity: 0.9; }
+  100% { text-shadow: 0 0 0.04em currentColor; clip-path: inset(0 0 0 0); opacity: 1; }
 }
 
-.cy-warp {
-  z-index: 100001;
-  background: repeating-conic-gradient(from 0deg at 50% 50%,
-    rgba(190,255,215,0) 0deg, rgba(190,255,215,0) 0.7deg,
-    rgba(190,255,215,0.42) 1deg, rgba(190,255,215,0) 1.3deg);
-  opacity: 0;
-  animation: warp-streak 1900ms cubic-bezier(0.6, 0, 0.9, 0.25) 550ms forwards;
-}
-@keyframes warp-streak {
-  0%   { transform: scale(0.15); opacity: 0; }
-  45%  { opacity: 0.5; }
-  72%  { opacity: 0.8; }
-  100% { transform: scale(7);    opacity: 0; }
-}
+/* The clean letter on the other side — crisp, no glow, no scanlines. */
+.cy-glyph.clean { color: #d8ffe8; text-shadow: none; transition: color 0.35s ease-out, text-shadow 0.35s ease-out; }
+.cy-glyph.clean::after { opacity: 0; }
 
-.cy-bloom {
-  z-index: 100002;
-  background: radial-gradient(circle at 50% 50%,
-    rgba(235,255,242,0.98) 0%, rgba(120,255,175,0.55) 12%, rgba(0,0,0,0) 46%);
-  opacity: 0;
-  animation: bloom-flash 1100ms ease-out 1600ms forwards;   /* peaks at the deepest dive */
-}
-@keyframes bloom-flash {
-  0%   { opacity: 0;    transform: scale(0.3); }
-  35%  { opacity: 0.98; transform: scale(1); }
-  100% { opacity: 0;    transform: scale(2.6); }
+@media (prefers-reduced-motion: reduce) {
+  .cy-charfx, .cy-glyph, .cy-glyph.glitch { animation: none !important; transition: none !important; }
 }
 
 /* ════════════════════════════════════════════════════════════════

@@ -61,13 +61,15 @@ SPDX-License-Identifier: BSD-3-Clause
     logoShowHold:   2000,   /* logo centered (incl. warm-up) before it slides up */
     slideDur:        600,   /* logo slide-to-top duration */
     preTextGap:     1000,   /* logo reaches top → boot text begins */
-    holdAfterBoot:  1800,   /* boot log held before your site loads into the tube */
+    holdAfterBoot:  1600,   /* boot log held before your site loads into the tube */
     revealFade:      900,   /* boot console fades out → your site shows in the tube */
-    sitePrehold:    1500,   /* your site shown in the tube (CRT skin) before the flight */
-    pushDur:        4200,   /* the WHOLE continuous flight: tube → glass → column.
-                               Slow + cinematic. The deepest push is at offset 0.46
-                               (~1930ms); the cy-glass/warp/bloom CSS animations are
-                               timed to peak there. */
+    sitePrehold:    1300,   /* your site shown in the tube before we zoom the char */
+    /* ── The single-character crossing (charZoom) ── */
+    stageIn:         550,   /* dark stage + small glyph fade in (focus before moving) */
+    zoomInDur:      1600,   /* glyph zooms up to fill the screen (slow, cinematic) */
+    distortDur:      720,   /* electronic distortion — "going through the screen" */
+    resolveDur:      420,   /* distortion settles into a clean letter */
+    zoomOutDur:     1900,   /* gently zoom back out as the clean page emerges */
     blankHold:      1000,   /* (legacy) tube blank hold — reduced-motion path */
     siteFade:        900    /* (legacy) main-page fade-in */
   };
@@ -219,97 +221,59 @@ SPDX-License-Identifier: BSD-3-Clause
           if (consoleEl.parentNode) consoleEl.parentNode.removeChild(consoleEl);
         }, T.revealFade + 120);
       }
-      setTimeout(pushAndDissolve, T.revealFade + T.sitePrehold);
+      setTimeout(charZoom, T.revealFade + T.sitePrehold);
     }
 
-    /* Stage 2 — THE FLIGHT. One continuous camera move carries the page from the
-       tube, through the glass (deepest push), and down into the clean column — a
-       SINGLE transform animation on the container, so there is no element swap,
-       no mid-flight layout reflow, and no velocity seam. The layout only becomes
-       "really" clean at the very end (landClean), once motion has stopped, so the
-       reflow can't drop frames. Three depth layers sell the crossing. */
-    function pushAndDissolve() {
-      var R = window.CyResponsive;
-      var content = screen.querySelector('main') || screen;
+    /* Stage 2 — THROUGH A SINGLE CHARACTER. Zoom up on one glyph, distort it
+       electronically (going through the screen), resolve to a clean letter, then
+       gently zoom back out to reveal the clean page. The glyph's scale is ONE
+       continuous WAAPI animation (zoom in → hold → zoom out) with a hold in the
+       middle for the distortion, so the motion never stops or jerks. */
+    function charZoom() {
+      var heading = screen.querySelector('h1, h2, h3');
+      var ch = (heading && heading.textContent.trim().charAt(0)) || 'C';
 
-      document.documentElement.classList.add('cy-dissolve');  /* melt glow/scanlines/bezel */
+      var stage = el('div', 'cy-charfx');
+      var glyph = el('div', 'cy-glyph', ch);
+      stage.appendChild(glyph);
+      document.body.appendChild(stage);
+      requestAnimationFrame(function () { stage.classList.add('in'); });   /* fade the stage in */
 
-      document.body.appendChild(el('div', 'cy-fx cy-glass'));
-      document.body.appendChild(el('div', 'cy-fx cy-warp'));
-      document.body.appendChild(el('div', 'cy-fx cy-bloom'));
+      var zin = T.zoomInDur, dist = T.distortDur, res = T.resolveDur, zout = T.zoomOutDur;
+      var total = zin + dist + res + zout;
+      var offIn   = zin / total;
+      var offHold = (zin + dist + res) / total;
 
-      var ft = R ? R.finalTransform() : { scale: 1, x: 0, y: 0 };
+      /* Start the flight once the stage has faded in, so we're focused before we
+         move. */
+      setTimeout(function () {
+        /* One continuous scale: small → fills the screen → (hold) → zoom out. */
+        glyph.animate([
+          { transform: 'scale(0.28)', easing: 'cubic-bezier(0.4, 0, 0.5, 1)' },      /* accelerate in */
+          { transform: 'scale(1.4)',  offset: offIn,   easing: 'linear' },
+          { transform: 'scale(1.4)',  offset: offHold, easing: 'cubic-bezier(0.35, 0, 0.15, 1)' }, /* hold, then ease out */
+          { transform: 'scale(0.6)' }
+        ], { duration: total, fill: 'forwards' });
 
-      /* Measure the content's box in the tube (now) and in the clean column
-         (by toggling cy-clean synchronously — no paint happens between, so no
-         flash). These bound the flight's start and landing. */
-      var tube = content.getBoundingClientRect();
-      document.documentElement.classList.add('cy-clean');
-      var keepT = container.style.transform, keepTr = container.style.transition;
-      container.style.transition = 'none';
-      container.style.transform  = 'none';
-      var col = content.getBoundingClientRect();
-      document.documentElement.classList.remove('cy-clean');
-      container.style.transition = keepTr;
-      container.style.transform  = keepT;
-
-      /* Container transform (top-left origin) that lands the content's top-left
-         at (TL,TT) with the given on-screen width. */
-      var Lx = (tube.left - ft.x) / ft.scale, Ly = (tube.top - ft.y) / ft.scale;
-      function place(TL, TT, W) {
-        var S = ft.scale * (W / tube.width);
-        return 'translate(' + (TL - S * Lx) + 'px,' + (TT - S * Ly) + 'px) scale(' + S + ')';
-      }
-      var startT = place(tube.left, tube.top, tube.width);      /* == current */
-      var landT  = place(col.left,  col.top,  col.width);       /* clean column */
-      /* Peak anchored at the SAME top-left as the column, scaled DIVE×. Two wins:
-         the left-aligned text keeps its line-beginnings on-screen (readable
-         through the whole dive, not swimming off a corner), and — since peak and
-         land share a top-left — the second half is a pure scale-down with ZERO
-         drift: the cleanest possible settle. */
-      var DIVE = 3;                                             /* depth of the dive */
-      var peakT = place(col.left, col.top, col.width * DIVE);
-
-      /* One continuous flight: tube → deepest push → column. ease-in-out on BOTH
-         legs means each leg starts and ends at ~0 velocity, so the whole path is
-         smooth (a gentle hang at the deepest point, in the light burst). */
-      container.style.willChange = 'transform';
-      container.style.transition = 'none';
-      var flight = container.animate([
-        { transform: startT, easing: 'cubic-bezier(0.45, 0, 0.55, 1)' },
-        { transform: peakT, offset: 0.46, easing: 'cubic-bezier(0.45, 0, 0.55, 1)' },
-        { transform: landT }
-      ], { duration: T.pushDur, fill: 'forwards' });
-
-      flight.onfinish = function () { landClean(landT); };
-    }
-
-    /* Motion has stopped at the column. NOW swap to the real clean layout: the
-       reflow happens at rest (no frame to drop) and the content is already
-       visually in the column, so there is no snap. */
-    function landClean(landT) {
-      var header = screen.querySelector('header');
-
-      container.style.transition = 'none';
-      container.style.transform  = landT;      /* commit before cancelling the anim */
-      if (container.getAnimations) {
-        container.getAnimations().forEach(function (a) { a.cancel(); });
-      }
-
-      if (header) header.style.opacity = '0';
-      document.documentElement.classList.add('cy-clean');
-      document.documentElement.classList.remove('cy-reveal', 'cy-dissolve');
-      container.style.transform  = 'none';
-      container.style.willChange = '';
-
-      if (header) {
-        requestAnimationFrame(function () {
-          header.style.transition = 'opacity 600ms ease';
-          header.style.opacity = '1';
-          setTimeout(function () { header.style.transition = header.style.opacity = ''; }, 680);
-        });
-      }
-      finish(consoleEl, off, flash);
+        setTimeout(function () { glyph.classList.add('glitch'); }, zin);             /* distort */
+        setTimeout(function () {                                                     /* resolve to clean letter */
+          glyph.classList.remove('glitch');
+          glyph.classList.add('clean');
+        }, zin + dist);
+        setTimeout(function () {                                                     /* reveal page as we zoom out */
+          document.documentElement.classList.add('cy-clean');
+          document.documentElement.classList.remove('cy-reveal', 'cy-dissolve');
+          container.style.transition = 'none';
+          container.style.transform  = 'none';
+          if (consoleEl) consoleEl.style.display = 'none';
+          stage.style.transition = 'opacity ' + zout + 'ms ease-in';
+          stage.style.opacity = '0';                                                /* dark sheet + glyph fade → page emerges */
+        }, zin + dist + res);
+        setTimeout(function () {
+          if (stage.parentNode) stage.parentNode.removeChild(stage);
+          finish(consoleEl, off, flash);
+        }, total + 150);
+      }, T.stageIn);
     }
 
     var frame = document.querySelector('.terminal-frame');
@@ -342,8 +306,8 @@ SPDX-License-Identifier: BSD-3-Clause
     document.documentElement.style.height = '';
     document.body.style.height = '';
 
-    /* Remove any through-the-glass FX layers. */
-    var fx = document.querySelectorAll('.cy-fx');
+    /* Remove any leftover through-the-screen FX / character stage. */
+    var fx = document.querySelectorAll('.cy-fx, .cy-charfx');
     for (var f = 0; f < fx.length; f++) {
       if (fx[f].parentNode) fx[f].parentNode.removeChild(fx[f]);
     }
