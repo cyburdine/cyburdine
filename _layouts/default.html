@@ -3,13 +3,15 @@ SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
 SPDX-License-Identifier: BSD-3-Clause
 -->
 <!DOCTYPE html>
+{%- comment -%} Per-build version to bust the CDN/browser cache on every deploy. {%- endcomment -%}
+{%- assign asset_v = site.time | date: '%s' -%}
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self'; connect-src 'self';">
   <title>{{ page.title }}</title>
-  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/style.css?v={{ asset_v }}">
 </head>
 <body>
   <div class="terminal-wrapper">
@@ -33,9 +35,9 @@ SPDX-License-Identifier: BSD-3-Clause
 
 <!-- site javascripts -->
   <!-- boot.js first: sets the pre-paint guard + boot flag before others parse -->
-  <script src="{{ '/assets/js/boot.js' | relative_url }}"></script>
-  <script src="{{ '/assets/js/render.js' | relative_url }}"></script>
-  <script src="{{ '/assets/js/video_glitch.js' | relative_url }}"></script>
-  <script src="{{ '/assets/js/responsive.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/boot.js' | relative_url }}?v={{ asset_v }}"></script>
+  <script src="{{ '/assets/js/render.js' | relative_url }}?v={{ asset_v }}"></script>
+  <script src="{{ '/assets/js/video_glitch.js' | relative_url }}?v={{ asset_v }}"></script>
+  <script src="{{ '/assets/js/responsive.js' | relative_url }}?v={{ asset_v }}"></script>
 </body>
 </html>
