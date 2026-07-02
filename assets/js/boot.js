@@ -319,12 +319,19 @@ SPDX-License-Identifier: BSD-3-Clause
       }, zin - ramp);
 
       /* At the apex (inside the immense glow): melt the CRT skin so we emerge to
-         a clean letter, with a soft light burst. */
+         a clean letter, with a light burst + a burst of digital noise — like
+         passing INTO the monitor. */
       setTimeout(function () {
         document.documentElement.classList.add('cy-dissolve');
         var flash = el('div', 'cy-flash');
         document.body.appendChild(flash);
         setTimeout(function () { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 900);
+        var noise = fireNoise();
+        setTimeout(function () {
+          noise.stop = true;
+          if (noise.id) cancelAnimationFrame(noise.id);
+          if (noise.el.parentNode) noise.el.parentNode.removeChild(noise.el);
+        }, 820);
       }, zin);
 
       setTimeout(function () { landCleanChar(landT); }, total + 60);   /* zoom-out done → clean layout at rest */
@@ -366,6 +373,29 @@ SPDX-License-Identifier: BSD-3-Clause
       return null;
     }
 
+    /* A full-screen canvas of animated digital noise (TV static) — fired with the
+       flash so the pass-through feels like plunging INTO the monitor. */
+    function fireNoise() {
+      var cv = el('canvas', 'cy-noise');
+      document.body.appendChild(cv);
+      var ctx = cv.getContext('2d');
+      var w = cv.width  = Math.max(200, Math.floor(window.innerWidth  / 4));
+      var h = cv.height = Math.max(150, Math.floor(window.innerHeight / 4));
+      var handle = { id: 0, stop: false, el: cv };
+      (function frame() {
+        if (handle.stop) return;
+        var img = ctx.createImageData(w, h), d = img.data;
+        for (var i = 0; i < d.length; i += 4) {
+          var v = (Math.random() * 255) | 0;
+          d[i] = d[i + 1] = d[i + 2] = v;
+          d[i + 3] = (Math.random() * 255) | 0;
+        }
+        ctx.putImageData(img, 0, 0);
+        handle.id = requestAnimationFrame(frame);
+      })();
+      return handle;
+    }
+
     var frame = document.querySelector('.terminal-frame');
     if (frame && typeof frame.decode === 'function') {
       frame.decode().then(runTimeline, runTimeline);
@@ -397,7 +427,7 @@ SPDX-License-Identifier: BSD-3-Clause
     document.body.style.height = '';
 
     /* Remove any leftover through-the-screen FX / character stage. */
-    var fx = document.querySelectorAll('.cy-fx, .cy-charfx, .cy-flash, .cy-scanbloom');
+    var fx = document.querySelectorAll('.cy-fx, .cy-charfx, .cy-flash, .cy-scanbloom, .cy-noise');
     for (var f = 0; f < fx.length; f++) {
       if (fx[f].parentNode) fx[f].parentNode.removeChild(fx[f]);
     }
