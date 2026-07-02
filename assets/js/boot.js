@@ -266,18 +266,21 @@ SPDX-License-Identifier: BSD-3-Clause
       var startT = place(mainTube.left, mainTube.top, mainTube.width);  /* == current */
       var landT  = place(mainClean.left, mainClean.top, mainClean.width);/* clean column at rest */
 
-      /* Focal point placed ON the glyph body (up-left, on a stroke — not the
-         hollow centre) so the DEEP zoom fills the screen with the letter's green
-         glow. centerAt(sc) keeps that point centred at any scale. */
-      var fpx = charTube.left + charTube.width * 0.19;   /* on the glyph's stroke */
-      var fpy = charTube.top  + charTube.height * 0.5;
-      function centerAt(sc) {
-        return 'translate(' + (window.innerWidth  / 2 - sc * (fpx - ft.x) / ft.scale) + 'px,' +
-               (window.innerHeight / 2 - sc * (fpy - ft.y) / ft.scale) + 'px) scale(' + sc + ')';
+      /* Pin the letter's TOP-LEFT corner where it is and scale ABOUT it, so the
+         upper-left corner stays fixed as we zoom into the glyph — its green glow
+         grows from that corner to fill the screen (rather than the page panning
+         to re-centre the character). scaleAbout(ft.scale) === the resting view,
+         so the zoom starts with no jump. The anchor sits ON the glyph's stroke
+         (near its upper-left) so the green glow fills around the fixed point,
+         rather than growing away from an empty bounding-box corner. */
+      var apx = charTube.left + charTube.width * 0.2;
+      var apy = charTube.top  + charTube.height * 0.42;
+      function scaleAbout(sc) {
+        return 'translate(' + (apx - sc * (apx - ft.x) / ft.scale) + 'px,' +
+               (apy - sc * (apy - ft.y) / ft.scale) + 'px) scale(' + sc + ')';
       }
       /* So deep the glyph is ~5.5× the viewport tall → its glow fills the space. */
       var Sdeep = ft.scale * (5.5 * window.innerHeight / charTube.height);
-      var deepT = centerAt(Sdeep);
 
       var zin = T.zoomInDur, zout = T.zoomOutDur, ramp = T.crossRamp;
       var total = zin + zout, offApex = zin / total;
@@ -294,7 +297,7 @@ SPDX-License-Identifier: BSD-3-Clause
         var sc = ft.scale * Math.pow(Sdeep / ft.scale, f);
         /* the last sample IS the apex (deepT); its easing governs the zoom-OUT. */
         var e = (i === N) ? 'cubic-bezier(0.25, 0, 0.2, 1)' : 'linear';
-        frames.push({ transform: centerAt(sc), offset: offApex * f, easing: e });
+        frames.push({ transform: scaleAbout(sc), offset: offApex * f, easing: e });
       }
       frames.push({ transform: landT, offset: 1 });
 
