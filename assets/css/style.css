@@ -702,25 +702,24 @@ html.cy-redraw main, html.cy-redraw header {
   100% { clip-path: inset(0 0 0 0); }
 }
 
-/* GLITCH — electronic distortion of the zoomed-in text. Applied to `main` (a
-   transparent-bg element) so the RGB channel split (drop-shadow) follows the
-   GLYPHS, not a box edge. Offsets are in px on the un-zoomed element, so the
-   container zoom scales them up into a big split. Plus a horizontal jitter shake
-   and flicker. Stepped so it reads as digital, not a smooth tween. */
-main.cy-glitch { animation: el-glitch 0.82s steps(1, end) both; }
-@keyframes el-glitch {
-  0%   { filter: drop-shadow(10px 0 rgba(255,0,90,0.95)) drop-shadow(-10px 0 rgba(0,220,255,0.95)) brightness(1.3);  transform: translate(0,0) scale(1);        opacity: 1; }
-  12%  { filter: drop-shadow(-22px 4px rgba(255,0,90,0.95)) drop-shadow(22px -4px rgba(0,220,255,0.95)) brightness(1.7); transform: translate(-9px,6px) scale(1.03); opacity: 0.8; }
-  24%  { filter: drop-shadow(28px -4px rgba(255,0,90,1)) drop-shadow(-28px 4px rgba(0,220,255,1)) brightness(1.2);   transform: translate(11px,-7px) scale(0.98); opacity: 0.5; }
-  36%  { filter: drop-shadow(-18px 7px rgba(255,0,90,0.95)) drop-shadow(18px -7px rgba(0,220,255,0.95)) brightness(2); transform: translate(-7px,-5px) scale(1.06); opacity: 1; }
-  48%  { filter: drop-shadow(24px 6px rgba(255,0,90,1)) drop-shadow(-24px -6px rgba(0,220,255,1)) brightness(1.1);   transform: translate(10px,8px) scale(0.97);  opacity: 0.45; }
-  60%  { filter: drop-shadow(-30px 0 rgba(255,0,90,1)) drop-shadow(30px 0 rgba(0,220,255,1)) brightness(2.3);        transform: translate(-12px,4px) scale(1.08); opacity: 1; }
-  72%  { filter: drop-shadow(16px -6px rgba(255,0,90,0.9)) drop-shadow(-16px 6px rgba(0,220,255,0.9)) brightness(1.3); transform: translate(7px,-4px) scale(1.01); opacity: 0.6; }
-  86%  { filter: drop-shadow(-9px 0 rgba(255,0,90,0.8)) drop-shadow(9px 0 rgba(0,220,255,0.8)) brightness(1.6);      transform: translate(-3px,2px) scale(1.03); opacity: 0.95; }
-  100% { filter: none; transform: translate(0,0) scale(1); opacity: 1; }
+/* PIXELS — at the deepest zoom the letter's green glow fills the whole screen;
+   this overlay reveals the CRT pixel/phosphor structure of that glow (a dark
+   cell grid + faint R/G/B sub-pixel stripes), then fades as the letter resolves
+   clean. Viewport-fixed so the cell size is constant regardless of the zoom. */
+.cy-pixels {
+  position: fixed; inset: 0; z-index: 100040; pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+  background:
+    repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 40px, rgba(0,0,0,0.82) 40px 47px),
+    repeating-linear-gradient(to right,  rgba(0,0,0,0) 0 40px, rgba(0,0,0,0.82) 40px 47px),
+    repeating-linear-gradient(to right,
+      rgba(255,60,70,0.18) 0 4px, rgba(0,0,0,0) 4px 8px,
+      rgba(70,120,255,0.18) 8px 12px, rgba(0,0,0,0) 12px 47px);
 }
+.cy-pixels.on { opacity: 1; }
 
-/* Light burst as we break through the plane — blooms and fades over the screen. */
+/* Light burst as we break through into the clean letter — blooms and fades. */
 .cy-flash {
   position: fixed; inset: 0; z-index: 100050;
   pointer-events: none; transform-origin: 50% 50%;
@@ -737,9 +736,8 @@ main.cy-glitch { animation: el-glitch 0.82s steps(1, end) both; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .boot-console.cy-clearing, html.cy-redraw main, html.cy-redraw header,
-  main.cy-glitch { animation: none !important; }
-  .cy-flash { display: none; }
+  .boot-console.cy-clearing, html.cy-redraw main, html.cy-redraw header { animation: none !important; }
+  .cy-flash, .cy-pixels { display: none; }
 }
 
 /* ════════════════════════════════════════════════════════════════

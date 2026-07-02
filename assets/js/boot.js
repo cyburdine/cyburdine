@@ -67,11 +67,11 @@ SPDX-License-Identifier: BSD-3-Clause
     clearBlank:      280,   /* blank screen beat after the clear */
     redrawDur:       800,   /* draw the site back in, line-by-line */
     sitePrehold:    1200,   /* site shown in the tube before we zoom into a char */
-    /* ── Zoom into a character → distort → zoom back out (charZoom) ── */
-    zoomInDur:      1600,   /* zoom deep into the character (slow, cinematic) */
-    distortDur:      720,   /* electronic distortion — "through the screen" */
-    resolveDur:      420,   /* distortion settles + CRT skin melts off */
-    zoomOutDur:     1900,   /* gently zoom back out to the clean site */
+    /* ── Slow zoom into the letter → pixels → clean → zoom back out (charZoom) ── */
+    zoomInDur:      3800,   /* SLOW continuous zoom the whole way into the glow */
+    pixelDur:        850,   /* glow fills → CRT pixels revealed */
+    resolveDur:      650,   /* pixels → clean letter (CRT skin melts) */
+    zoomOutDur:     2600,   /* zoom back out to the full clean web page */
     blankHold:      1000,   /* (legacy) tube blank hold — reduced-motion path */
     siteFade:        900    /* (legacy) main-page fade-in */
   };
@@ -267,42 +267,57 @@ SPDX-License-Identifier: BSD-3-Clause
       var startT = place(mainTube.left, mainTube.top, mainTube.width);  /* == current */
       var landT  = place(mainClean.left, mainClean.top, mainClean.width);/* clean column at rest */
 
-      /* Deep zoom centred on the focal character. centerScale keeps the glyph
-         centred at any scale, so we can PUNCH deeper through the distortion. */
-      var ccx = charTube.left + charTube.width / 2, ccy = charTube.top + charTube.height / 2;
-      var Sp = ft.scale * (0.62 * window.innerHeight / charTube.height);
-      function centerScale(sc) {
-        return 'translate(' + (window.innerWidth  / 2 - sc * (ccx - ft.x) / ft.scale) + 'px,' +
-               (window.innerHeight / 2 - sc * (ccy - ft.y) / ft.scale) + 'px) scale(' + sc + ')';
+      /* Focal point placed ON the glyph body (up-left, on a stroke — not the
+         hollow centre) so the DEEP zoom fills the screen with the letter's green
+         glow. centerAt(sc) keeps that point centred at any scale. */
+      var fpx = charTube.left + charTube.width * 0.19;   /* on the glyph's stroke */
+      var fpy = charTube.top  + charTube.height * 0.5;
+      function centerAt(sc) {
+        return 'translate(' + (window.innerWidth  / 2 - sc * (fpx - ft.x) / ft.scale) + 'px,' +
+               (window.innerHeight / 2 - sc * (fpy - ft.y) / ft.scale) + 'px) scale(' + sc + ')';
       }
-      var peakT  = centerScale(Sp);
-      var punchT = centerScale(Sp * 1.5);   /* accelerate DEEPER through the glitch — "pulled through" */
+      /* So deep the glyph is ~5.5× the viewport tall → its glow fills the space. */
+      var Sdeep = ft.scale * (5.5 * window.innerHeight / charTube.height);
+      var deepT = centerAt(Sdeep);
 
-      var zin = T.zoomInDur, dist = T.distortDur, res = T.resolveDur, zout = T.zoomOutDur;
-      var total = zin + dist + res + zout;
-      var offIn = zin / total, offHold = (zin + dist + res) / total;
+      var zin = T.zoomInDur, pix = T.pixelDur, res = T.resolveDur, zout = T.zoomOutDur;
+      var total = zin + pix + res + zout;
+      var offIn = zin / total, offHold = (zin + pix + res) / total;
 
-      /* One continuous flight: whole site → into the glyph → PUNCH through → out. */
+      /* ONE continuous move. The zoom-IN is sampled at exponential (constant-
+         RATIO) scales so it reads as a steady, slow push the whole way in rather
+         than lurching. Then it holds at the deep glow, then eases back out to the
+         clean column. */
+      var frames = [{ transform: startT, offset: 0, easing: 'linear' }];
+      var N = 9;
+      for (var i = 1; i <= N; i++) {
+        var f = i / N;
+        var sc = ft.scale * Math.pow(Sdeep / ft.scale, f);
+        frames.push({ transform: centerAt(sc), offset: offIn * f, easing: 'linear' });
+      }
+      frames.push({ transform: deepT, offset: offHold, easing: 'cubic-bezier(0.35, 0, 0.2, 1)' });
+      frames.push({ transform: landT, offset: 1 });
+
       container.style.willChange = 'transform';
       container.style.transition = 'none';
-      container.animate([
-        { transform: startT,  easing: 'cubic-bezier(0.4, 0, 0.5, 1)' },
-        { transform: peakT,   offset: offIn,   easing: 'cubic-bezier(0.6, 0, 0.9, 0.4)' }, /* accelerate in */
-        { transform: punchT,  offset: offHold, easing: 'cubic-bezier(0.3, 0, 0.2, 1)' },   /* punch deeper, then ease */
-        { transform: landT }
-      ], { duration: total, fill: 'forwards' });
+      container.animate(frames, { duration: total, fill: 'forwards' });
 
-      setTimeout(function () { content.classList.add('cy-glitch'); }, zin);  /* electronic distortion (on the text) */
-      setTimeout(function () {                                               /* light burst as we break through */
+      /* glow fills → PIXELS. */
+      var pixels = el('div', 'cy-pixels');
+      document.body.appendChild(pixels);
+      setTimeout(function () { pixels.classList.add('on'); }, zin);
+
+      /* PIXELS → CLEAN letter: pixels fade, CRT skin melts, a soft light burst. */
+      setTimeout(function () {
+        pixels.classList.remove('on');
+        document.documentElement.classList.add('cy-dissolve');
         var flash = el('div', 'cy-flash');
         document.body.appendChild(flash);
         setTimeout(function () { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 900);
-      }, zin + Math.round(dist * 0.5));
-      setTimeout(function () {                                               /* resolve: melt CRT skin → clean glyph */
-        content.classList.remove('cy-glitch');
-        document.documentElement.classList.add('cy-dissolve');
-      }, zin + dist);
-      setTimeout(function () { landCleanChar(landT); }, total + 60);         /* at rest → clean layout */
+      }, zin + pix);
+      setTimeout(function () { if (pixels.parentNode) pixels.parentNode.removeChild(pixels); }, zin + pix + res + 200);
+
+      setTimeout(function () { landCleanChar(landT); }, total + 60);   /* zoom-out done → clean layout at rest */
     }
 
     /* Motion has stopped at the column. Swap to the real clean layout at rest so
@@ -372,7 +387,7 @@ SPDX-License-Identifier: BSD-3-Clause
     document.body.style.height = '';
 
     /* Remove any leftover through-the-screen FX / character stage. */
-    var fx = document.querySelectorAll('.cy-fx, .cy-charfx, .cy-flash');
+    var fx = document.querySelectorAll('.cy-fx, .cy-charfx, .cy-flash, .cy-pixels');
     for (var f = 0; f < fx.length; f++) {
       if (fx[f].parentNode) fx[f].parentNode.removeChild(fx[f]);
     }
