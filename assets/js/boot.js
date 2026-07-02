@@ -267,27 +267,37 @@ SPDX-License-Identifier: BSD-3-Clause
       var startT = place(mainTube.left, mainTube.top, mainTube.width);  /* == current */
       var landT  = place(mainClean.left, mainClean.top, mainClean.width);/* clean column at rest */
 
-      /* Deep zoom centred on the focal character so it dominates the screen. */
+      /* Deep zoom centred on the focal character. centerScale keeps the glyph
+         centred at any scale, so we can PUNCH deeper through the distortion. */
       var ccx = charTube.left + charTube.width / 2, ccy = charTube.top + charTube.height / 2;
       var Sp = ft.scale * (0.62 * window.innerHeight / charTube.height);
-      var peakT = 'translate(' + (window.innerWidth / 2 - Sp * (ccx - ft.x) / ft.scale) + 'px,' +
-                  (window.innerHeight / 2 - Sp * (ccy - ft.y) / ft.scale) + 'px) scale(' + Sp + ')';
+      function centerScale(sc) {
+        return 'translate(' + (window.innerWidth  / 2 - sc * (ccx - ft.x) / ft.scale) + 'px,' +
+               (window.innerHeight / 2 - sc * (ccy - ft.y) / ft.scale) + 'px) scale(' + sc + ')';
+      }
+      var peakT  = centerScale(Sp);
+      var punchT = centerScale(Sp * 1.5);   /* accelerate DEEPER through the glitch — "pulled through" */
 
       var zin = T.zoomInDur, dist = T.distortDur, res = T.resolveDur, zout = T.zoomOutDur;
       var total = zin + dist + res + zout;
       var offIn = zin / total, offHold = (zin + dist + res) / total;
 
-      /* One continuous flight: whole site → into the glyph → hold → out to column. */
+      /* One continuous flight: whole site → into the glyph → PUNCH through → out. */
       container.style.willChange = 'transform';
       container.style.transition = 'none';
       container.animate([
-        { transform: startT, easing: 'cubic-bezier(0.4, 0, 0.5, 1)' },
-        { transform: peakT,  offset: offIn,   easing: 'linear' },
-        { transform: peakT,  offset: offHold, easing: 'cubic-bezier(0.35, 0, 0.15, 1)' },
+        { transform: startT,  easing: 'cubic-bezier(0.4, 0, 0.5, 1)' },
+        { transform: peakT,   offset: offIn,   easing: 'cubic-bezier(0.6, 0, 0.9, 0.4)' }, /* accelerate in */
+        { transform: punchT,  offset: offHold, easing: 'cubic-bezier(0.3, 0, 0.2, 1)' },   /* punch deeper, then ease */
         { transform: landT }
       ], { duration: total, fill: 'forwards' });
 
       setTimeout(function () { content.classList.add('cy-glitch'); }, zin);  /* electronic distortion (on the text) */
+      setTimeout(function () {                                               /* light burst as we break through */
+        var flash = el('div', 'cy-flash');
+        document.body.appendChild(flash);
+        setTimeout(function () { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 900);
+      }, zin + Math.round(dist * 0.5));
       setTimeout(function () {                                               /* resolve: melt CRT skin → clean glyph */
         content.classList.remove('cy-glitch');
         document.documentElement.classList.add('cy-dissolve');
@@ -362,7 +372,7 @@ SPDX-License-Identifier: BSD-3-Clause
     document.body.style.height = '';
 
     /* Remove any leftover through-the-screen FX / character stage. */
-    var fx = document.querySelectorAll('.cy-fx, .cy-charfx');
+    var fx = document.querySelectorAll('.cy-fx, .cy-charfx, .cy-flash');
     for (var f = 0; f < fx.length; f++) {
       if (fx[f].parentNode) fx[f].parentNode.removeChild(fx[f]);
     }
