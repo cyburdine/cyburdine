@@ -263,43 +263,57 @@ SPDX-License-Identifier: BSD-3-Clause
         var S = ft.scale * (W / mainTube.width);
         return 'translate(' + (TL - S * Lx) + 'px,' + (TT - S * Ly) + 'px) scale(' + S + ')';
       }
-      var startT = place(mainTube.left, mainTube.top, mainTube.width);  /* == current */
       var landT  = place(mainClean.left, mainClean.top, mainClean.width);/* clean column at rest */
 
-      /* Pin the letter's TOP-LEFT corner where it is and scale ABOUT it, so the
-         upper-left corner stays fixed as we zoom into the glyph — its green glow
-         grows from that corner to fill the screen (rather than the page panning
-         to re-centre the character). scaleAbout(ft.scale) === the resting view,
-         so the zoom starts with no jump. The anchor sits ON the glyph's stroke
-         (near its upper-left) so the green glow fills around the fixed point,
-         rather than growing away from an empty bounding-box corner. */
+      /* Pin the letter's TOP-LEFT corner where it is and scale ABOUT it (see
+         about() below), so the upper-left stays fixed as we zoom into the glyph
+         — its green glow grows from that corner to fill the screen rather than
+         the page panning to re-centre. The anchor sits ON the glyph's stroke
+         (near its upper-left) so the glow fills around the fixed point, not an
+         empty bounding-box corner. */
       var apx = charTube.left + charTube.width * 0.2;
       var apy = charTube.top  + charTube.height * 0.42;
-      function scaleAbout(sc) {
-        return 'translate(' + (apx - sc * (apx - ft.x) / ft.scale) + 'px,' +
-               (apy - sc * (apy - ft.y) / ft.scale) + 'px) scale(' + sc + ')';
-      }
       /* So deep the glyph is ~5.5× the viewport tall → its glow fills the space. */
       var Sdeep = ft.scale * (5.5 * window.innerHeight / charTube.height);
 
       var zin = T.zoomInDur, zout = T.zoomOutDur, ramp = T.crossRamp;
       var total = zin + zout, offApex = zin / total;
 
-      /* ONE continuous move that NEVER stops or holds: a slow steady push all the
-         way in (sampled at exponential/constant-ratio scales so it doesn't lurch),
-         straight through the apex, then back out to the clean column. The apex is
-         a turnaround, not a dwell — and the immense glow masks the direction flip
-         so it reads as passing THROUGH the screen. */
-      var frames = [{ transform: startT, offset: 0, easing: 'linear' }];
-      var N = 9;
-      for (var i = 1; i <= N; i++) {
-        var f = i / N;
-        var sc = ft.scale * Math.pow(Sdeep / ft.scale, f);
-        /* the last sample IS the apex (deepT); its easing governs the zoom-OUT. */
-        var e = (i === N) ? 'cubic-bezier(0.25, 0, 0.2, 1)' : 'linear';
-        frames.push({ transform: scaleAbout(sc), offset: offApex * f, easing: e });
+      /* ONE continuous move, FINELY sampled for smoothness. Two ideas:
+         · scale changes EXPONENTIALLY (constant ratio) so the zoom is
+           perceptually steady rather than rushing then crawling;
+         · time is eased (smoothstep) so it starts from rest, glides through the
+           apex turnaround at ~0 velocity (hidden by the glow), and settles onto
+           the page — no abrupt start and no velocity kink at the seam.
+         Many small steps mean the linear tween between them reads as one smooth
+         curve. */
+      function tstr(st) { return 'translate(' + st.Tx + 'px,' + st.Ty + 'px) scale(' + st.S + ')'; }
+      function about(sc) {
+        return { S: sc, Tx: apx - sc * (apx - ft.x) / ft.scale, Ty: apy - sc * (apy - ft.y) / ft.scale };
       }
-      frames.push({ transform: landT, offset: 1 });
+      function ss(x) { return x * x * (3 - 2 * x); }                 /* smoothstep */
+      function lerp(a, b, e) {
+        return { S: a.S + (b.S - a.S) * e, Tx: a.Tx + (b.Tx - a.Tx) * e, Ty: a.Ty + (b.Ty - a.Ty) * e };
+      }
+
+      var S1 = ft.scale * (mainClean.width / mainTube.width);        /* landing scale */
+      var land  = { S: S1, Tx: mainClean.left - S1 * Lx, Ty: mainClean.top - S1 * Ly };
+      var apexS = about(Sdeep);
+
+      var frames = [], Nin = 22, Nout = 18;
+      /* zoom IN: whole page → deep into the glow (exponential scale, eased time). */
+      for (var i = 0; i <= Nin; i++) {
+        var u = i / Nin;
+        var sc = ft.scale * Math.pow(Sdeep / ft.scale, ss(u));
+        frames.push({ transform: tstr(about(sc)), offset: offApex * u, easing: 'linear' });
+      }
+      /* zoom OUT: deep glow → clean column (exponential scale via g, eased time). */
+      for (var j = 1; j <= Nout; j++) {
+        var v = j / Nout;
+        var scv = Sdeep * Math.pow(S1 / Sdeep, ss(v));
+        var g = (S1 - Sdeep) !== 0 ? (scv - Sdeep) / (S1 - Sdeep) : v;
+        frames.push({ transform: tstr(lerp(apexS, land, g)), offset: offApex + (1 - offApex) * v, easing: 'linear' });
+      }
 
       container.style.willChange = 'transform';
       container.style.transition = 'none';
