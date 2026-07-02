@@ -61,15 +61,17 @@ SPDX-License-Identifier: BSD-3-Clause
     logoShowHold:   2000,   /* logo centered (incl. warm-up) before it slides up */
     slideDur:        600,   /* logo slide-to-top duration */
     preTextGap:     1000,   /* logo reaches top → boot text begins */
-    holdAfterBoot:  1600,   /* boot log held before your site loads into the tube */
-    revealFade:      900,   /* boot console fades out → your site shows in the tube */
-    sitePrehold:    1300,   /* your site shown in the tube before we zoom the char */
-    /* ── The single-character crossing (charZoom) ── */
-    stageIn:         550,   /* dark stage + small glyph fade in (focus before moving) */
-    zoomInDur:      1600,   /* glyph zooms up to fill the screen (slow, cinematic) */
-    distortDur:      720,   /* electronic distortion — "going through the screen" */
-    resolveDur:      420,   /* distortion settles into a clean letter */
-    zoomOutDur:     1900,   /* gently zoom back out as the clean page emerges */
+    holdAfterBoot:  1400,   /* finished boot log held before the screen clears */
+    /* ── Old-computer CLEAR + REDRAW (no dissolve) ── */
+    clearDur:        550,   /* erase the boot log top→down */
+    clearBlank:      280,   /* blank screen beat after the clear */
+    redrawDur:       800,   /* draw the site back in, line-by-line */
+    sitePrehold:    1200,   /* site shown in the tube before we zoom into a char */
+    /* ── Zoom into a character → distort → zoom back out (charZoom) ── */
+    zoomInDur:      1600,   /* zoom deep into the character (slow, cinematic) */
+    distortDur:      720,   /* electronic distortion — "through the screen" */
+    resolveDur:      420,   /* distortion settles + CRT skin melts off */
+    zoomOutDur:     1900,   /* gently zoom back out to the clean site */
     blankHold:      1000,   /* (legacy) tube blank hold — reduced-motion path */
     siteFade:        900    /* (legacy) main-page fade-in */
   };
@@ -209,71 +211,124 @@ SPDX-License-Identifier: BSD-3-Clause
       setTimeout(loadSiteInTube, T.holdAfterBoot);
     }
 
-    /* Stage 1 — "load my site first": reveal the real homepage inside the tube,
-       already in the clean font (so nothing re-typesets later) but still wearing
-       the CRT skin (glow, scanlines, bezel). The boot console fades out over it. */
+    /* Stage 1 — CLEAR then REDRAW (old-computer style, NOT a dissolve). The
+       finished boot log is erased top→down, the screen holds blank a beat, then
+       the real site is drawn back in line-by-line. */
     function loadSiteInTube() {
-      document.documentElement.classList.add('cy-reveal');   /* clean font, CRT skin on */
-      document.body.classList.remove('boot-active');         /* real main/footer visible */
-      if (consoleEl) {
-        consoleEl.classList.add('fading');                   /* boot log fades away */
+      if (consoleEl) consoleEl.classList.add('cy-clearing');   /* erase the boot log */
+      setTimeout(function () {
+        if (consoleEl && consoleEl.parentNode) consoleEl.parentNode.removeChild(consoleEl);
+      }, T.clearDur);
+
+      setTimeout(function () {
+        /* Draw the site back in (CRT skin on, clean font so nothing re-typesets). */
+        document.documentElement.classList.add('cy-reveal', 'cy-redraw');
+        document.body.classList.remove('boot-active');
         setTimeout(function () {
-          if (consoleEl.parentNode) consoleEl.parentNode.removeChild(consoleEl);
-        }, T.revealFade + 120);
-      }
-      setTimeout(charZoom, T.revealFade + T.sitePrehold);
+          document.documentElement.classList.remove('cy-redraw');
+        }, T.redrawDur + 80);
+        setTimeout(charZoom, T.redrawDur + T.sitePrehold);
+      }, T.clearDur + T.clearBlank);
     }
 
-    /* Stage 2 — THROUGH A SINGLE CHARACTER. Zoom up on one glyph, distort it
-       electronically (going through the screen), resolve to a clean letter, then
-       gently zoom back out to reveal the clean page. The glyph's scale is ONE
-       continuous WAAPI animation (zoom in → hold → zoom out) with a hold in the
-       middle for the distortion, so the motion never stops or jerks. */
+    /* Stage 2 — ZOOM INTO A CHARACTER OF THE REAL PAGE, distort it electronically
+       ("through the screen"), then zoom back out to the clean site. It's ONE
+       continuous container move: whole site → deep into one glyph → (glitch +
+       de-skin at the hold) → back out to the clean column. The clean layout is
+       applied at rest (landCleanChar), so no reflow happens mid-motion. */
     function charZoom() {
-      var heading = screen.querySelector('h1, h2, h3');
-      var ch = (heading && heading.textContent.trim().charAt(0)) || 'C';
+      var R = window.CyResponsive;
+      var content = screen.querySelector('main') || screen;
+      var ft = R ? R.finalTransform() : { scale: 1, x: 0, y: 0 };
 
-      var stage = el('div', 'cy-charfx');
-      var glyph = el('div', 'cy-glyph', ch);
-      stage.appendChild(glyph);
-      document.body.appendChild(stage);
-      requestAnimationFrame(function () { stage.classList.add('in'); });   /* fade the stage in */
+      /* Focal character = first glyph of the heading, wrapped so we can measure it. */
+      var heading = screen.querySelector('h1, h2, h3') || content;
+      var focal = wrapFirstChar(heading) || content;
+      var charTube = focal.getBoundingClientRect();
+
+      /* Measure main in the tube (now) and in the clean column (toggle cy-clean
+         synchronously — no paint between, so no flash). */
+      var mainTube = content.getBoundingClientRect();
+      document.documentElement.classList.add('cy-clean');
+      var keepT = container.style.transform, keepTr = container.style.transition;
+      container.style.transition = 'none';
+      container.style.transform  = 'none';
+      var mainClean = content.getBoundingClientRect();
+      document.documentElement.classList.remove('cy-clean');
+      container.style.transition = keepTr;
+      container.style.transform  = keepT;
+
+      /* Container transform (top-left origin, tube basis) landing main at a rect. */
+      var Lx = (mainTube.left - ft.x) / ft.scale, Ly = (mainTube.top - ft.y) / ft.scale;
+      function place(TL, TT, W) {
+        var S = ft.scale * (W / mainTube.width);
+        return 'translate(' + (TL - S * Lx) + 'px,' + (TT - S * Ly) + 'px) scale(' + S + ')';
+      }
+      var startT = place(mainTube.left, mainTube.top, mainTube.width);  /* == current */
+      var landT  = place(mainClean.left, mainClean.top, mainClean.width);/* clean column at rest */
+
+      /* Deep zoom centred on the focal character so it dominates the screen. */
+      var ccx = charTube.left + charTube.width / 2, ccy = charTube.top + charTube.height / 2;
+      var Sp = ft.scale * (0.62 * window.innerHeight / charTube.height);
+      var peakT = 'translate(' + (window.innerWidth / 2 - Sp * (ccx - ft.x) / ft.scale) + 'px,' +
+                  (window.innerHeight / 2 - Sp * (ccy - ft.y) / ft.scale) + 'px) scale(' + Sp + ')';
 
       var zin = T.zoomInDur, dist = T.distortDur, res = T.resolveDur, zout = T.zoomOutDur;
       var total = zin + dist + res + zout;
-      var offIn   = zin / total;
-      var offHold = (zin + dist + res) / total;
+      var offIn = zin / total, offHold = (zin + dist + res) / total;
 
-      /* Start the flight once the stage has faded in, so we're focused before we
-         move. */
-      setTimeout(function () {
-        /* One continuous scale: small → fills the screen → (hold) → zoom out. */
-        glyph.animate([
-          { transform: 'scale(0.28)', easing: 'cubic-bezier(0.4, 0, 0.5, 1)' },      /* accelerate in */
-          { transform: 'scale(1.4)',  offset: offIn,   easing: 'linear' },
-          { transform: 'scale(1.4)',  offset: offHold, easing: 'cubic-bezier(0.35, 0, 0.15, 1)' }, /* hold, then ease out */
-          { transform: 'scale(0.6)' }
-        ], { duration: total, fill: 'forwards' });
+      /* One continuous flight: whole site → into the glyph → hold → out to column. */
+      container.style.willChange = 'transform';
+      container.style.transition = 'none';
+      container.animate([
+        { transform: startT, easing: 'cubic-bezier(0.4, 0, 0.5, 1)' },
+        { transform: peakT,  offset: offIn,   easing: 'linear' },
+        { transform: peakT,  offset: offHold, easing: 'cubic-bezier(0.35, 0, 0.15, 1)' },
+        { transform: landT }
+      ], { duration: total, fill: 'forwards' });
 
-        setTimeout(function () { glyph.classList.add('glitch'); }, zin);             /* distort */
-        setTimeout(function () {                                                     /* resolve to clean letter */
-          glyph.classList.remove('glitch');
-          glyph.classList.add('clean');
-        }, zin + dist);
-        setTimeout(function () {                                                     /* reveal page as we zoom out */
-          document.documentElement.classList.add('cy-clean');
-          document.documentElement.classList.remove('cy-reveal', 'cy-dissolve');
-          container.style.transition = 'none';
-          container.style.transform  = 'none';
-          if (consoleEl) consoleEl.style.display = 'none';
-          stage.style.transition = 'opacity ' + zout + 'ms ease-in';
-          stage.style.opacity = '0';                                                /* dark sheet + glyph fade → page emerges */
-        }, zin + dist + res);
-        setTimeout(function () {
-          if (stage.parentNode) stage.parentNode.removeChild(stage);
-          finish(consoleEl, off, flash);
-        }, total + 150);
-      }, T.stageIn);
+      setTimeout(function () { content.classList.add('cy-glitch'); }, zin);  /* electronic distortion (on the text) */
+      setTimeout(function () {                                               /* resolve: melt CRT skin → clean glyph */
+        content.classList.remove('cy-glitch');
+        document.documentElement.classList.add('cy-dissolve');
+      }, zin + dist);
+      setTimeout(function () { landCleanChar(landT); }, total + 60);         /* at rest → clean layout */
+    }
+
+    /* Motion has stopped at the column. Swap to the real clean layout at rest so
+       the reflow can't drop frames and the content is already in place. */
+    function landCleanChar(landT) {
+      container.style.transition = 'none';
+      container.style.transform  = landT;
+      if (container.getAnimations) {
+        container.getAnimations().forEach(function (a) { a.cancel(); });
+      }
+      var g = screen.querySelector('.cy-glitch');
+      if (g) { g.classList.remove('cy-glitch'); g.style.filter = g.style.transform = g.style.opacity = ''; }
+      document.documentElement.classList.add('cy-clean');
+      document.documentElement.classList.remove('cy-reveal', 'cy-dissolve');
+      container.style.transform  = 'none';
+      container.style.willChange = '';
+      finish(consoleEl, off, flash);
+    }
+
+    /* Wrap the first non-space character of `elm` in a <span> and return it, so
+       its box can be measured as the zoom focal point. */
+    function wrapFirstChar(elm) {
+      var walker = document.createTreeWalker(elm, NodeFilter.SHOW_TEXT, null, false);
+      var node;
+      while ((node = walker.nextNode())) {
+        var i = node.nodeValue.search(/\S/);
+        if (i >= 0) {
+          var rest = node.splitText(i);
+          var span = document.createElement('span');
+          span.textContent = rest.nodeValue.charAt(0);
+          rest.nodeValue = rest.nodeValue.slice(1);
+          rest.parentNode.insertBefore(span, rest);
+          return span;
+        }
+      }
+      return null;
     }
 
     var frame = document.querySelector('.terminal-frame');
