@@ -88,6 +88,30 @@ SPDX-License-Identifier: BSD-3-Clause
     else document.addEventListener('DOMContentLoaded', fn);
   }
 
+  /* Put a blinking cursor inline right after the LAST character of the page
+     content — hugging the last line, as if it was just typed. */
+  function placeCursor() {
+    var main = document.querySelector('main');
+    if (!main) return;
+    var old = main.querySelector('.cy-cursor');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+
+    var walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, null, false);
+    var last = null, node;
+    while ((node = walker.nextNode())) { if (/\S/.test(node.nodeValue)) last = node; }
+
+    var cursor = document.createElement('span');
+    cursor.className = 'cy-cursor';
+    cursor.textContent = '█';                 /* █ */
+    if (last) {
+      last.nodeValue = last.nodeValue.replace(/\s+$/, '');   /* drop trailing whitespace so it hugs the text */
+      if (last.nextSibling) last.parentNode.insertBefore(cursor, last.nextSibling);
+      else last.parentNode.appendChild(cursor);
+    } else {
+      main.appendChild(cursor);
+    }
+  }
+
   /* ── Run one boot sequence (initial load or easter-egg replay). ──── */
   function playBoot(isReplay) {
     if (running) return;            /* ignore overlapping triggers */
@@ -486,6 +510,8 @@ SPDX-License-Identifier: BSD-3-Clause
     if (!document.documentElement.classList.contains('cy-clean')) {
       if (window.CyGlitch && window.CyGlitch.start) window.CyGlitch.start();
       triggerDecode();
+    } else {
+      placeCursor();       /* landed clean → drop the cursor at the end of the text */
     }
 
     running = false;       /* allow the easter egg to replay */
@@ -633,6 +659,7 @@ SPDX-License-Identifier: BSD-3-Clause
     /* Not booting → render the real (clean) site. Set before first paint so the
        CRT never flashes for returning visitors or first-time deep links. */
     document.documentElement.classList.add('cy-clean');
+    ready(placeCursor);
   }
 
   /* Easter eggs: invisible links over keypad keys replay the sequence. Also
