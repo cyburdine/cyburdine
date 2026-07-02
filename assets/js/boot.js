@@ -63,10 +63,10 @@ SPDX-License-Identifier: BSD-3-Clause
     preTextGap:     1000,   /* logo reaches top → boot text begins */
     holdAfterBoot:  1500,   /* boot log held before your site loads into the tube */
     revealFade:      800,   /* boot console fades out → your site shows in the tube */
-    sitePrehold:    1000,   /* your site shown in the tube (CRT skin) before the push */
-    pushDur:        1500,   /* push through the glass while the CRT skin dissolves
-                               (MUST match the phosphor-through animation in CSS) */
-    throughHold:     450,   /* held "through" (clean, still zoomed) before settling */
+    sitePrehold:     900,   /* your site shown in the tube (CRT skin) before the push */
+    pushDur:        1600,   /* punch through the glass while the CRT skin dissolves
+                               (MUST match the cy-glass/warp/bloom animations in CSS) */
+    throughHold:     100,   /* beat at the crossing before the settle begins */
     settleDur:       950,   /* FLIP settle into the clean readable column */
     blankHold:      1000,   /* (legacy) tube blank hold — reduced-motion path */
     siteFade:        900    /* (legacy) main-page fade-in */
@@ -222,45 +222,41 @@ SPDX-License-Identifier: BSD-3-Clause
       setTimeout(pushAndDissolve, T.revealFade + T.sitePrehold);
     }
 
-    /* Stage 2 — push through the glass while the CRT skin dissolves (no static,
-       pure dissolve). Same text, de-skinned in place. The push zooms INTO the
-       text's own centre (scale K× about that point) so the content stays put and
-       enlarges — rather than drifting toward the glass centre and off-screen. */
+    /* Stage 2 — PUNCH THROUGH THE GLASS. Three viewport-fixed layers give the
+       crossing real depth: the glass surface rushes toward the camera and blows
+       past the edges, warp streaks tunnel outward from centre, and a light burst
+       flashes as we break the plane. Meanwhile the page itself dives toward the
+       viewport centre, accelerating into the glass, and the CRT skin dissolves. */
     function pushAndDissolve() {
       var R = window.CyResponsive;
       var content = screen.querySelector('main') || screen;
 
-      /* "See the pixels/scanlines" grow-then-melt as we hit the glass. */
-      var phosphor = el('div', 'crt-phosphor');
-      screen.appendChild(phosphor);
-
       document.documentElement.classList.add('cy-dissolve');  /* melt glow/scanlines/bezel */
 
-      /* Dive into the text anchored at its TOP-LEFT: keep that corner pinned
-         while the text scales K× and grows down-right, so the line beginnings
-         stay on-screen with a clean left margin (the text is left-aligned). The
-         settle then just shrinks it into the column. Derived from the current
-         (finalTransform, top-left origin) placement: keep viewport (Lx,Ty) fixed. */
+      /* Depth FX (self-timed via CSS, all coupled to T.pushDur). */
+      document.body.appendChild(el('div', 'cy-fx cy-glass'));
+      document.body.appendChild(el('div', 'cy-fx cy-warp'));
+      document.body.appendChild(el('div', 'cy-fx cy-bloom'));
+
+      /* Dive the page toward the viewport centre, accelerating, so it rushes the
+         glass plane in step with the surface flying past. Zoom about the content
+         centre and re-centre it to (vw/2, vh/2). Derived from the current
+         (finalTransform, top-left origin) placement. */
       var ft = R ? R.finalTransform() : { scale: 1, x: 0, y: 0 };
       var rect = content.getBoundingClientRect();
-      var Lx = rect.left, Ty = rect.top;
-      var K = 2.4;                                            /* how hard we push in */
+      var px = rect.left + rect.width / 2, py = rect.top + rect.height / 2;
+      var K = 3.5;                                            /* how hard we punch in */
       var ns  = ft.scale * K;
-      var tnx = Lx - K * (Lx - ft.x);
-      var tny = Ty - K * (Ty - ft.y);
+      var tnx = window.innerWidth  / 2 - K * (px - ft.x);
+      var tny = window.innerHeight / 2 - K * (py - ft.y);
 
       container.style.transition =
-        'transform ' + T.pushDur + 'ms cubic-bezier(0.42, 0, 0.7, 0.55)';
+        'transform ' + T.pushDur + 'ms cubic-bezier(0.6, 0, 0.86, 0.2)';  /* accelerate */
       requestAnimationFrame(function () {
         container.style.transform = 'translate(' + tnx + 'px,' + tny + 'px) scale(' + ns + ')';
       });
 
-      /* Stage 3 hold, then settle. Phosphor is removed at settle (it lives in
-         the screen and would otherwise re-flow with the clean layout). */
-      setTimeout(function () {
-        if (phosphor.parentNode) phosphor.parentNode.removeChild(phosphor);
-        settleToColumn();
-      }, T.pushDur + T.throughHold);
+      setTimeout(settleToColumn, T.pushDur + T.throughHold);
     }
 
     /* Stage 4 — FLIP the same text block from its zoomed position down into the
@@ -332,6 +328,12 @@ SPDX-License-Identifier: BSD-3-Clause
     document.body.classList.remove('boot-active');
     document.documentElement.style.height = '';
     document.body.style.height = '';
+
+    /* Remove any through-the-glass FX layers. */
+    var fx = document.querySelectorAll('.cy-fx');
+    for (var f = 0; f < fx.length; f++) {
+      if (fx[f].parentNode) fx[f].parentNode.removeChild(fx[f]);
+    }
 
     var container = document.querySelector('.terminal-container');
     if (container) {

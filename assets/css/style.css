@@ -679,35 +679,62 @@ html.cy-booting body {
   .boot-cursor::after { animation: none; }
 }
 
-/* ── Push-through: a phosphor/aperture mask + fat scanlines that grow in over
-   the enlarging boot text as the camera drives into the glass. Confined to the
-   glass via the --glass-* insets. ── */
-.crt-phosphor {
-  position: absolute;
-  top: var(--glass-top); left: var(--glass-left);
-  right: var(--glass-right); bottom: var(--glass-bottom);
-  z-index: 90002;
-  pointer-events: none;
-  opacity: 0;
+/* ════════════════════════════════════════════════════════════════
+   THROUGH-THE-GLASS FX — viewport-fixed layers that create the depth of
+   punching through the CRT plane. Appended to <body> by boot.js during the
+   push, all emanating from centre. Durations are coupled to T.pushDur (1600ms).
+   ── cy-glass: the glass surface (scanlines + phosphor + curvature) rushes
+      toward the camera and blows past the edges — you pass through the pane.
+   ── cy-warp: radial light streaks tunnel outward from centre (into-the-screen).
+   ── cy-bloom: a bright light burst at the moment you break through.
+   ════════════════════════════════════════════════════════════════ */
+.cy-fx { position: fixed; inset: 0; z-index: 100000; pointer-events: none; transform-origin: 50% 50%; }
+
+.cy-glass {
   background:
     repeating-linear-gradient(to bottom,
-      rgba(0,0,0,0.55) 0, rgba(0,0,0,0.55) 2px,
-      transparent 2px, transparent 6px),
+      rgba(0,0,0,0.45) 0, rgba(0,0,0,0.45) 2px, transparent 2px, transparent 5px),
     repeating-linear-gradient(to right,
-      rgba(255,0,80,0.20) 0, rgba(255,0,80,0.20) 2px,
-      rgba(0,255,120,0.20) 2px, rgba(0,255,120,0.20) 4px,
-      rgba(60,120,255,0.20) 4px, rgba(60,120,255,0.20) 6px);
-  background-size: 100% 100%, 6px 6px;
-  transition: opacity 0.7s ease-in, background-size 1.9s cubic-bezier(0.5,0,0.85,0.35);
+      rgba(0,255,120,0.12) 0, rgba(0,255,120,0.12) 2px, transparent 2px, transparent 5px),
+    radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,0.7) 100%);
+  opacity: 0;
+  animation: glass-rush 1600ms cubic-bezier(0.62, 0, 0.9, 0.28) forwards;
 }
-/* Grow-then-melt as the camera drives up to the glass and pushes through — you
-   see the scanlines/pixels swell, then they dissolve. Duration MUST match
-   T.pushDur in boot.js (1500ms). Driven under .cy-dissolve. */
-html.cy-dissolve .crt-phosphor { animation: phosphor-through 1500ms ease-in-out forwards; }
-@keyframes phosphor-through {
-  0%   { opacity: 0; background-size: 100% 100%, 6px 6px; }
-  45%  { opacity: 1; background-size: 100% 16px, 30px 30px; }
-  100% { opacity: 0; background-size: 100% 30px, 54px 54px; }
+@keyframes glass-rush {
+  0%   { transform: scale(1);    opacity: 0; }
+  12%  { opacity: 0.9; }
+  70%  { opacity: 0.85; }
+  100% { transform: scale(13);   opacity: 0; }
+}
+
+.cy-warp {
+  z-index: 100001;
+  mix-blend-mode: screen;
+  background: repeating-conic-gradient(from 0deg at 50% 50%,
+    rgba(190,255,215,0) 0deg, rgba(190,255,215,0) 0.7deg,
+    rgba(190,255,215,0.40) 1deg, rgba(190,255,215,0) 1.3deg);
+  opacity: 0;
+  animation: warp-streak 1500ms cubic-bezier(0.7, 0, 0.9, 0.2) 250ms forwards;
+}
+@keyframes warp-streak {
+  0%   { transform: scale(0.15); opacity: 0; }
+  45%  { opacity: 0.55; }
+  75%  { opacity: 0.8; }
+  100% { transform: scale(7);    opacity: 0; }
+}
+
+.cy-bloom {
+  z-index: 100002;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(235,255,242,0.98) 0%, rgba(120,255,175,0.55) 12%, rgba(0,0,0,0) 46%);
+  opacity: 0;
+  animation: bloom-flash 850ms ease-out 900ms forwards;
+}
+@keyframes bloom-flash {
+  0%   { opacity: 0;    transform: scale(0.3); }
+  35%  { opacity: 0.98; transform: scale(1); }
+  100% { opacity: 0;    transform: scale(2.6); }
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -744,8 +771,7 @@ html.cy-dissolve .char {
 html.cy-dissolve pre, html.cy-dissolve .glow { color: #7dffb0; }
 
 @media (prefers-reduced-motion: reduce) {
-  .crt-phosphor { display: none; }
-  html.cy-dissolve .crt-phosphor { animation: none; }
+  .cy-fx { display: none !important; animation: none !important; }
 }
 
 /* ════════════════════════════════════════════════════════════════
