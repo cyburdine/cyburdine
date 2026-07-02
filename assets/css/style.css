@@ -702,22 +702,34 @@ html.cy-redraw main, html.cy-redraw header {
   100% { clip-path: inset(0 0 0 0); }
 }
 
-/* PIXELS — at the deepest zoom the letter's green glow fills the whole screen;
-   this overlay reveals the CRT pixel/phosphor structure of that glow (a dark
-   cell grid + faint R/G/B sub-pixel stripes), then fades as the letter resolves
-   clean. Viewport-fixed so the cell size is constant regardless of the zoom. */
-.cy-pixels {
+/* SCAN-BLOOM — CRT scanlines that glow and BLUR more and more as we zoom into
+   the letter, building to an immense glow as we pass through the screen, then
+   fading as the clean letter emerges. Viewport-fixed, so its blur is in screen
+   space (predictable), unlike a filter on the deeply-zoomed content. */
+.cy-scanbloom {
   position: fixed; inset: 0; z-index: 100040; pointer-events: none;
+  background: repeating-linear-gradient(to bottom,
+    rgba(150,255,190,0) 0, rgba(150,255,190,0) 30%,
+    rgba(150,255,190,0.9) 50%, rgba(150,255,190,0) 70%);
+  background-size: 100% 10px;
   opacity: 0;
-  transition: opacity 0.5s ease-out;
-  background:
-    repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 40px, rgba(0,0,0,0.82) 40px 47px),
-    repeating-linear-gradient(to right,  rgba(0,0,0,0) 0 40px, rgba(0,0,0,0.82) 40px 47px),
-    repeating-linear-gradient(to right,
-      rgba(255,60,70,0.18) 0 4px, rgba(0,0,0,0) 4px 8px,
-      rgba(70,120,255,0.18) 8px 12px, rgba(0,0,0,0) 12px 47px);
+  will-change: opacity, filter, background-size;
+  animation: cy-scanbloom-anim 2600ms ease-in-out forwards;
 }
-.cy-pixels.on { opacity: 1; }
+@keyframes cy-scanbloom-anim {
+  0%   { opacity: 0;    filter: blur(0) brightness(1);       background-size: 100% 10px; }
+  54%  { opacity: 0.95; filter: blur(15px) brightness(2.5);  background-size: 100% 66px; }  /* immense glow @ apex */
+  100% { opacity: 0;    filter: blur(52px) brightness(3.6);  background-size: 100% 140px; }
+}
+
+/* The letter's own glow surges immense at the apex, then settles. Brightness
+   only — a blur here would be multiplied by the huge zoom into a total white-out. */
+main.cy-bloom-in { animation: cy-content-bloom 2600ms ease-in-out forwards; }
+@keyframes cy-content-bloom {
+  0%   { filter: brightness(1); }
+  54%  { filter: brightness(3.4); }
+  100% { filter: brightness(1); }
+}
 
 /* Light burst as we break through into the clean letter — blooms and fades. */
 .cy-flash {
@@ -737,7 +749,8 @@ html.cy-redraw main, html.cy-redraw header {
 
 @media (prefers-reduced-motion: reduce) {
   .boot-console.cy-clearing, html.cy-redraw main, html.cy-redraw header { animation: none !important; }
-  .cy-flash, .cy-pixels { display: none; }
+  .cy-flash, .cy-scanbloom { display: none; }
+  main.cy-bloom-in { animation: none !important; }
 }
 
 /* ════════════════════════════════════════════════════════════════

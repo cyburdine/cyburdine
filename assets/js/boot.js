@@ -67,11 +67,10 @@ SPDX-License-Identifier: BSD-3-Clause
     clearBlank:      280,   /* blank screen beat after the clear */
     redrawDur:       800,   /* draw the site back in, line-by-line */
     sitePrehold:    1200,   /* site shown in the tube before we zoom into a char */
-    /* ── Slow zoom into the letter → pixels → clean → zoom back out (charZoom) ── */
+    /* ── Continuous zoom into the glow → pass through → zoom out (charZoom) ── */
     zoomInDur:      3800,   /* SLOW continuous zoom the whole way into the glow */
-    pixelDur:        850,   /* glow fills → CRT pixels revealed */
-    resolveDur:      650,   /* pixels → clean letter (CRT skin melts) */
-    zoomOutDur:     2600,   /* zoom back out to the full clean web page */
+    crossRamp:      1400,   /* before the apex: scanlines glow+blur to immense */
+    zoomOutDur:     2600,   /* continuous zoom back out to the full clean page */
     blankHold:      1000,   /* (legacy) tube blank hold — reduced-motion path */
     siteFade:        900    /* (legacy) main-page fade-in */
   };
@@ -280,42 +279,50 @@ SPDX-License-Identifier: BSD-3-Clause
       var Sdeep = ft.scale * (5.5 * window.innerHeight / charTube.height);
       var deepT = centerAt(Sdeep);
 
-      var zin = T.zoomInDur, pix = T.pixelDur, res = T.resolveDur, zout = T.zoomOutDur;
-      var total = zin + pix + res + zout;
-      var offIn = zin / total, offHold = (zin + pix + res) / total;
+      var zin = T.zoomInDur, zout = T.zoomOutDur, ramp = T.crossRamp;
+      var total = zin + zout, offApex = zin / total;
 
-      /* ONE continuous move. The zoom-IN is sampled at exponential (constant-
-         RATIO) scales so it reads as a steady, slow push the whole way in rather
-         than lurching. Then it holds at the deep glow, then eases back out to the
-         clean column. */
+      /* ONE continuous move that NEVER stops or holds: a slow steady push all the
+         way in (sampled at exponential/constant-ratio scales so it doesn't lurch),
+         straight through the apex, then back out to the clean column. The apex is
+         a turnaround, not a dwell — and the immense glow masks the direction flip
+         so it reads as passing THROUGH the screen. */
       var frames = [{ transform: startT, offset: 0, easing: 'linear' }];
       var N = 9;
       for (var i = 1; i <= N; i++) {
         var f = i / N;
         var sc = ft.scale * Math.pow(Sdeep / ft.scale, f);
-        frames.push({ transform: centerAt(sc), offset: offIn * f, easing: 'linear' });
+        /* the last sample IS the apex (deepT); its easing governs the zoom-OUT. */
+        var e = (i === N) ? 'cubic-bezier(0.25, 0, 0.2, 1)' : 'linear';
+        frames.push({ transform: centerAt(sc), offset: offApex * f, easing: e });
       }
-      frames.push({ transform: deepT, offset: offHold, easing: 'cubic-bezier(0.35, 0, 0.2, 1)' });
       frames.push({ transform: landT, offset: 1 });
 
       container.style.willChange = 'transform';
       container.style.transition = 'none';
       container.animate(frames, { duration: total, fill: 'forwards' });
 
-      /* glow fills → PIXELS. */
-      var pixels = el('div', 'cy-pixels');
-      document.body.appendChild(pixels);
-      setTimeout(function () { pixels.classList.add('on'); }, zin);
-
-      /* PIXELS → CLEAN letter: pixels fade, CRT skin melts, a soft light burst. */
+      /* Approaching the apex: CRT scanlines glow + blur more and more, and the
+         letter's glow surges immense — "passing through the screen". */
       setTimeout(function () {
-        pixels.classList.remove('on');
+        var sb = el('div', 'cy-scanbloom');
+        document.body.appendChild(sb);
+        content.classList.add('cy-bloom-in');
+        setTimeout(function () {
+          if (sb.parentNode) sb.parentNode.removeChild(sb);
+          content.classList.remove('cy-bloom-in');
+          content.style.filter = '';
+        }, 2700);
+      }, zin - ramp);
+
+      /* At the apex (inside the immense glow): melt the CRT skin so we emerge to
+         a clean letter, with a soft light burst. */
+      setTimeout(function () {
         document.documentElement.classList.add('cy-dissolve');
         var flash = el('div', 'cy-flash');
         document.body.appendChild(flash);
         setTimeout(function () { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 900);
-      }, zin + pix);
-      setTimeout(function () { if (pixels.parentNode) pixels.parentNode.removeChild(pixels); }, zin + pix + res + 200);
+      }, zin);
 
       setTimeout(function () { landCleanChar(landT); }, total + 60);   /* zoom-out done → clean layout at rest */
     }
@@ -387,7 +394,7 @@ SPDX-License-Identifier: BSD-3-Clause
     document.body.style.height = '';
 
     /* Remove any leftover through-the-screen FX / character stage. */
-    var fx = document.querySelectorAll('.cy-fx, .cy-charfx, .cy-flash, .cy-pixels');
+    var fx = document.querySelectorAll('.cy-fx, .cy-charfx, .cy-flash, .cy-scanbloom');
     for (var f = 0; f < fx.length; f++) {
       if (fx[f].parentNode) fx[f].parentNode.removeChild(fx[f]);
     }
