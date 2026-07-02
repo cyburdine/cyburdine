@@ -698,7 +698,7 @@ html.cy-booting body {
       rgba(0,255,120,0.12) 0, rgba(0,255,120,0.12) 2px, transparent 2px, transparent 5px),
     radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,0.7) 100%);
   opacity: 0;
-  animation: glass-rush 1600ms cubic-bezier(0.62, 0, 0.9, 0.28) forwards;
+  animation: glass-rush 1500ms cubic-bezier(0.62, 0, 0.9, 0.28) 150ms forwards;
 }
 @keyframes glass-rush {
   0%   { transform: scale(1);    opacity: 0; }
@@ -714,7 +714,7 @@ html.cy-booting body {
     rgba(190,255,215,0) 0deg, rgba(190,255,215,0) 0.7deg,
     rgba(190,255,215,0.40) 1deg, rgba(190,255,215,0) 1.3deg);
   opacity: 0;
-  animation: warp-streak 1500ms cubic-bezier(0.7, 0, 0.9, 0.2) 250ms forwards;
+  animation: warp-streak 1300ms cubic-bezier(0.7, 0, 0.9, 0.2) 500ms forwards;
 }
 @keyframes warp-streak {
   0%   { transform: scale(0.15); opacity: 0; }
@@ -729,7 +729,7 @@ html.cy-booting body {
   background: radial-gradient(circle at 50% 50%,
     rgba(235,255,242,0.98) 0%, rgba(120,255,175,0.55) 12%, rgba(0,0,0,0) 46%);
   opacity: 0;
-  animation: bloom-flash 850ms ease-out 900ms forwards;
+  animation: bloom-flash 750ms ease-out 1300ms forwards;   /* peaks at the deepest dive */
 }
 @keyframes bloom-flash {
   0%   { opacity: 0;    transform: scale(0.3); }

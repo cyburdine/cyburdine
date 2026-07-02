@@ -66,7 +66,9 @@ SPDX-License-Identifier: BSD-3-Clause
     sitePrehold:     900,   /* your site shown in the tube (CRT skin) before the push */
     pushDur:        1600,   /* punch through the glass while the CRT skin dissolves
                                (MUST match the cy-glass/warp/bloom animations in CSS) */
-    throughHold:     100,   /* beat at the crossing before the settle begins */
+    throughHold:      60,   /* tiny gap so the dive transition commits before the
+                               settle reads it (both arcs are at ~0 velocity here,
+                               so this is imperceptible — not a visible pause) */
     settleDur:       950,   /* FLIP settle into the clean readable column */
     blankHold:      1000,   /* (legacy) tube blank hold — reduced-motion path */
     siteFade:        900    /* (legacy) main-page fade-in */
@@ -250,8 +252,12 @@ SPDX-License-Identifier: BSD-3-Clause
       var tnx = window.innerWidth  / 2 - K * (px - ft.x);
       var tny = window.innerHeight / 2 - K * (py - ft.y);
 
+      /* Ease-in-OUT so the dive accelerates then DECELERATES to a still point at
+         the deepest push (velocity → 0). The settle then accelerates from that
+         same rest — the two arcs meet at zero velocity, so there is no slam-stop
+         or jerk at the crossing. */
       container.style.transition =
-        'transform ' + T.pushDur + 'ms cubic-bezier(0.6, 0, 0.86, 0.2)';  /* accelerate */
+        'transform ' + T.pushDur + 'ms cubic-bezier(0.5, 0, 0.2, 1)';
       requestAnimationFrame(function () {
         container.style.transform = 'translate(' + tnx + 'px,' + tny + 'px) scale(' + ns + ')';
       });
@@ -284,7 +290,9 @@ SPDX-License-Identifier: BSD-3-Clause
       if (header) header.style.opacity = '0';                 /* nav fades in with the settle */
 
       requestAnimationFrame(function () {
-        content.style.transition = 'transform ' + T.settleDur + 'ms cubic-bezier(0.22, 0.61, 0.36, 1)';
+        /* Accelerate from rest (matches the dive's zero-velocity endpoint) and
+           ease out to a still stop at the column — no jerk at either end. */
+        content.style.transition = 'transform ' + T.settleDur + 'ms cubic-bezier(0.4, 0, 0.2, 1)';
         content.style.transform  = 'none';
         if (header) {
           header.style.transition = 'opacity ' + T.settleDur + 'ms ease';
