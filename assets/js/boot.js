@@ -262,10 +262,13 @@ SPDX-License-Identifier: BSD-3-Clause
       }
       var startT = place(tube.left, tube.top, tube.width);      /* == current */
       var landT  = place(col.left,  col.top,  col.width);       /* clean column */
-      var K = 3.4;                                              /* depth of the dive */
-      var peakW = tube.width * K;
-      var peakT = place(window.innerWidth  / 2 - peakW / 2,
-                        window.innerHeight / 2 - tube.height * K / 2, peakW);
+      /* Peak anchored at the SAME top-left as the column, scaled DIVE×. Two wins:
+         the left-aligned text keeps its line-beginnings on-screen (readable
+         through the whole dive, not swimming off a corner), and — since peak and
+         land share a top-left — the second half is a pure scale-down with ZERO
+         drift: the cleanest possible settle. */
+      var DIVE = 3;                                             /* depth of the dive */
+      var peakT = place(col.left, col.top, col.width * DIVE);
 
       /* One continuous flight: tube → deepest push → column. ease-in-out on BOTH
          legs means each leg starts and ends at ~0 velocity, so the whole path is
