@@ -294,6 +294,12 @@ footer {
   background: transparent;
   z-index: 1000;
 }
+/* Footer "reboot" link — reads as the dim footer text until hovered. */
+.cy-reboot,
+html.cy-clean .cy-reboot { color: inherit; text-decoration: none; cursor: pointer; }
+.cy-reboot:hover,
+html.cy-clean .cy-reboot:hover { color: #33ffcc; text-decoration: underline; }
+
 /* ─── NAVBAR WITH GLOWING BACKGROUND ─── */
 
 nav.console {
@@ -724,7 +730,8 @@ html.cy-redraw main, html.cy-redraw header {
 
 /* The letter's own glow surges immense at the apex, then settles. Brightness
    only — a blur here would be multiplied by the huge zoom into a total white-out. */
-main.cy-bloom-in { animation: cy-content-bloom 2600ms ease-in-out forwards; }
+main.cy-bloom-in,
+.boot-logo-wrap.cy-bloom-in { animation: cy-content-bloom 2600ms ease-in-out forwards; }
 @keyframes cy-content-bloom {
   0%   { filter: brightness(1); }
   54%  { filter: brightness(3.4); }
@@ -764,9 +771,8 @@ main.cy-bloom-in { animation: cy-content-bloom 2600ms ease-in-out forwards; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .boot-console.cy-clearing, html.cy-redraw main, html.cy-redraw header { animation: none !important; }
   .cy-flash, .cy-scanbloom, .cy-noise { display: none; }
-  main.cy-bloom-in { animation: none !important; }
+  main.cy-bloom-in, .boot-logo-wrap.cy-bloom-in { animation: none !important; }
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -942,3 +948,44 @@ html.cy-clean main { animation: cy-text-glitch 7.5s steps(1, end) infinite; }
 }
 @keyframes cy-cursor-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .cy-cursor { animation: none; } }
+
+/* ════════════════════════════════════════════════════════════════
+   RENDER MODE — the per-page "materialize" effect (render.js).
+   Every char of <main> is wrapped in a .char span and typed out as katakana,
+   then converted line-by-line to the real letters. Runs in clean mode on a
+   black terminal, so the CRT never appears here.
+   ════════════════════════════════════════════════════════════════ */
+
+/* The wrapped .char spans must inherit the clean-mode font (IBM Plex Mono body,
+   VT323 headings) — the base `.char { font-family: VT323 }` rule would otherwise
+   change the clean page's body font once everything is span-wrapped. */
+html.cy-clean .char { font-family: inherit; }
+/* ...but a kana glyph mid-conversion keeps the foreign font. */
+html.cy-clean .char.foreign { font-family: var(--foreign-font), monospace; color: #cfffe6; }
+
+/* Pre-paint + during typing: black screen, chrome hidden, <main> hidden until
+   render.js reveals it (empty). */
+html.cy-rendering { background: #05070a; }
+html.cy-rendering main   { visibility: hidden; }
+html.cy-rendering header,
+html.cy-rendering footer { visibility: hidden; }
+
+/* Per-glyph conversion glitch (kana → real letter). Clean-mode safe: uses
+   filter, not text-shadow. */
+.cy-flip { animation: cy-flip 0.2s steps(1, end); }
+@keyframes cy-flip {
+  0%   { filter: brightness(2.2); }
+  30%  { filter: drop-shadow(2px 0 rgba(255,0,90,0.7)) drop-shadow(-2px 0 rgba(0,220,255,0.7)); }
+  60%  { filter: brightness(1.5); }
+  100% { filter: none; }
+}
+@media (prefers-reduced-motion: reduce) { .cy-flip { animation: none; } }
+
+/* Black cover used at the boot cinematic's apex to fall to black before the
+   render types the page. Sits above the CRT frame/overlays. */
+.cy-black {
+  position: fixed; inset: 0; z-index: 100002;
+  background: #05070a; opacity: 0; pointer-events: none;
+}
+.cy-black.on { opacity: 1; transition: opacity 260ms ease-in; }
+@media (prefers-reduced-motion: reduce) { .cy-black { display: none; } }
