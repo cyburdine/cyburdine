@@ -76,6 +76,7 @@ SPDX-License-Identifier: BSD-3-Clause
   // from more than one boot path.
   var hasRun = false;
   function runDecode() {
+    if (document.documentElement.classList.contains('cy-clean')) return;  /* CRT-only effect */
     if (hasRun) return;
     hasRun = true;
     wrapCharacters();
@@ -87,6 +88,7 @@ SPDX-License-Identifier: BSD-3-Clause
   // and decrypt again — used by the easter-egg boot replay so the text
   // re-materialises. Falls back to a first run if decode hasn't run yet.
   function replayDecode() {
+    if (document.documentElement.classList.contains('cy-clean')) return;  /* CRT-only effect */
     if (!hasRun) { runDecode(); return; }
     document.querySelectorAll('.char').forEach(span => {
       const original = span.getAttribute('data-original');

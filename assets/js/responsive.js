@@ -86,8 +86,31 @@ SPDX-License-Identifier: BSD-3-Clause
     };
   }
 
+  /* Push-through: continue past finalTransform, blowing the glass up so it
+     overshoots the viewport, centered on the glass — the "right up to the
+     monitor" move before we break through the screen. */
+  function throughTransform() {
+    var base = finalTransform();
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var PUSH = 3;                                  /* how far past resting we drive */
+    var scale = base.scale * PUSH;
+    var gcx = GLASS_LEFT + GLASS_WIDTH / 2;        /* glass center, unscaled coords */
+    var gcy = GLASS_TOP + GLASS_HEIGHT / 2;
+    var tx = vw / 2 - gcx * scale;
+    var ty = vh / 2 - gcy * scale;
+    return {
+      scale: scale,
+      css: 'translate(' + tx + 'px, ' + ty + 'px) scale(' + scale + ')'
+    };
+  }
+
   function applyScale() {
     if (locked) return;
+    /* Clean mode: no CRT stage — clear any transform and bail. */
+    if (document.documentElement.classList.contains('cy-clean')) {
+      container.style.transform = 'none';
+      return;
+    }
     var t = finalTransform();
     container.style.transform = t.css;
     container.style.transformOrigin = 'top left';
@@ -103,6 +126,7 @@ SPDX-License-Identifier: BSD-3-Clause
     applyScale: applyScale,
     finalTransform: finalTransform,
     wideTransform: wideTransform,
+    throughTransform: throughTransform,
     lock: function() { locked = true; },
     unlock: function() { locked = false; applyScale(); }
   };

@@ -21,6 +21,22 @@ SPDX-License-Identifier: BSD-3-Clause
   src: url('/assets/fonts/NotoSansJP-subset.ttf') format('truetype');
 }
 
+/* Clean-mode body font — readable monospace once you're "through the screen". */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/assets/fonts/IBMPlexMono-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/assets/fonts/IBMPlexMono-Medium.woff2') format('woff2');
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -662,3 +678,267 @@ html.cy-booting body {
   .boot-console.powered,
   .boot-cursor::after { animation: none; }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   BOOT → SITE and THROUGH-THE-SCREEN (driven by boot.js).
+   No dissolve: the boot log CLEARS (erased top→down, old-computer style) then
+   the site REDRAWS (drawn back line-by-line). Then charZoom zooms INTO a real
+   character of the page, glitches it electronically, and zooms back out clean.
+   ════════════════════════════════════════════════════════════════ */
+
+/* CLEAR — erase the finished boot log top→down (CRT screen-clear). */
+.boot-console.cy-clearing { animation: crt-erase 0.5s steps(16, end) forwards; }
+@keyframes crt-erase {
+  0%   { clip-path: inset(0 0 0 0); }
+  100% { clip-path: inset(100% 0 0 0); }
+}
+
+/* REDRAW — draw the site content back top→down, chunky (line-by-line). */
+html.cy-redraw main, html.cy-redraw header {
+  animation: crt-draw 0.75s steps(22, end) forwards;
+}
+@keyframes crt-draw {
+  0%   { clip-path: inset(0 0 100% 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+
+/* SCAN-BLOOM — CRT scanlines that glow and BLUR more and more as we zoom into
+   the letter, building to an immense glow as we pass through the screen, then
+   fading as the clean letter emerges. Viewport-fixed, so its blur is in screen
+   space (predictable), unlike a filter on the deeply-zoomed content. */
+.cy-scanbloom {
+  position: fixed; inset: 0; z-index: 100040; pointer-events: none;
+  background: repeating-linear-gradient(to bottom,
+    rgba(150,255,190,0) 0, rgba(150,255,190,0) 30%,
+    rgba(150,255,190,0.9) 50%, rgba(150,255,190,0) 70%);
+  background-size: 100% 10px;
+  opacity: 0;
+  will-change: opacity, filter, background-size;
+  animation: cy-scanbloom-anim 2600ms ease-in-out forwards;
+}
+@keyframes cy-scanbloom-anim {
+  0%   { opacity: 0;    filter: blur(0) brightness(1);       background-size: 100% 10px; }
+  54%  { opacity: 0.95; filter: blur(15px) brightness(2.5);  background-size: 100% 66px; }  /* immense glow @ apex */
+  100% { opacity: 0;    filter: blur(52px) brightness(3.6);  background-size: 100% 140px; }
+}
+
+/* The letter's own glow surges immense at the apex, then settles. Brightness
+   only — a blur here would be multiplied by the huge zoom into a total white-out. */
+main.cy-bloom-in { animation: cy-content-bloom 2600ms ease-in-out forwards; }
+@keyframes cy-content-bloom {
+  0%   { filter: brightness(1); }
+  54%  { filter: brightness(3.4); }
+  100% { filter: brightness(1); }
+}
+
+/* Light burst as we break through into the clean letter — blooms and fades. */
+.cy-flash {
+  position: fixed; inset: 0; z-index: 100050;
+  pointer-events: none; transform-origin: 50% 50%;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(238,255,244,0.97) 0%, rgba(130,255,180,0.55) 24%, rgba(0,0,0,0) 64%);
+  opacity: 0;
+  will-change: opacity, transform;
+  animation: cy-flash-anim 0.85s ease-out forwards;
+}
+@keyframes cy-flash-anim {
+  0%   { opacity: 0;    transform: scale(0.35); }
+  20%  { opacity: 1;    transform: scale(1); }
+  100% { opacity: 0;    transform: scale(2.1); }
+}
+
+/* Digital noise bursting with the flash — like passing INTO the monitor. Painted
+   frame-by-frame on a canvas by boot.js; sits above the flash. */
+.cy-noise {
+  position: fixed; top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  z-index: 100055; pointer-events: none;
+  opacity: 0;
+  animation: cy-noise-anim 780ms ease-out forwards;
+}
+@keyframes cy-noise-anim {
+  0%   { opacity: 0; }
+  16%  { opacity: 0.6; }
+  55%  { opacity: 0.42; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-console.cy-clearing, html.cy-redraw main, html.cy-redraw header { animation: none !important; }
+  .cy-flash, .cy-scanbloom, .cy-noise { display: none; }
+  main.cy-bloom-in { animation: none !important; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   THROUGH-THE-SCREEN — seamless two-stage dissolve (no static).
+   Stage 1 (cy-reveal): the real site shows IN the tube, already in the clean
+   font (so nothing re-typesets later), CRT skin still on.
+   Stage 2 (cy-dissolve): the CRT skin (glow, scanlines, bezel) melts away as
+   the camera pushes in. The screen bg is already near-black, so only the glow,
+   lines and frame need to fade — a true dissolve. Then boot.js FLIP-settles the
+   same text into the clean column.
+   ════════════════════════════════════════════════════════════════ */
+
+/* Shared clean font from the reveal onward ⇒ no font swap mid-transition, so
+   the FLIP settle is a pure scale and the text lines up. */
+html.cy-reveal main, html.cy-reveal pre, html.cy-reveal .console,
+html.cy-dissolve main, html.cy-dissolve pre, html.cy-dissolve .console {
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* Stage 2 dissolve: melt the CRT skin. */
+html.cy-dissolve .terminal-frame { opacity: 0; transition: opacity 1s ease-out; }
+html.cy-dissolve #glitchCanvas   { opacity: 0; transition: opacity 0.5s ease-out; }
+html.cy-dissolve .terminal-screen::before { opacity: 0; transition: opacity 0.9s ease-out; }
+/* Global scanlines run a flicker animation; animation overrides plain opacity,
+   so stop it AND fade out. */
+html.cy-dissolve body::before { animation: none !important; opacity: 0 !important; transition: opacity 0.6s ease-out; }
+html.cy-dissolve .terminal-screen { background: #05070a; }   /* near-black already */
+/* Match the clean background everywhere so the landing swap has no bg edge. */
+html.cy-dissolve, html.cy-dissolve body, html.cy-dissolve .terminal-wrapper { background: #05070a; }
+html.cy-dissolve .glow, html.cy-dissolve .console, html.cy-dissolve pre,
+html.cy-dissolve nav.glow, html.cy-dissolve nav a, html.cy-dissolve a,
+html.cy-dissolve .char {
+  text-shadow: none !important;
+  transition: text-shadow 0.7s ease-out, color 1s ease-out;
+}
+html.cy-dissolve pre, html.cy-dissolve .glow { color: #7dffb0; }
+html.cy-dissolve footer { opacity: 0; transition: opacity 0.4s ease-out; }  /* don't fly the footer */
+
+@media (prefers-reduced-motion: reduce) {
+  .cy-fx { display: none !important; animation: none !important; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CLEAN MODE — the real site once you've come "through the screen".
+   No CRT frame, scanlines, glow, or glitch. Readable centered column.
+   Gated entirely behind html.cy-clean so the CRT rules are untouched.
+   ════════════════════════════════════════════════════════════════ */
+html.cy-clean,
+html.cy-clean body {
+  height: auto;
+  overflow: visible;
+  background: #05070a;
+  color: #7dffb0;                    /* softer, high-contrast green */
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* Kill the fixed CRT stage + frame + scanlines + glitch. */
+html.cy-clean .terminal-frame,
+html.cy-clean #glitchCanvas,
+html.cy-clean .cy-egg,
+html.cy-clean body::before,
+html.cy-clean .terminal-screen::before { display: none !important; }
+
+html.cy-clean .terminal-wrapper {
+  height: auto !important;
+  background: #05070a;
+  overflow: visible;
+}
+html.cy-clean .terminal-container {
+  position: static;
+  width: 100%;
+  height: auto;
+  transform: none !important;
+  overflow: visible;
+  z-index: auto;
+}
+html.cy-clean .terminal-screen {
+  position: static;
+  top: auto; left: auto;
+  width: 100%;
+  max-width: 72ch;
+  height: auto;
+  margin: 0;                         /* left-aligned, not centered */
+  padding: 2.5rem 1.5rem 4rem;
+  background: transparent;
+  overflow: visible;
+  font-size: 18px;                   /* no counter-scaling in clean mode */
+  line-height: 1.6;
+}
+
+/* Body copy lives inside <pre> — the UA stylesheet forces `monospace`, so pin
+   IBM Plex Mono explicitly to reach the actual content. */
+html.cy-clean pre,
+html.cy-clean .console,
+html.cy-clean main {
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* Strip all neon glow. */
+html.cy-clean .glow,
+html.cy-clean .console,
+html.cy-clean .project,
+html.cy-clean .char,
+html.cy-clean .char.foreign,
+html.cy-clean a,
+html.cy-clean a:hover { text-shadow: none !important; }
+
+/* Readable links + accents (palette kept, glow removed). */
+html.cy-clean a { color: #33ffcc; }
+html.cy-clean a:hover { color: #ffffff; text-decoration: underline; }
+
+/* Headings keep the VT323 identity. */
+html.cy-clean h1, html.cy-clean h2, html.cy-clean h3,
+html.cy-clean .boot-logo-text {
+  font-family: 'VT323', monospace;
+  letter-spacing: 1px;
+  color: #33ffcc;
+}
+
+/* Nav: flat readable bar (the real nav is `.glow`, not `.console`), glow off. */
+html.cy-clean nav {
+  box-shadow: none;
+  text-shadow: none;
+  display: flex;
+  gap: 1.5rem;
+  padding: 0 0 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #123;
+}
+html.cy-clean nav a { color: #33ffcc; margin-right: 0; }
+html.cy-clean nav a:hover { color: #ffffff; }
+
+/* Let long pre content wrap so it stays readable without horizontal scroll. */
+html.cy-clean pre,
+html.cy-clean .console { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ── "Inside the computer": once we're through and on the clean page, it reads
+   as a live monitor — a faint scanline flicker, and the text glitches now and
+   then. Kept subtle so the page stays readable. ── */
+html.cy-clean body::after {
+  content: "";
+  position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+  background: repeating-linear-gradient(to bottom,
+    rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px,
+    rgba(0,0,0,0.11) 3px, rgba(0,0,0,0) 4px);
+  animation: cy-monitor-flicker 5s ease-in-out infinite;
+}
+@keyframes cy-monitor-flicker { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+/* Occasional brief RGB-split glitch + flicker on the text (no position shift, so
+   it doesn't disturb reading). */
+html.cy-clean main { animation: cy-text-glitch 7.5s steps(1, end) infinite; }
+@keyframes cy-text-glitch {
+  0%, 84%, 100% { filter: none; opacity: 1; }
+  86% { filter: drop-shadow(2px 0 rgba(255,0,90,0.5)) drop-shadow(-2px 0 rgba(0,220,255,0.5)); opacity: 0.9; }
+  88% { filter: none; opacity: 1; }
+  90.5% { filter: drop-shadow(-3px 0 rgba(255,0,90,0.55)) drop-shadow(3px 0 rgba(0,220,255,0.55)); opacity: 0.85; }
+  92.5% { filter: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.cy-clean body::after, html.cy-clean main { animation: none !important; }
+}
+
+/* Blinking terminal cursor — placed inline right after the last character of the
+   content by boot.js (placeCursor), so it hugs the last line as if just typed. */
+.cy-cursor {
+  display: inline-block;
+  margin-left: 0.08em;
+  color: #7dffb0;
+  animation: cy-cursor-blink 1.1s steps(1, end) infinite;
+}
+@keyframes cy-cursor-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .cy-cursor { animation: none; } }

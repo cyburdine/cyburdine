@@ -61,9 +61,18 @@ SPDX-License-Identifier: BSD-3-Clause
     logoShowHold:   2000,   /* logo centered (incl. warm-up) before it slides up */
     slideDur:        600,   /* logo slide-to-top duration */
     preTextGap:     1000,   /* logo reaches top → boot text begins */
-    holdAfterBoot:  3000,   /* finished boot held before going blank */
-    blankHold:      1000,   /* tube sits blank (black) before the site appears */
-    siteFade:        900    /* main-page text fade-in (from black) */
+    holdAfterBoot:  1400,   /* finished boot log held before the screen clears */
+    /* ── Old-computer CLEAR + REDRAW (no dissolve) ── */
+    clearDur:        550,   /* erase the boot log top→down */
+    clearBlank:      280,   /* blank screen beat after the clear */
+    redrawDur:       800,   /* draw the site back in, line-by-line */
+    sitePrehold:    1200,   /* site shown in the tube before we zoom into a char */
+    /* ── Continuous zoom into the glow → pass through → zoom out (charZoom) ── */
+    zoomInDur:      3800,   /* SLOW continuous zoom the whole way into the glow */
+    crossRamp:      1400,   /* before the apex: scanlines glow+blur to immense */
+    zoomOutDur:     2600,   /* continuous zoom back out to the full clean page */
+    blankHold:      1000,   /* (legacy) tube blank hold — reduced-motion path */
+    siteFade:        900    /* (legacy) main-page fade-in */
   };
 
   /* ── DOM helpers ───────────────────────────────────────────────── */
@@ -77,6 +86,30 @@ SPDX-License-Identifier: BSD-3-Clause
   function ready(fn) {
     if (document.readyState !== 'loading') fn();
     else document.addEventListener('DOMContentLoaded', fn);
+  }
+
+  /* Put a blinking cursor inline right after the LAST character of the page
+     content — hugging the last line, as if it was just typed. */
+  function placeCursor() {
+    var main = document.querySelector('main');
+    if (!main) return;
+    var old = main.querySelector('.cy-cursor');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+
+    var walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, null, false);
+    var last = null, node;
+    while ((node = walker.nextNode())) { if (/\S/.test(node.nodeValue)) last = node; }
+
+    var cursor = document.createElement('span');
+    cursor.className = 'cy-cursor';
+    cursor.textContent = '█';                 /* █ */
+    if (last) {
+      last.nodeValue = last.nodeValue.replace(/\s+$/, '');   /* drop trailing whitespace so it hugs the text */
+      if (last.nextSibling) last.parentNode.insertBefore(cursor, last.nextSibling);
+      else last.parentNode.appendChild(cursor);
+    } else {
+      main.appendChild(cursor);
+    }
   }
 
   /* ── Run one boot sequence (initial load or easter-egg replay). ──── */
@@ -196,22 +229,234 @@ SPDX-License-Identifier: BSD-3-Clause
       runBootLog(consoleEl, endSequence);
     }
 
-    /* Pause on the finished boot screen → blank the tube → bring up the site. */
+    /* Boot log finished → hold, then load the real site INTO the tube. */
     function endSequence() {
-      setTimeout(function () {
-        consoleEl.classList.add('blank');            /* screen goes blank (black) */
-        setTimeout(revealSite, T.blankHold);
-      }, T.holdAfterBoot);
+      setTimeout(loadSiteInTube, T.holdAfterBoot);
     }
 
-    /* Bring up the real page and fade the text in from black. The live site
-       (green screen + text) is made visible behind the blank black console,
-       then the black console fades away so the site emerges from black. */
-    function revealSite() {
-      document.body.classList.remove('boot-active');     /* main/footer visible */
-      triggerDecode();                                   /* decode reveal (start or replay) */
-      consoleEl.classList.add('fading');                 /* black fades → reveals green site */
-      setTimeout(function () { finish(consoleEl, off, flash); }, T.siteFade + 200);
+    /* Stage 1 — CLEAR then REDRAW (old-computer style, NOT a dissolve). The
+       finished boot log is erased top→down, the screen holds blank a beat, then
+       the real site is drawn back in line-by-line. */
+    function loadSiteInTube() {
+      if (consoleEl) consoleEl.classList.add('cy-clearing');   /* erase the boot log */
+      setTimeout(function () {
+        if (consoleEl && consoleEl.parentNode) consoleEl.parentNode.removeChild(consoleEl);
+      }, T.clearDur);
+
+      setTimeout(function () {
+        /* Draw the site back in (CRT skin on, clean font so nothing re-typesets). */
+        document.documentElement.classList.add('cy-reveal', 'cy-redraw');
+        document.body.classList.remove('boot-active');
+        setTimeout(function () {
+          document.documentElement.classList.remove('cy-redraw');
+        }, T.redrawDur + 80);
+        setTimeout(charZoom, T.redrawDur + T.sitePrehold);
+      }, T.clearDur + T.clearBlank);
+    }
+
+    /* Stage 2 — ZOOM INTO A CHARACTER OF THE REAL PAGE, distort it electronically
+       ("through the screen"), then zoom back out to the clean site. It's ONE
+       continuous container move: whole site → deep into one glyph → (glitch +
+       de-skin at the hold) → back out to the clean column. The clean layout is
+       applied at rest (landCleanChar), so no reflow happens mid-motion. */
+    function charZoom() {
+      var R = window.CyResponsive;
+      var content = screen.querySelector('main') || screen;
+      var ft = R ? R.finalTransform() : { scale: 1, x: 0, y: 0 };
+
+      /* Focal character = first glyph of the heading, wrapped so we can measure it. */
+      var heading = screen.querySelector('h1, h2, h3') || content;
+      var focal = wrapFirstChar(heading) || content;
+      var charTube = focal.getBoundingClientRect();
+
+      /* Measure main in the tube (now) and in the clean column (toggle cy-clean
+         synchronously — no paint between, so no flash). */
+      var mainTube = content.getBoundingClientRect();
+      document.documentElement.classList.add('cy-clean');
+      var keepT = container.style.transform, keepTr = container.style.transition;
+      container.style.transition = 'none';
+      container.style.transform  = 'none';
+      var mainClean = content.getBoundingClientRect();
+      document.documentElement.classList.remove('cy-clean');
+      container.style.transition = keepTr;
+      container.style.transform  = keepT;
+
+      /* Container transform (top-left origin, tube basis) landing main at a rect. */
+      var Lx = (mainTube.left - ft.x) / ft.scale, Ly = (mainTube.top - ft.y) / ft.scale;
+      function place(TL, TT, W) {
+        var S = ft.scale * (W / mainTube.width);
+        return 'translate(' + (TL - S * Lx) + 'px,' + (TT - S * Ly) + 'px) scale(' + S + ')';
+      }
+      var landT  = place(mainClean.left, mainClean.top, mainClean.width);/* clean column at rest */
+
+      /* Pin the letter's TOP-LEFT corner where it is and scale ABOUT it (see
+         about() below), so the upper-left stays fixed as we zoom into the glyph
+         — its green glow grows from that corner to fill the screen rather than
+         the page panning to re-centre. The anchor sits ON the glyph's stroke
+         (near its upper-left) so the glow fills around the fixed point, not an
+         empty bounding-box corner. */
+      var apx = charTube.left + charTube.width * 0.2;
+      var apy = charTube.top  + charTube.height * 0.42;
+      /* So deep the glyph is ~5.5× the viewport tall → its glow fills the space. */
+      var Sdeep = ft.scale * (5.5 * window.innerHeight / charTube.height);
+
+      var zin = T.zoomInDur, zout = T.zoomOutDur, ramp = T.crossRamp;
+      var total = zin + zout, offApex = zin / total;
+
+      /* ONE continuous move, FINELY sampled for smoothness. Two ideas:
+         · scale changes EXPONENTIALLY (constant ratio) so the zoom is
+           perceptually steady rather than rushing then crawling;
+         · time is eased (smoothstep) so it starts from rest, glides through the
+           apex turnaround at ~0 velocity (hidden by the glow), and settles onto
+           the page — no abrupt start and no velocity kink at the seam.
+         Many small steps mean the linear tween between them reads as one smooth
+         curve. */
+      function tstr(st) { return 'translate(' + st.Tx + 'px,' + st.Ty + 'px) scale(' + st.S + ')'; }
+      function about(sc) {
+        return { S: sc, Tx: apx - sc * (apx - ft.x) / ft.scale, Ty: apy - sc * (apy - ft.y) / ft.scale };
+      }
+      function ss(x) { return x * x * (3 - 2 * x); }                 /* smoothstep */
+      function lerp(a, b, e) {
+        return { S: a.S + (b.S - a.S) * e, Tx: a.Tx + (b.Tx - a.Tx) * e, Ty: a.Ty + (b.Ty - a.Ty) * e };
+      }
+
+      var S1 = ft.scale * (mainClean.width / mainTube.width);        /* landing scale */
+      var land  = { S: S1, Tx: mainClean.left - S1 * Lx, Ty: mainClean.top - S1 * Ly };
+      var apexS = about(Sdeep);
+
+      var frames = [], Nin = 22, Nout = 18;
+      /* zoom IN: whole page → deep into the glow (exponential scale, eased time). */
+      for (var i = 0; i <= Nin; i++) {
+        var u = i / Nin;
+        var sc = ft.scale * Math.pow(Sdeep / ft.scale, ss(u));
+        frames.push({ transform: tstr(about(sc)), offset: offApex * u, easing: 'linear' });
+      }
+      /* zoom OUT: deep glow → clean column (exponential scale via g, eased time). */
+      for (var j = 1; j <= Nout; j++) {
+        var v = j / Nout;
+        var scv = Sdeep * Math.pow(S1 / Sdeep, ss(v));
+        var g = (S1 - Sdeep) !== 0 ? (scv - Sdeep) / (S1 - Sdeep) : v;
+        frames.push({ transform: tstr(lerp(apexS, land, g)), offset: offApex + (1 - offApex) * v, easing: 'linear' });
+      }
+
+      container.style.willChange = 'transform';
+      container.style.transition = 'none';
+      container.animate(frames, { duration: total, fill: 'forwards' });
+
+      /* Approaching the apex: CRT scanlines glow + blur more and more, and the
+         letter's glow surges immense — "passing through the screen". */
+      setTimeout(function () {
+        var sb = el('div', 'cy-scanbloom');
+        document.body.appendChild(sb);
+        content.classList.add('cy-bloom-in');
+        setTimeout(function () {
+          if (sb.parentNode) sb.parentNode.removeChild(sb);
+          content.classList.remove('cy-bloom-in');
+          content.style.filter = '';
+        }, 2700);
+      }, zin - ramp);
+
+      /* At the apex (inside the immense glow): melt the CRT skin so we emerge to
+         a clean letter, with a light burst + a burst of digital noise — like
+         passing INTO the monitor. */
+      setTimeout(function () {
+        document.documentElement.classList.add('cy-dissolve');
+        var flash = el('div', 'cy-flash');
+        document.body.appendChild(flash);
+        setTimeout(function () { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 900);
+        var noise = fireNoise();
+        setTimeout(function () {
+          noise.stop = true;
+          if (noise.id) cancelAnimationFrame(noise.id);
+          if (noise.el.parentNode) noise.el.parentNode.removeChild(noise.el);
+        }, 820);
+      }, zin);
+
+      /* The chrome (nav) re-lays-out between the tube and the clean column, so
+         fade it out over the end of the zoom-out; only `main` (which lands
+         exactly) carries through the swap, then the chrome fades back in. This
+         is what turns the landing from a jump-cut into a seamless arrival. */
+      setTimeout(function () {
+        var nav = screen.querySelector('header');
+        if (nav) { nav.style.transition = 'opacity 450ms ease'; nav.style.opacity = '0'; }
+      }, total - 480);
+
+      setTimeout(function () { landCleanChar(landT); }, total + 60);   /* zoom-out done → clean layout at rest */
+    }
+
+    /* Motion has stopped at the column. Swap to the real clean layout at rest so
+       the reflow can't drop frames and the content is already in place. */
+    function landCleanChar(landT) {
+      container.style.transition = 'none';
+      container.style.transform  = landT;
+      if (container.getAnimations) {
+        container.getAnimations().forEach(function (a) { a.cancel(); });
+      }
+      var g = screen.querySelector('.cy-glitch');
+      if (g) { g.classList.remove('cy-glitch'); g.style.filter = g.style.transform = g.style.opacity = ''; }
+      document.documentElement.classList.add('cy-clean');
+      document.documentElement.classList.remove('cy-reveal', 'cy-dissolve');
+      container.style.transform  = 'none';
+      container.style.willChange = '';
+
+      /* Fade the chrome (nav + footer) into their clean positions so their
+         layout change is never a visible jump. */
+      var nav = screen.querySelector('header');
+      var foot = document.querySelector('footer');
+      [nav, foot].forEach(function (n) {
+        if (!n) return;
+        n.style.transition = 'none';
+        n.style.opacity = '0';
+        requestAnimationFrame(function () {
+          n.style.transition = 'opacity 700ms ease';
+          n.style.opacity = '1';
+          setTimeout(function () { n.style.transition = n.style.opacity = ''; }, 760);
+        });
+      });
+
+      finish(consoleEl, off, flash);
+    }
+
+    /* Wrap the first non-space character of `elm` in a <span> and return it, so
+       its box can be measured as the zoom focal point. */
+    function wrapFirstChar(elm) {
+      var walker = document.createTreeWalker(elm, NodeFilter.SHOW_TEXT, null, false);
+      var node;
+      while ((node = walker.nextNode())) {
+        var i = node.nodeValue.search(/\S/);
+        if (i >= 0) {
+          var rest = node.splitText(i);
+          var span = document.createElement('span');
+          span.textContent = rest.nodeValue.charAt(0);
+          rest.nodeValue = rest.nodeValue.slice(1);
+          rest.parentNode.insertBefore(span, rest);
+          return span;
+        }
+      }
+      return null;
+    }
+
+    /* A full-screen canvas of animated digital noise (TV static) — fired with the
+       flash so the pass-through feels like plunging INTO the monitor. */
+    function fireNoise() {
+      var cv = el('canvas', 'cy-noise');
+      document.body.appendChild(cv);
+      var ctx = cv.getContext('2d');
+      var w = cv.width  = Math.max(200, Math.floor(window.innerWidth  / 4));
+      var h = cv.height = Math.max(150, Math.floor(window.innerHeight / 4));
+      var handle = { id: 0, stop: false, el: cv };
+      (function frame() {
+        if (handle.stop) return;
+        var img = ctx.createImageData(w, h), d = img.data;
+        for (var i = 0; i < d.length; i += 4) {
+          var v = (Math.random() * 255) | 0;
+          d[i] = d[i + 1] = d[i + 2] = v;
+          d[i + 3] = (Math.random() * 255) | 0;
+        }
+        ctx.putImageData(img, 0, 0);
+        handle.id = requestAnimationFrame(frame);
+      })();
+      return handle;
     }
 
     var frame = document.querySelector('.terminal-frame');
@@ -227,6 +472,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
   /* ── Reduced motion: skip the cinematics, reveal immediately. ───── */
   function reducedReveal(consoleEl, off, flash) {
+    document.documentElement.classList.add('cy-clean');   /* straight to the real site */
     if (off) off.parentNode && off.parentNode.removeChild(off);
     if (flash) flash.parentNode && flash.parentNode.removeChild(flash);
     if (consoleEl) consoleEl.parentNode && consoleEl.parentNode.removeChild(consoleEl);
@@ -238,10 +484,16 @@ SPDX-License-Identifier: BSD-3-Clause
     [consoleEl, off, flash].forEach(function (n) {
       if (n && n.parentNode) n.parentNode.removeChild(n);
     });
-    document.documentElement.classList.remove('cy-booting');
+    document.documentElement.classList.remove('cy-booting', 'cy-reveal', 'cy-dissolve');
     document.body.classList.remove('boot-active');
     document.documentElement.style.height = '';
     document.body.style.height = '';
+
+    /* Remove any leftover through-the-screen FX / character stage. */
+    var fx = document.querySelectorAll('.cy-fx, .cy-charfx, .cy-flash, .cy-scanbloom, .cy-noise');
+    for (var f = 0; f < fx.length; f++) {
+      if (fx[f].parentNode) fx[f].parentNode.removeChild(fx[f]);
+    }
 
     var container = document.querySelector('.terminal-container');
     if (container) {
@@ -252,11 +504,15 @@ SPDX-License-Identifier: BSD-3-Clause
     if (window.CyResponsive) window.CyResponsive.unlock();   /* final layout */
     markBooted();
 
-    /* Ensure the live effects are running. Glitch.start is idempotent;
-       triggerDecode is a no-op if the reveal already fired it. Covers the
-       reduced-motion / missing-DOM paths. */
-    if (window.CyGlitch && window.CyGlitch.start) window.CyGlitch.start();
-    triggerDecode();
+    /* Ensure the live CRT effects are running — but NOT in clean mode, where
+       glow/scanlines/glitch/decode are all stripped. Covers the reduced-motion
+       / missing-DOM paths. */
+    if (!document.documentElement.classList.contains('cy-clean')) {
+      if (window.CyGlitch && window.CyGlitch.start) window.CyGlitch.start();
+      triggerDecode();
+    } else {
+      placeCursor();       /* landed clean → drop the cursor at the end of the text */
+    }
 
     running = false;       /* allow the easter egg to replay */
   }
@@ -399,6 +655,11 @@ SPDX-License-Identifier: BSD-3-Clause
     window.__CY_BOOT_PENDING__ = true;
     document.documentElement.classList.add('cy-booting');
     ready(function () { playBoot(false); });
+  } else {
+    /* Not booting → render the real (clean) site. Set before first paint so the
+       CRT never flashes for returning visitors or first-time deep links. */
+    document.documentElement.classList.add('cy-clean');
+    ready(placeCursor);
   }
 
   /* Easter eggs: invisible links over keypad keys replay the sequence. Also
@@ -412,5 +673,18 @@ SPDX-License-Identifier: BSD-3-Clause
         playBoot(true);
       });
     }
+
+    /* In clean mode the keypad is hidden, so the "D" keyboard key replays the
+       whole cinematic (drop back into the CRT, run boot, emerge clean again). */
+    document.addEventListener('keydown', function (e) {
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      var tag = (e.target && e.target.tagName) || '';
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) ||
+          (e.target && e.target.isContentEditable)) return;
+      if (e.key === 'd' || e.key === 'D') {
+        document.documentElement.classList.remove('cy-clean');
+        playBoot(true);
+      }
+    });
   });
 })();
