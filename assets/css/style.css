@@ -688,7 +688,16 @@ html.cy-booting body {
    ── cy-warp: radial light streaks tunnel outward from centre (into-the-screen).
    ── cy-bloom: a bright light burst at the moment you break through.
    ════════════════════════════════════════════════════════════════ */
-.cy-fx { position: fixed; inset: 0; z-index: 100000; pointer-events: none; transform-origin: 50% 50%; }
+/* will-change promotes each layer to its own GPU layer (only transform/opacity
+   animate, so no per-frame repaint). No mix-blend-mode: over the near-black page
+   `screen` blending ≈ normal, and dropping it avoids costly per-frame
+   compositing (a big source of stutter). Timed to peak at the deepest push
+   (~1930ms into the 4200ms flight). */
+.cy-fx {
+  position: fixed; inset: 0; z-index: 100000;
+  pointer-events: none; transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
 
 .cy-glass {
   background:
@@ -698,38 +707,36 @@ html.cy-booting body {
       rgba(0,255,120,0.12) 0, rgba(0,255,120,0.12) 2px, transparent 2px, transparent 5px),
     radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,0.7) 100%);
   opacity: 0;
-  animation: glass-rush 1500ms cubic-bezier(0.62, 0, 0.9, 0.28) 150ms forwards;
+  animation: glass-rush 1900ms cubic-bezier(0.5, 0, 0.85, 0.35) 250ms forwards;
 }
 @keyframes glass-rush {
   0%   { transform: scale(1);    opacity: 0; }
-  12%  { opacity: 0.9; }
-  70%  { opacity: 0.85; }
+  14%  { opacity: 0.9; }
+  70%  { opacity: 0.8; }
   100% { transform: scale(13);   opacity: 0; }
 }
 
 .cy-warp {
   z-index: 100001;
-  mix-blend-mode: screen;
   background: repeating-conic-gradient(from 0deg at 50% 50%,
     rgba(190,255,215,0) 0deg, rgba(190,255,215,0) 0.7deg,
-    rgba(190,255,215,0.40) 1deg, rgba(190,255,215,0) 1.3deg);
+    rgba(190,255,215,0.42) 1deg, rgba(190,255,215,0) 1.3deg);
   opacity: 0;
-  animation: warp-streak 1300ms cubic-bezier(0.7, 0, 0.9, 0.2) 500ms forwards;
+  animation: warp-streak 1900ms cubic-bezier(0.6, 0, 0.9, 0.25) 550ms forwards;
 }
 @keyframes warp-streak {
   0%   { transform: scale(0.15); opacity: 0; }
-  45%  { opacity: 0.55; }
-  75%  { opacity: 0.8; }
+  45%  { opacity: 0.5; }
+  72%  { opacity: 0.8; }
   100% { transform: scale(7);    opacity: 0; }
 }
 
 .cy-bloom {
   z-index: 100002;
-  mix-blend-mode: screen;
   background: radial-gradient(circle at 50% 50%,
     rgba(235,255,242,0.98) 0%, rgba(120,255,175,0.55) 12%, rgba(0,0,0,0) 46%);
   opacity: 0;
-  animation: bloom-flash 750ms ease-out 1300ms forwards;   /* peaks at the deepest dive */
+  animation: bloom-flash 1100ms ease-out 1600ms forwards;   /* peaks at the deepest dive */
 }
 @keyframes bloom-flash {
   0%   { opacity: 0;    transform: scale(0.3); }
@@ -769,6 +776,7 @@ html.cy-dissolve .char {
   transition: text-shadow 0.7s ease-out, color 1s ease-out;
 }
 html.cy-dissolve pre, html.cy-dissolve .glow { color: #7dffb0; }
+html.cy-dissolve footer { opacity: 0; transition: opacity 0.4s ease-out; }  /* don't fly the footer */
 
 @media (prefers-reduced-motion: reduce) {
   .cy-fx { display: none !important; animation: none !important; }

@@ -61,15 +61,13 @@ SPDX-License-Identifier: BSD-3-Clause
     logoShowHold:   2000,   /* logo centered (incl. warm-up) before it slides up */
     slideDur:        600,   /* logo slide-to-top duration */
     preTextGap:     1000,   /* logo reaches top → boot text begins */
-    holdAfterBoot:  1500,   /* boot log held before your site loads into the tube */
-    revealFade:      800,   /* boot console fades out → your site shows in the tube */
-    sitePrehold:     900,   /* your site shown in the tube (CRT skin) before the push */
-    pushDur:        1600,   /* punch through the glass while the CRT skin dissolves
-                               (MUST match the cy-glass/warp/bloom animations in CSS) */
-    throughHold:      60,   /* tiny gap so the dive transition commits before the
-                               settle reads it (both arcs are at ~0 velocity here,
-                               so this is imperceptible — not a visible pause) */
-    settleDur:       950,   /* FLIP settle into the clean readable column */
+    holdAfterBoot:  1800,   /* boot log held before your site loads into the tube */
+    revealFade:      900,   /* boot console fades out → your site shows in the tube */
+    sitePrehold:    1500,   /* your site shown in the tube (CRT skin) before the flight */
+    pushDur:        4200,   /* the WHOLE continuous flight: tube → glass → column.
+                               Slow + cinematic. The deepest push is at offset 0.46
+                               (~1930ms); the cy-glass/warp/bloom CSS animations are
+                               timed to peak there. */
     blankHold:      1000,   /* (legacy) tube blank hold — reduced-motion path */
     siteFade:        900    /* (legacy) main-page fade-in */
   };
@@ -224,87 +222,91 @@ SPDX-License-Identifier: BSD-3-Clause
       setTimeout(pushAndDissolve, T.revealFade + T.sitePrehold);
     }
 
-    /* Stage 2 — PUNCH THROUGH THE GLASS. Three viewport-fixed layers give the
-       crossing real depth: the glass surface rushes toward the camera and blows
-       past the edges, warp streaks tunnel outward from centre, and a light burst
-       flashes as we break the plane. Meanwhile the page itself dives toward the
-       viewport centre, accelerating into the glass, and the CRT skin dissolves. */
+    /* Stage 2 — THE FLIGHT. One continuous camera move carries the page from the
+       tube, through the glass (deepest push), and down into the clean column — a
+       SINGLE transform animation on the container, so there is no element swap,
+       no mid-flight layout reflow, and no velocity seam. The layout only becomes
+       "really" clean at the very end (landClean), once motion has stopped, so the
+       reflow can't drop frames. Three depth layers sell the crossing. */
     function pushAndDissolve() {
       var R = window.CyResponsive;
       var content = screen.querySelector('main') || screen;
 
       document.documentElement.classList.add('cy-dissolve');  /* melt glow/scanlines/bezel */
 
-      /* Depth FX (self-timed via CSS, all coupled to T.pushDur). */
       document.body.appendChild(el('div', 'cy-fx cy-glass'));
       document.body.appendChild(el('div', 'cy-fx cy-warp'));
       document.body.appendChild(el('div', 'cy-fx cy-bloom'));
 
-      /* Dive the page toward the viewport centre, accelerating, so it rushes the
-         glass plane in step with the surface flying past. Zoom about the content
-         centre and re-centre it to (vw/2, vh/2). Derived from the current
-         (finalTransform, top-left origin) placement. */
       var ft = R ? R.finalTransform() : { scale: 1, x: 0, y: 0 };
-      var rect = content.getBoundingClientRect();
-      var px = rect.left + rect.width / 2, py = rect.top + rect.height / 2;
-      var K = 3.5;                                            /* how hard we punch in */
-      var ns  = ft.scale * K;
-      var tnx = window.innerWidth  / 2 - K * (px - ft.x);
-      var tny = window.innerHeight / 2 - K * (py - ft.y);
 
-      /* Ease-in-OUT so the dive accelerates then DECELERATES to a still point at
-         the deepest push (velocity → 0). The settle then accelerates from that
-         same rest — the two arcs meet at zero velocity, so there is no slam-stop
-         or jerk at the crossing. */
-      container.style.transition =
-        'transform ' + T.pushDur + 'ms cubic-bezier(0.5, 0, 0.2, 1)';
-      requestAnimationFrame(function () {
-        container.style.transform = 'translate(' + tnx + 'px,' + tny + 'px) scale(' + ns + ')';
-      });
-
-      setTimeout(settleToColumn, T.pushDur + T.throughHold);
-    }
-
-    /* Stage 4 — FLIP the same text block from its zoomed position down into the
-       clean centered column. Same DOM + same font ⇒ it lines up and just glides
-       into place (a gentle settle), rather than swapping to a new screen. */
-    function settleToColumn() {
-      var content = screen.querySelector('main') || screen;
-      var header  = screen.querySelector('header');
-
-      var first = content.getBoundingClientRect();            /* zoomed (F) */
-
-      document.documentElement.classList.add('cy-clean');     /* real clean layout */
-      document.documentElement.classList.remove('cy-reveal', 'cy-dissolve');
+      /* Measure the content's box in the tube (now) and in the clean column
+         (by toggling cy-clean synchronously — no paint happens between, so no
+         flash). These bound the flight's start and landing. */
+      var tube = content.getBoundingClientRect();
+      document.documentElement.classList.add('cy-clean');
+      var keepT = container.style.transform, keepTr = container.style.transition;
       container.style.transition = 'none';
       container.style.transform  = 'none';
+      var col = content.getBoundingClientRect();
+      document.documentElement.classList.remove('cy-clean');
+      container.style.transition = keepTr;
+      container.style.transform  = keepT;
 
-      var last = content.getBoundingClientRect();             /* clean column (L) */
-      var s  = last.width ? first.width / last.width : 1;
-      var dx = first.left - last.left;
-      var dy = first.top  - last.top;
+      /* Container transform (top-left origin) that lands the content's top-left
+         at (TL,TT) with the given on-screen width. */
+      var Lx = (tube.left - ft.x) / ft.scale, Ly = (tube.top - ft.y) / ft.scale;
+      function place(TL, TT, W) {
+        var S = ft.scale * (W / tube.width);
+        return 'translate(' + (TL - S * Lx) + 'px,' + (TT - S * Ly) + 'px) scale(' + S + ')';
+      }
+      var startT = place(tube.left, tube.top, tube.width);      /* == current */
+      var landT  = place(col.left,  col.top,  col.width);       /* clean column */
+      var K = 3.4;                                              /* depth of the dive */
+      var peakW = tube.width * K;
+      var peakT = place(window.innerWidth  / 2 - peakW / 2,
+                        window.innerHeight / 2 - tube.height * K / 2, peakW);
 
-      content.style.transformOrigin = 'top left';
-      content.style.transition = 'none';
-      content.style.transform  = 'translate(' + dx + 'px,' + dy + 'px) scale(' + s + ')';
-      if (header) header.style.opacity = '0';                 /* nav fades in with the settle */
+      /* One continuous flight: tube → deepest push → column. ease-in-out on BOTH
+         legs means each leg starts and ends at ~0 velocity, so the whole path is
+         smooth (a gentle hang at the deepest point, in the light burst). */
+      container.style.willChange = 'transform';
+      container.style.transition = 'none';
+      var flight = container.animate([
+        { transform: startT, easing: 'cubic-bezier(0.45, 0, 0.55, 1)' },
+        { transform: peakT, offset: 0.46, easing: 'cubic-bezier(0.45, 0, 0.55, 1)' },
+        { transform: landT }
+      ], { duration: T.pushDur, fill: 'forwards' });
 
-      requestAnimationFrame(function () {
-        /* Accelerate from rest (matches the dive's zero-velocity endpoint) and
-           ease out to a still stop at the column — no jerk at either end. */
-        content.style.transition = 'transform ' + T.settleDur + 'ms cubic-bezier(0.4, 0, 0.2, 1)';
-        content.style.transform  = 'none';
-        if (header) {
-          header.style.transition = 'opacity ' + T.settleDur + 'ms ease';
+      flight.onfinish = function () { landClean(landT); };
+    }
+
+    /* Motion has stopped at the column. NOW swap to the real clean layout: the
+       reflow happens at rest (no frame to drop) and the content is already
+       visually in the column, so there is no snap. */
+    function landClean(landT) {
+      var header = screen.querySelector('header');
+
+      container.style.transition = 'none';
+      container.style.transform  = landT;      /* commit before cancelling the anim */
+      if (container.getAnimations) {
+        container.getAnimations().forEach(function (a) { a.cancel(); });
+      }
+
+      if (header) header.style.opacity = '0';
+      document.documentElement.classList.add('cy-clean');
+      document.documentElement.classList.remove('cy-reveal', 'cy-dissolve');
+      container.style.transform  = 'none';
+      container.style.willChange = '';
+
+      if (header) {
+        requestAnimationFrame(function () {
+          header.style.transition = 'opacity 600ms ease';
           header.style.opacity = '1';
-        }
-      });
-
-      setTimeout(function () {
-        content.style.transition = content.style.transform = content.style.transformOrigin = '';
-        if (header) { header.style.transition = header.style.opacity = ''; }
-        finish(consoleEl, off, flash);
-      }, T.settleDur + 80);
+          setTimeout(function () { header.style.transition = header.style.opacity = ''; }, 680);
+        });
+      }
+      finish(consoleEl, off, flash);
     }
 
     var frame = document.querySelector('.terminal-frame');
