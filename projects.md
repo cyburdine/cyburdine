@@ -7,25 +7,25 @@ SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
 SPDX-License-Identifier: BSD-3-Clause
 -->
 <div class="glow">
-<h3 style="color:#33ffcc">CYBURDINE.com :: [forge.node]</h3>
+{% include page-header.html title="forge.node" kicker="CYBURDINE.com :: [projects]" %}
+
 <div class="search-bar">
   <input type="text" id="projectSearchInput" placeholder="// enter query">
-  <select id="projectTagFilter">
-    <option value="">// all tags</option>
-    {% assign all_tags = site.projects | map: "tags" | flatten | uniq | sort %}
-    {% for tag in all_tags %}
-      <option value="{{ tag }}">{{ tag }}</option>
-    {% endfor %}
-  </select>
+  <div class="cy-select">
+    <select id="projectTagFilter">
+      <option value="">// all tags</option>
+      {% assign all_tags = site.projects | map: "tags" | flatten | uniq | sort %}
+      {% for tag in all_tags %}
+        <option value="{{ tag }}">{{ tag }}</option>
+      {% endfor %}
+    </select>
+  </div>
 </div>
 
-<ul id="projectList">
+<div class="cy-cards" id="projectList">
   {% for project in site.projects %}
-    <li class="project-item" data-tags="{{ project.tags | join: ',' }}">
-      <a href="{{ project.url }}">{{ project.title }}</a>{% if project.tags %} // tags: {{ project.tags | join: ', ' }}{% endif %}
-    </li>
+    {% include project-card.html project=project %}
   {% endfor %}
-</ul>
+</div>
 </div>
 <script src="{{ '/assets/js/project_filter.js' | relative_url }}"></script>
-

@@ -2,6 +2,9 @@
 title: "Spirefall: Ghost Code"
 layout: project
 tags: [animation, music, worldbuilding]
+status: "in progress"
+wip: true
+summary: "Composing the sound that drives Spirefall, an original cyberpunk animation series."
 ---
 <!--
 SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>

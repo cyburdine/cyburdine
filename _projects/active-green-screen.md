@@ -2,6 +2,9 @@
 title: "Active Greenscreen"
 layout: project
 tags: [vfx, diy]
+status: "in progress"
+wip: true
+summary: "A retroreflective screen that pulls mattes dynamically across multiple key colors."
 ---
 <!--
 SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>

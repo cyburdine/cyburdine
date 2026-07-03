@@ -1,0 +1,29 @@
+<!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+
+  Framed page header. Params:
+    title   — heading text (required)
+    kicker  — small system label above the title (optional)
+    type    — meta chip, e.g. "LOG" / "PROJECT" (optional)
+    status  — status pill text (optional)
+    live    — truthy → cyan "live" pill instead of pink (optional)
+    date    — pre-formatted date string (optional)
+    tags    — array of tag strings (optional)
+-->
+<div class="cy-page-header">
+  {% if include.kicker %}<div class="cy-meta cy-section-label">{{ include.kicker }}</div>{% endif %}
+  <h1>{{ include.title }}</h1>
+  {% if include.type or include.status or include.date %}
+  <div class="cy-statusbar">
+    {% if include.type %}<span class="cy-meta">{{ include.type }}</span>{% endif %}
+    {% if include.status %}<span class="cy-status{% if include.live %} cy-status--live{% endif %}">{{ include.status }}</span>{% endif %}
+    {% if include.date %}<span class="cy-meta">{{ include.date }}</span>{% endif %}
+  </div>
+  {% endif %}
+  {% if include.tags %}
+  <div class="cy-tags">
+    {% for tag in include.tags %}<span class="cy-tag">{{ tag }}</span>{% endfor %}
+  </div>
+  {% endif %}
+</div>

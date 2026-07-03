@@ -2,9 +2,7 @@
 layout: default
 ---
 <article>
-  <h1>{{ page.title }}</h1>
-  <p><small>// timestamp: {{ page.date | date: "%B %d, %Y" }}</small></p>
-  <div class="console">
-    {{ content }}
-  </div>
+  {% assign post_date = page.date | date: "%Y.%m.%d" %}
+  {% include page-header.html title=page.title type="LOG" date=post_date tags=page.tags %}
+  <div class="console cy-frame">{{ content }}</div>
 </article>

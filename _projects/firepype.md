@@ -2,6 +2,9 @@
 title: "Startup 01: Firepype"
 layout: project
 tags: [webapp, startup]
+status: "shipped · 2012–16"
+live: true
+summary: "Media-distribution automation — drop a file, get it encoded and pushed everywhere. Later: live podcast analytics and dynamic ad insertion."
 ---
 <!--
 SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>

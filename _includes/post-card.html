@@ -1,0 +1,18 @@
+<!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+
+  Blog listing card. Param: post (a _posts item).
+  Filter contract (blog_filter.js): the outer element MUST keep
+  class "post-item" + a comma-joined data-tags attribute, and the
+  default display comes from CSS (never an inline style).
+    front-matter used: title, url, date, tags, summary
+-->
+<article class="post-item cy-card" data-tags="{{ include.post.tags | join: ',' }}">
+  <div class="cy-card__head">
+    <a class="cy-card__link" href="{{ include.post.url }}">{{ include.post.title }}</a>
+    <span class="cy-meta">{{ include.post.date | date: "%Y.%m.%d" }}</span>
+  </div>
+  {% if include.post.summary %}<p class="cy-card__desc">{{ include.post.summary }}</p>{% endif %}
+  {% if include.post.tags %}<div class="cy-card__meta cy-meta">// {{ include.post.tags | join: '  ·  ' }}</div>{% endif %}
+</article>

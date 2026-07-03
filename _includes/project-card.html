@@ -1,0 +1,18 @@
+<!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+
+  Project listing card. Param: project (a _projects item).
+  Filter contract (project_filter.js): the outer element MUST keep
+  class "project-item" + a comma-joined data-tags attribute, and the
+  default display comes from CSS (never an inline style).
+    front-matter used: title, url, tags, summary, status, wip
+-->
+<article class="project-item cy-card{% if include.project.wip %} cy-card--stub{% endif %}" data-tags="{{ include.project.tags | join: ',' }}">
+  <div class="cy-card__head">
+    <a class="cy-card__link" href="{{ include.project.url }}">{{ include.project.title }}</a>
+    {% if include.project.status %}<span class="cy-status{% unless include.project.wip %} cy-status--live{% endunless %}">{{ include.project.status }}</span>{% endif %}
+  </div>
+  {% if include.project.summary %}<p class="cy-card__desc">{{ include.project.summary }}</p>{% endif %}
+  {% if include.project.tags %}<div class="cy-card__meta cy-meta">// {{ include.project.tags | join: '  ·  ' }}</div>{% endif %}
+</article>

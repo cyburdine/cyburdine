@@ -7,24 +7,25 @@ SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
 SPDX-License-Identifier: BSD-3-Clause
 -->
 <div class="glow">
-<h3 style="color:#33ffcc">CYBURDINE.com :: [consciousness.stream]</h3>
+{% include page-header.html title="consciousness.stream" kicker="CYBURDINE.com :: [blog]" %}
+
 <div class="search-bar">
   <input type="text" id="searchInput" placeholder="// enter query">
-  <select id="tagFilter">
-    <option value="">// all tags</option>
-    {% assign all_tags = site.tags | sort %}
-    {% for tag in all_tags %}
-      <option value="{{ tag[0] }}">{{ tag[0] }}</option>
-    {% endfor %}
-  </select>
+  <div class="cy-select">
+    <select id="tagFilter">
+      <option value="">// all tags</option>
+      {% assign all_tags = site.tags | sort %}
+      {% for tag in all_tags %}
+        <option value="{{ tag[0] }}">{{ tag[0] }}</option>
+      {% endfor %}
+    </select>
+  </div>
 </div>
 
-<ul id="postList">
+<div class="cy-cards" id="postList">
   {% for post in site.posts %}
-    <li class="post-item" data-tags="{{ post.tags | join: ',' }}">
-      :: {{ post.date | date: "%y%m%d" }} - <a href="{{ post.url }}">{{ post.title }}</a> // tags: {{ post.tags | join: ', ' }}
-    </li>
+    {% include post-card.html post=post %}
   {% endfor %}
-</ul>
+</div>
 </div>
 <script src="{{ '/assets/js/blog_filter.js' | relative_url }}"></script>
