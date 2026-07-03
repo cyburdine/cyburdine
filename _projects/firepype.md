@@ -53,3 +53,8 @@ Firepype didn’t make it, but the lessons were priceless. Build for a real pain
 
 I still think about Firepype whenever I see all these modern tools with their little “Share on YouTube” buttons and think, yeah, we were doing that before it was cool.
 </div>
+
+<div class="cy-meta cy-section-label">:: teaser trailer</div>
+<div class="cy-video">
+  <iframe src="https://www.youtube-nocookie.com/embed/Wf_YwWHgFL0" title="Firepype — teaser trailer" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</div>
