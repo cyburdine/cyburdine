@@ -7,8 +7,6 @@ SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
 SPDX-License-Identifier: BSD-3-Clause
 -->
 <div class="glow">
-{% include page-header.html title="forge.node" kicker="CYBURDINE.com :: [projects]" %}
-
 <div class="search-bar">
   <input type="text" id="projectSearchInput" placeholder="// enter query">
   <div class="cy-select">

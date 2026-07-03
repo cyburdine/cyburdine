@@ -7,8 +7,6 @@ SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
 SPDX-License-Identifier: BSD-3-Clause
 -->
 <div class="glow">
-{% include page-header.html title="consciousness.stream" kicker="CYBURDINE.com :: [blog]" %}
-
 <div class="search-bar">
   <input type="text" id="searchInput" placeholder="// enter query">
   <div class="cy-select">

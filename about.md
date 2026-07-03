@@ -7,7 +7,6 @@ SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
 SPDX-License-Identifier: BSD-3-Clause
 -->
 <div class="glow">
-{% include page-header.html title="origin.trace" kicker="CYBURDINE.com :: [about]" %}
 <div class="cy-frame">
 <pre class="glow">
 <span class="cy-accent">:: subject :</span> Justin Burdine  

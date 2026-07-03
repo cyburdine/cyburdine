@@ -8,8 +8,6 @@ SPDX-License-Identifier: BSD-3-Clause
 -->
 <div class="glow">
 <div class="cy-hero">
-  <div class="cy-meta cy-section-label">CYBURDINE.com :: [entry.trace]</div>
-  <div class="cy-hero__id">Justin Burdine</div>
   <div class="cy-hero__roles cy-meta">Technologist // Artist // Versatilist</div>
   <p class="cy-hero__tagline">I build systems and the worlds they run in — infrastructure automation, AI creative tooling, and an original cyberpunk animation series. I ship real things and write about how they were made.</p>
 </div>
