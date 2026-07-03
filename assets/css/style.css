@@ -1269,6 +1269,21 @@ html.cy-clean .cy-hero__tagline {
 }
 html.cy-clean .cy-section-label { margin: 0 0 var(--cy-sp-2); }
 
+/* ── Responsive video embed (16:9) ────────────────────────────── */
+html.cy-clean .cy-video {
+  width: 100%;
+  margin: var(--cy-sp-4) 0 0;
+  border: 1px solid var(--cy-rule);
+  background: #000;
+  aspect-ratio: 16 / 9;
+}
+html.cy-clean .cy-video iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 /* ── Contact / "open channel" block ───────────────────────────── */
 html.cy-clean .cy-channel { margin: var(--cy-sp-5) 0 0; }
 html.cy-clean .cy-channel__links {
