@@ -23,5 +23,4 @@ exclude:
   - CLAUDE.md
 
 # If you use any plugins (e.g. jekyll-feed), list them here:
-plugins:
-  - jekyll-feed
+plugins: []

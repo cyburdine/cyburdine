@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-cyburdine.com is a personal portfolio and blog site for Justin Burdine, built with a cyberpunk retro-terminal aesthetic. The entire site renders inside a CRT monitor frame image with scanlines, glitch effects, and a Japanese character "decryption" animation on page load. On first visit to the landing page, a cinematic CRT boot sequence plays (zoom into the monitor → power-on → Cyburdine Systems boot log → fade into the site).
+cyburdine.com is a personal portfolio site for Justin Burdine, built with a cyberpunk retro-terminal aesthetic. The entire site renders inside a CRT monitor frame image with scanlines, glitch effects, and a Japanese character "decryption" animation on page load. On first visit to the landing page, a cinematic CRT boot sequence plays (zoom into the monitor → power-on → Cyburdine Systems boot log → fade into the site).
 
 ## Tech Stack
 
@@ -27,18 +27,15 @@ bundle exec jekyll build          # production build to _site/
 ### Layout System
 
 - `_layouts/default.html` — Master layout. Wraps all content in `.terminal-container` > `.terminal-screen` with the CRT frame overlay (`terminal-full.webp`). Loads all JS files (boot.js first). Also contains the invisible `.cy-egg` easter-egg link over the "4" key.
-- `_layouts/post.html` — Blog post layout, inherits from `default`. Wraps content in `.console` class.
 - `_layouts/project.html` — Project page layout, inherits from `default`. Wraps content in `.console` class.
 
 ### Collections
 
-- `_posts/` — Blog posts (standard Jekyll, uses `post` layout)
 - `_projects/` — Custom collection configured in `_config.yml` with `output: true` and permalink `/projects/:path/`
 
 ### Pages
 
 - `index.md` — Landing page with terminal-style "handshake" text
-- `blog.md` — Post listing with client-side search/tag filtering
 - `projects.md` — Project listing with client-side search/tag filtering
 - `about.md` — Bio/profile page
 
@@ -62,7 +59,7 @@ All scripts are IIFEs loaded on every page via `default.html` (boot.js first, so
 
 ## Content Style
 
-All content uses a cyberpunk terminal aesthetic with `::` prefixes, `//` comments, and monospace formatting. Blog posts and project pages should maintain this voice. Posts use front matter tags for the filtering system on `blog.md`.
+All content uses a cyberpunk terminal aesthetic with `::` prefixes, `//` comments, and monospace formatting. Project pages should maintain this voice.
 
 ## Responsive Design
 

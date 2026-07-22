@@ -1,8 +1,0 @@
----
-layout: default
----
-<article>
-  {% assign post_date = page.date | date: "%Y.%m.%d" %}
-  {% include page-header.html title=page.title type="LOG" date=post_date tags=page.tags %}
-  <div class="console cy-frame">{{ content }}</div>
-</article>
