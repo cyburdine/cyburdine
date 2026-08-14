@@ -1,0 +1,138 @@
+---
+title: "RE:play"
+layout: project
+tags: [opensource, app, macos, windows, ai]
+status: "shipped · 2026"
+live: true
+summary: "I wanted to hear my own mix. Apple Music showed me an ad instead. Four hours later there was a media player — eleven weeks later it ran on two platforms, and I don't know a line of C#."
+---
+<!--
+SPDX-FileCopyrightText: © 2026 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+-->
+<div class="project">
+I was working on some songs and I just wanted to hear one back.
+
+That's it. That's the whole origin story. I had a mix bouncing down, I wanted to check the output, and every single time I clicked the file, Apple Music launched and threw up an ad for their subscription service. It never played the song. Not once. I had to manually drag the file into the window like it was 1998.
+
+So I went looking for something else, the way you do. And almost everything out there was bloated — a media player that wants an account, or a media player that ships a browser engine to draw a play button, or a media player with a store in it. I just wanted a thing that plays a file when I click the file.
+
+I'd been vibe coding for about a year at that point. And somewhere between the third ad and the fourth manual drag, it stopped being an annoyance and turned into a project: build the media player, make it open source, give it away. That sounded fun.
+
+Four hours later I had one that worked.
+
+</div>
+
+<div class="cy-meta cy-section-label">:: the hour before the four hours</div>
+
+<div class="project">
+
+Here's the part people leave out when they tell this kind of story, and it's the part that actually matters.
+
+I didn't sit down and start typing. When I start a project with Claude, I open the app on my phone, get on the treadmill, and talk to it — sometimes for forty-five minutes, sometimes for an hour. And I don't ask it to help me. I tell it to act as a skeptical business partner. Challenge my design choices. Is there even a market for this. Tell me why this fails. Suggest changes to the plan that derail us.
+
+For RE:play, it pushed back hard. It genuinely did not understand why I would build this. VLC exists. IINA exists. The market is saturated, it's free, nobody is waiting for another media player.
+
+Which is all true, and none of it was the point.
+
+Part of it was that I wanted to be able to say I produced an open-source tool and handed it to the world with a pretty bow on it. Part of it was practice — I want to keep getting better at taking an idea out of my head and getting it built. It's the same feeling I get when I design something in 3D and then print it on my 3D printer. It's a dopamine rush. Voila — and now there's a thing that exists, that didn't before, and it's free, and I like it, so I'm hoping other people like it too.
+
+That's a bad business case and a great reason.
+
+So I walked, and it argued, and by the end of the walk the argument had turned into a plan.
+
+</div>
+
+<div class="cy-meta cy-section-label">:: four hours</div>
+
+<div class="project">
+
+Then I sat down at the keyboard, in the same chat I'd just been talking into, and started the build.
+
+The plan from the treadmill became the first thing in the repo — issue #1, titled "build prompt." It is not a one-liner. It's a specification: Swift, SwiftUI with AppKit interop, AVFoundation, zero third-party libraries. Bundle identifier com.cyburdine.replay. It solves the naming problem in advance — macOS bundle identifiers and file paths can't contain a colon, so the app is Replay everywhere on disk and <span class="cy-accent">RE:play</span> only as the display name. It specifies frame-stepping through AVPlayer.step(byCount:), and then goes one better:
+
+> For audio files, define a "frame" as a small fixed step (e.g., 1/30th of a second) so the same control works gracefully for both audio and video.
+
+That's the difference between vibe coding and whatever this is. One hour of somebody trying to talk me out of it, followed by four hours of execution against a plan that had already survived the argument. Version 1.0.0 shipped the next day.
+
+Zero dependencies, by the way, was in the spec from the first line. The entire complaint that started this was bloat. You don't fix bloat by accident.
+
+</div>
+
+<div class="cy-meta cy-section-label">:: and then it didn't stop</div>
+
+<div class="project">
+
+The player was done in four hours. I kept going for eleven weeks.
+
+What I added wasn't player features. It was everything a company wraps around a product. A marketing site at replay.cyburdine.com, with a hero animation built in Remotion. A feedback form fronted by Cloudflare Turnstile. A Worker behind that form. Funding links — Sponsors, Patreon, Buy Me a Coffee. A silent auto-updater that checks GitHub releases on launch and says nothing at all unless there's genuinely something newer: no "you're up to date" popup, no error if you're offline. A file-type associations pane so you can actually make it your default player. An audio visualizer.
+
+That's a go-to-market department. For a free media player nobody asked for.
+
+I did it because that's all part of the learning. I want to keep building and creating products and companies, and I want to do all the parts myself. I once heard someone say that AI could let one person build the first single-employee billion-dollar company, and that has stuck with me ever since.
+
+</div>
+
+<div class="cy-meta cy-section-label">:: the loop</div>
+
+<div class="project">
+
+Somewhere in there, how I work changed.
+
+I stopped typing what I wanted into the Claude window. Now every change gets written up as an issue first — enhancements as I think of them, bugs as they surface. That way I don't forget them, and I can capture the thought without derailing whatever I'm in the middle of.
+
+When I start a new session, I have Claude read through all the open issues and figure out which ones are highest priority, and whether any of them group together. Then we pick whichever one it considers the biggest or quickest win. It does the work, writes up what it changed, closes the issue. Repeat, as I have time and attention to give. The plans themselves live in Kaku, my own notation system, instead of scattered markdown files.
+
+Which quietly closed a loop I didn't design on purpose. A stranger fills out the feedback form on the site. Turnstile clears them, the Worker files it as a GitHub issue and pings me in Slack. That issue lands in the same queue Claude triages at the start of the next session. The fix goes out as a release. And the app's own updater offers that release back to the stranger, silently, the next time they open it.
+
+Someone's complaint can round-trip all the way back to their machine and I never touch a support inbox.
+
+</div>
+
+<div class="cy-meta cy-section-label">:: windows</div>
+
+<div class="project">
+
+Then in August I built the Windows version.
+
+Not a port. Swift, SwiftUI, AppKit, and AVFoundation have no Windows equivalent, so there was nothing to port — every layer got re-implemented on whatever was closest and most native on that side: WPF on .NET 8 for the UI, a different playback engine, a different visualizer, a different persistence layer, a different file-association model, and an NSIS installer. The installer is about 300 KB because it carries no payload at all; it asks the GitHub Releases API for the newest release and downloads it. Publish a new release and every copy of that installer already out in the world picks it up without being rebuilt.
+
+I don't know any C#. I don't know WPF. Zero. Not "rusty" — never written it.
+
+I do have a Windows 10 machine, and that's where it was built and tested, because I wasn't going to ship something I'd never watched run. But the language, the framework, the installer ecosystem, the whole stack — none of that was knowledge I had. It shipped as 1.5.0.
+
+That's the part I'd point at if you asked me what's actually different now.
+
+</div>
+
+<div class="cy-meta cy-section-label">:: the honest part</div>
+
+<div class="project">
+
+Two stars. Zero forks. No downloads worth reporting.
+
+I haven't looked much, and I don't expect much, because it's new and I haven't promoted it. Not once. I built a marketing site and then didn't market. That's the same thing that killed Firepype ten years ago, so apparently I'm consistent.
+
+I'm leaving that in because a piece like this usually ends with a number that's supposed to impress you, and I don't have one. What I have is an app that works, that I use every day, that's free, that has no account and no ads and no store in it, and that now — as of writing this — has an actual BSD-3 license file in the repo, because I checked while putting this together and discovered I'd never added one. A public repo with no license grants you nothing, legally. Handing something to the world with a pretty bow on it and forgetting the bow is very on brand.
+
+It's fixed. Fork it.
+
+</div>
+
+<div class="cy-meta cy-section-label">:: why not me</div>
+
+<div class="project">
+
+So that's RE:play. An ad for a subscription service, an hour on a treadmill arguing with a skeptic, four hours of building, eleven weeks of refusing to stop, and a Windows app in a language I can't write.
+
+None of this is a business. Not yet. But the reason I keep doing all the parts myself — the code, the site, the installer, the funding page, the support loop, the port — is that I keep coming back to that line about the single-employee billion-dollar company.
+
+And I have to ask myself: why not me?
+</div>
+
+<div class="cy-meta cy-section-label">:: get it</div>
+
+<div class="project">
+<a href="https://replay.cyburdine.com">replay.cyburdine.com</a> — macOS and Windows, free.
+<a href="https://github.com/cyburdine/REplay">github.com/cyburdine/REplay</a> — source, issues, releases. BSD-3.
+</div>
