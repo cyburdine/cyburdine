@@ -1,8 +1,0 @@
----
-layout: default
----
-<article>
-  {% include page-header.html title=page.title type="PROJECT" status=page.status live=page.live tags=page.tags %}
-  <div class="console cy-frame{% if page.wip %} cy-frame--wip{% endif %}">{{ content }}</div>
-  {% include contact.html %}
-</article>

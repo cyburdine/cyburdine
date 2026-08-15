@@ -1,1 +1,7 @@
 _site/
+.DS_Store
+
+# Salvaged scratch files that live outside the served document root.
+# The site is served from site/ — a top-level assets/ is no longer part of the
+# build, so keep it out of version control rather than re-adding 3 MB of it.
+/assets/
