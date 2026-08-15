@@ -70,7 +70,7 @@ Then `./deploy.sh`.
 ## Editing shared page furniture
 
 There are no layouts or includes — the `<head>`, nav, footer, contact block and
-script tags are duplicated across all 9 pages. **Any change to those must be
+script tags are duplicated across all 10 pages. **Any change to those must be
 made in every file in `site/`.** See the duplication rule in `CLAUDE.md`.
 
 ## License

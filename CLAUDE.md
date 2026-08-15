@@ -60,7 +60,7 @@ tags, or the contact block must be applied to every page in `site/`.** Changing
 one page only will silently desynchronise the site.
 
 ```bash
-# after any such change, confirm the count matches the page count (9)
+# after any such change, confirm the count matches the page count (10)
 grep -rl '<nav class="glow">' site --include='*.html' | wc -l
 ```
 
