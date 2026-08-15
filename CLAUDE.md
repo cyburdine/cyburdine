@@ -4,67 +4,144 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-cyburdine.com is a personal portfolio site for Justin Burdine, built with a cyberpunk retro-terminal aesthetic. The entire site renders inside a CRT monitor frame image with scanlines, glitch effects, and a Japanese character "decryption" animation on page load. On first visit to the landing page, a cinematic CRT boot sequence plays (zoom into the monitor → power-on → Cyburdine Systems boot log → fade into the site).
+cyburdine.com is a personal portfolio site for Justin Burdine, built with a cyberpunk retro-terminal aesthetic. The entire site renders inside a CRT monitor frame image with scanlines, glitch effects, and a katakana "render" animation on page load. On first visit to the landing page, a cinematic CRT boot sequence plays (zoom into the monitor → power-on → Cyburdine Systems boot log → through-screen handoff into the site).
 
 ## Tech Stack
 
-- **Jekyll 4.4** static site generator (Ruby)
-- **GitHub Pages** deployment via GitHub Actions (`.github/workflows/jekyll.yml`)
-- Vanilla CSS + JavaScript (no frameworks, no bundlers)
-- Self-hosted fonts: VT323 (primary monospace), Noto Sans JP subset (decode effect only, 15 glyphs)
+**Plain static HTML. There is no build step — no Ruby, no Jekyll, no template language, no bundler.** Opening `site/index.html` in a browser shows the page.
+
+- Vanilla CSS + JavaScript
+- Self-hosted fonts: VT323 (primary monospace), IBM Plex Mono, Noto Sans JP subset (render effect only)
+- Served by nginx on `cyb-proto4`; deployed with `./deploy.sh`
 - BSD-3-Clause license
 
-## Build & Serve Commands
+> The site was migrated off Jekyll + GitHub Pages in August 2026. If you find
+> instructions anywhere referring to `bundle exec jekyll serve`, `_config.yml`,
+> `_layouts/`, `_includes/`, or the `_projects` collection, they are stale —
+> none of those exist any more. The last Jekyll-buildable commit is tagged
+> `jekyll-final`.
+
+## Local Preview
+
+No toolchain required. Either open the files directly, or serve them so that root-relative `/assets/...` paths resolve:
 
 ```bash
-bundle install                    # install dependencies
-bundle exec jekyll serve          # local dev server at localhost:4000
-bundle exec jekyll build          # production build to _site/
+cd site && python3 -m http.server 8099   # then visit http://localhost:8099/
 ```
 
-## Architecture
+Note that `python3 -m http.server` has no `try_files`, so extensionless URLs do
+not resolve locally — browse `/about.html`, not `/about`. nginx handles those in
+production (see below).
 
-### Layout System
+## Repository Layout
 
-- `_layouts/default.html` — Master layout. Wraps all content in `.terminal-container` > `.terminal-screen` with the CRT frame overlay (`terminal-full.webp`). Loads all JS files (boot.js first). Also contains the invisible `.cy-egg` easter-egg link over the "4" key.
-- `_layouts/project.html` — Project page layout, inherits from `default`. Wraps content in `.console` class.
+```
+site/                 ← the nginx document root, deployed verbatim
+  index.html  about.html  projects.html  404.html
+  projects/<slug>/index.html      one directory per project
+  .well-known/security.txt
+  assets/{css,js,fonts,images}
+deploy.sh             ← the only deploy path
+docs/superpowers/     ← design specs/plans from earlier work; NOT served
+```
 
-### Collections
+`site/` is the document root, so anything placed there is public. `docs/` sits
+outside it deliberately — those planning documents used to be served by Jekyll
+and no longer are.
 
-- `_projects/` — Custom collection configured in `_config.yml` with `output: true` and permalink `/projects/:path/`
+## THE DUPLICATION RULE — read before editing any page
 
-### Pages
+There are no layouts and no includes. **The `<head>`, the nav header, the footer,
+the contact block, and the script tags are copied literally into all 9 HTML
+files.** This is the deliberate trade for having no build step.
 
-- `index.md` — Landing page with terminal-style "handshake" text
-- `projects.md` — Project listing with client-side search/tag filtering
-- `about.md` — Bio/profile page
+That means: **a change to the nav, the footer, the CSP meta tag, the script
+tags, or the contact block must be applied to every page in `site/`.** Changing
+one page only will silently desynchronise the site.
 
-### Visual Effects (JavaScript)
+```bash
+# after any such change, confirm the count matches the page count (9)
+grep -rl '<nav class="glow">' site --include='*.html' | wc -l
+```
 
-All scripts are IIFEs loaded on every page via `default.html` (boot.js first, so it can set `window.__CY_BOOT_PENDING__` to defer the others):
+The copyright year in the footer is now a literal (Jekyll used to stamp it from
+the build date). It needs a manual bump each January, in every page.
 
-- `assets/js/boot.js` — The first-visit CRT boot sequence (landing page only, gated by a `cy_booted` localStorage flag). Orchestrates the timeline in `playBoot()`: cold start → wide shot → zoom into the monitor → power-on flash → centered logo warm-up → boot log → blank → fade the site in. Exposes `window.CyBoot.replay()` (wired to the `.cy-egg` easter egg) and coordinates with decode/glitch via `window.CyDecode`/`window.CyGlitch`. Timeline constants live in the `T` object; the boot overlays are confined to the CRT glass via the `--glass-*` CSS variables.
-- `assets/js/decode.js` — Randomly replaces ~30% of visible characters with Japanese glyphs, then "decrypts" them back (750ms delay, 8ms per character). Deferred when a boot is pending; exposes `CyDecode.start()`/`CyDecode.replay()`.
-- `assets/js/video_glitch.js` — Canvas-based random horizontal glitch lines at ~30fps. Deferred when a boot is pending (no lines until the monitor powers on); exposes `CyGlitch.start()`. Config constants at the top.
+## Adding a Project
 
-### CSS Design
+See `README.md` — it is **three** edits, not one.
 
-`assets/css/style.css` — Single stylesheet. Key design decisions:
+## Visual Effects (JavaScript)
+
+All scripts are IIFEs loaded on every page, in this order (boot.js first, so it
+can set `window.__CY_BOOT_PENDING__` to defer the others):
+
+- `assets/js/boot.js` — The first-visit CRT boot sequence (landing page only, gated by a `cy_booted` localStorage flag). Orchestrates the timeline in `playBoot()`: cold start → wide shot → zoom into the monitor → power-on flash → centered logo warm-up → boot log → through-screen handoff. Exposes `window.CyBoot.replay()` (wired to the `.cy-egg` easter eggs and the `.cy-reboot` footer link). Timeline constants live in the `T` object; boot overlays are confined to the CRT glass via the `--glass-*` CSS variables.
+- `assets/js/render.js` — The katakana render sequence that supersedes the old `decode.js`. Types each page in as Japanese glyphs, then resolves them to the real text, driving the site into "clean mode" (`html.cy-clean`). Sets `html.cy-rendering` while in progress and removes it on completion. Honours `prefers-reduced-motion: reduce` with an instant reveal. Exposes `window.CyRender.play()`.
+- `assets/js/video_glitch.js` — Canvas-based random horizontal glitch lines at ~30fps. Deferred when a boot is pending. Exposes `CyGlitch.start()`.
+- `assets/js/responsive.js` — Computes the `transform: scale()` that contains the monitor in the viewport and publishes it as `--cy-scale`. Exposes `CyResponsive.finalTransform()/wideTransform()/lock()/unlock()`, which `boot.js` drives during the zoom.
+
+**Verifying animations in a browser-automation tab does not work reliably** —
+rAF is throttled there, so `render.js` can sit in `cy-rendering` indefinitely and
+page text stays empty. That is an artifact of the automation tab, not a bug; the
+live site behaves identically under it. Check animations in a normal window.
+
+## The `project_filter.js` Contract
+
+`site/assets/js/project_filter.js` runs only on `projects.html` and has **no
+crash guard** — it throws if its elements are missing, so do not load it on
+other pages. It requires:
+
+- `#projectSearchInput` (text input) and `#projectTagFilter` (`<select>`, empty value = all tags)
+- Cards carrying class `project-item`, each with `data-tags` as a **comma-joined string with no spaces** (`data-tags="vfx,diy"`) — matching is exact per tag
+- Search matches `item.textContent`, so all searchable text must be rendered as text inside the card
+- Visibility is toggled via `item.style.display = "" | "none"`, so **a card's default display must come from CSS — never set an inline `display` on a card**
+
+## CSS Design
+
+`assets/css/style.css` — single stylesheet. Key decisions:
 - Terminal container is fixed at 3000x1688px (matches the CRT frame image)
 - `.terminal-screen` is absolutely positioned within the frame; it is wider than the visible (transparent) CRT glass, so boot overlays use the `--glass-*` inset variables to line up with the actual screen
-- Screen background is the phosphor-green `--crt-bg` gradient (shared by the boot console and the live site)
+- Screen background is the phosphor-green `--crt-bg` gradient
 - Scanlines via `::before` pseudo-elements with repeating gradients
 - Neon glow via `text-shadow` on `.glow` and `.console` classes
-- Color palette: `#15ff00` (green text), `#33ffcc` (cyan links), `#ff33cc` (pink accents), `#008080` (teal nav bar)
+- Palette: `#15ff00` (green text), `#33ffcc` (cyan links), `#ff33cc` (pink accents), `#008080` (teal nav bar)
 
 ## Content Style
 
 All content uses a cyberpunk terminal aesthetic with `::` prefixes, `//` comments, and monospace formatting. Project pages should maintain this voice.
 
-## Responsive Design
+## Content Security Policy
 
-`assets/js/responsive.js` computes a `transform: scale()` that "contains" the monitor in the viewport, pinned to the top-left, so the whole monitor is always visible (the keypad fills surplus width on wide screens). It publishes the live scale as `--cy-scale`; `.terminal-screen` font size counter-scales off it (`min(16px / var(--cy-scale), 52px)` — the cap keeps long lines on-screen on phones). When the scaled console is shorter than the viewport (phones in portrait), it centers vertically (letterbox) instead of pinning top. `responsive.js` exposes `CyResponsive.finalTransform()/wideTransform()/lock()/unlock()`, which `boot.js` drives during the zoom.
+Every page ships its own CSP in a `<meta http-equiv="Content-Security-Policy">`
+tag, including `frame-src https://www.youtube-nocookie.com` for the Firepype
+trailer embed. **nginx deliberately does not send a CSP header** — a second
+policy would intersect with the meta one and break that embed. If you add an
+embed from a new origin, update the meta tag on *every* page.
 
 ## Deployment
 
-Push to `main` triggers the GitHub Actions workflow which builds with Jekyll and deploys to GitHub Pages. No manual deployment needed.
+```bash
+./deploy.sh              # rsync site/ to a new timestamped release, flip `current`
+./deploy.sh --rollback   # re-point `current` at the previous release
+./deploy.sh --list       # show releases, marking the live one
+```
+
+Deploys go from Justin's Mac to `deploy@10.0.22.35` (`cyb-proto4`) over SSH.
+There is **no CI deploy** — SSH to proto4 is not reachable from GitHub's
+runners. Pushing to `main` publishes nothing; only `./deploy.sh` does.
+
+Server details:
+- Document root `/opt/cyburdine.com/current` → `releases/<UTC timestamp>/` (atomic symlink flip, so no request sees a half-copied tree; no nginx reload needed)
+- vhost `/etc/nginx/conf.d/cyburdine.com.conf`
+- TLS via the Cloudflare Origin CA wildcard cert (`*.cyburdine.com`, valid to 2041); Cloudflare SSL/TLS mode must stay **Full (strict)**
+- SELinux is **enforcing**: releases must be labelled `httpd_sys_content_t` or every request 403s. `deploy.sh` runs `restorecon` for you; the fcontext rule is already registered.
+
+Two nginx details worth knowing before editing the vhost:
+
+- `try_files $uri $uri.html $uri/ =404;` — **`$uri.html` must come before `$uri/`**. `/projects` is both `projects.html` and the `projects/` directory of detail pages; checking `$uri/` first makes `/projects` 301 to `/projects/`, which has no index and 404s.
+- No `Strict-Transport-Security` header. This vhost serves the apex, and HSTS there would apply to `cyburdine.com` itself with no easy client-side undo. HSTS is Cloudflare's to manage.
+
+When reading server state, use `sudo nginx -T` (the loaded config) rather than
+grepping `/etc/nginx/` — `conf.d` holds retired `.bak-<timestamp>` files that
+nginx never loads and that have been mistaken for live config before.
