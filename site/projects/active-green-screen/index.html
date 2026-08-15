@@ -1,0 +1,111 @@
+<!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+-->
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self'; connect-src 'self'; frame-src https://www.youtube-nocookie.com;">
+  <title>Active Greenscreen</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <div class="terminal-wrapper">
+  <div class="terminal-container">
+    <div class="terminal-screen">
+	  <canvas id="glitchCanvas"></canvas>
+      <header>
+  <nav class="glow">
+    <a href="/">Home</a>
+    <a href="/projects">Projects</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+
+        <main>
+          <article>
+  <!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+
+  Framed page header. Params:
+    title   — heading text (required)
+    kicker  — small system label above the title (optional)
+    type    — meta chip, e.g. "LOG" / "PROJECT" (optional)
+    status  — status pill text (optional)
+    live    — truthy → cyan "live" pill instead of pink (optional)
+    date    — pre-formatted date string (optional)
+    tags    — array of tag strings (optional)
+-->
+<div class="cy-page-header">
+  
+  <h1>Active Greenscreen</h1>
+  
+  <div class="cy-statusbar">
+    <span class="cy-meta">PROJECT</span>
+    <span class="cy-status">in progress</span>
+    
+  </div>
+  
+  
+  <div class="cy-tags">
+    <span class="cy-tag">vfx</span><span class="cy-tag">diy</span>
+  </div>
+  
+</div>
+
+  <div class="console cy-frame cy-frame--wip"><!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+-->
+
+<p>:: INIT // subject: Building an Active Greenscreen<br />
+:: DESC // creating a retroreflective screen to pull mattes dynamically using  various colors
+:: STATUS // in progress // TBD</p>
+
+<p>// full doc coming soon</p>
+
+</div>
+  <!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+
+  "Open channel" contact block — the single source for outbound links.
+  Reused on the homepage, about page, and project footer.
+-->
+<section class="cy-channel cy-frame">
+  <div class="cy-meta">:: open channel</div>
+  <div class="cy-channel__links">
+    <a href="mailto:justin@cyburdine.com">email</a>
+    <a href="https://www.linkedin.com/in/cyburdine/" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="https://www.youtube.com/@InfiniteVolumes" target="_blank" rel="noopener">Infinite Volumes [YT]</a>
+    <a href="https://www.imdb.com/name/nm0120984/" target="_blank" rel="noopener">IMDB</a>
+  </div>
+</section>
+
+</article>
+
+        </main>
+	  <footer>
+  <p>&copy; <a href="#" class="cy-reboot" aria-label="Reload and replay the intro">1999-2026 cyburdine</a></p>
+</footer>
+      
+    </div>
+      <!-- FRAME OVERLAY sits on top -->
+    <img src="/assets/images/terminal-full.webp" alt="Terminal Frame" class="terminal-frame" />
+    <!-- Easter eggs: invisible links over the "4" and "D" keys replay the boot -->
+    <a href="#" class="cy-egg cy-egg--four" aria-label="Reboot terminal"></a>
+    <a href="#" class="cy-egg cy-egg--d" aria-label="Reboot terminal"></a>
+  </div>
+  </div>
+
+
+<!-- site javascripts -->
+  <!-- boot.js first: sets the pre-paint guard + boot flag before others parse -->
+  <script src="/assets/js/boot.js"></script>
+  <script src="/assets/js/render.js"></script>
+  <script src="/assets/js/video_glitch.js"></script>
+  <script src="/assets/js/responsive.js"></script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+-->
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self'; connect-src 'self'; frame-src https://www.youtube-nocookie.com;">
+  <title>CYBURDINE.com - [projects]</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <div class="terminal-wrapper">
+  <div class="terminal-container">
+    <div class="terminal-screen">
+	  <canvas id="glitchCanvas"></canvas>
+      <header>
+  <nav class="glow">
+    <a href="/">Home</a>
+    <a href="/projects">Projects</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+
+        <main>
+          <!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+-->
+<div class="glow">
+<div class="search-bar">
+  <input type="text" id="projectSearchInput" placeholder="// enter query" />
+  <div class="cy-select">
+    <select id="projectTagFilter">
+      <option value="">// all tags</option>
+      
+      
+        <option value="ai">ai</option>
+      
+        <option value="animation">animation</option>
+      
+        <option value="app">app</option>
+      
+        <option value="diy">diy</option>
+      
+        <option value="macos">macos</option>
+      
+        <option value="music">music</option>
+      
+        <option value="opensource">opensource</option>
+      
+        <option value="startup">startup</option>
+      
+        <option value="vfx">vfx</option>
+      
+        <option value="webapp">webapp</option>
+      
+        <option value="windows">windows</option>
+      
+        <option value="worldbuilding">worldbuilding</option>
+      
+    </select>
+  </div>
+</div>
+
+<div class="cy-cards" id="projectList">
+  
+    <!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+
+  Project listing card. Param: project (a _projects item).
+  Filter contract (project_filter.js): the outer element MUST keep
+  class "project-item" + a comma-joined data-tags attribute, and the
+  default display comes from CSS (never an inline style).
+    front-matter used: title, url, tags, summary, status, wip
+-->
+<article class="project-item cy-card cy-card--stub" data-tags="vfx,diy">
+  <div class="cy-card__head">
+    <a class="cy-card__link" href="/projects/active-green-screen/">Active Greenscreen</a>
+    <span class="cy-status">in progress</span>
+  </div>
+  <p class="cy-card__desc">A retroreflective screen that pulls mattes dynamically across multiple key colors.</p>
+  <div class="cy-card__meta cy-meta">// vfx  ·  diy</div>
+</article>
+
+  
+    <!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+
+  Project listing card. Param: project (a _projects item).
+  Filter contract (project_filter.js): the outer element MUST keep
+  class "project-item" + a comma-joined data-tags attribute, and the
+  default display comes from CSS (never an inline style).
+    front-matter used: title, url, tags, summary, status, wip
+-->
+<article class="project-item cy-card" data-tags="webapp,startup">
+  <div class="cy-card__head">
+    <a class="cy-card__link" href="/projects/firepype/">Startup 01: Firepype</a>
+    <span class="cy-status cy-status--live">shipped · 2012–16</span>
+  </div>
+  <p class="cy-card__desc">Media-distribution automation — drop a file, get it encoded and pushed everywhere. Later: live podcast analytics and dynamic ad insertion.</p>
+  <div class="cy-card__meta cy-meta">// webapp  ·  startup</div>
+</article>
+
+  
+    <!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+
+  Project listing card. Param: project (a _projects item).
+  Filter contract (project_filter.js): the outer element MUST keep
+  class "project-item" + a comma-joined data-tags attribute, and the
+  default display comes from CSS (never an inline style).
+    front-matter used: title, url, tags, summary, status, wip
+-->
+<article class="project-item cy-card cy-card--stub" data-tags="vfx,diy">
+  <div class="cy-card__head">
+    <a class="cy-card__link" href="/projects/motion-capture/">Motion Capture</a>
+    <span class="cy-status">in progress</span>
+  </div>
+  <p class="cy-card__desc">Building a DIY motion-capture studio.</p>
+  <div class="cy-card__meta cy-meta">// vfx  ·  diy</div>
+</article>
+
+  
+    <!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+
+  Project listing card. Param: project (a _projects item).
+  Filter contract (project_filter.js): the outer element MUST keep
+  class "project-item" + a comma-joined data-tags attribute, and the
+  default display comes from CSS (never an inline style).
+    front-matter used: title, url, tags, summary, status, wip
+-->
+<article class="project-item cy-card" data-tags="opensource,app,macos,windows,ai">
+  <div class="cy-card__head">
+    <a class="cy-card__link" href="/projects/replay/">RE:play</a>
+    <span class="cy-status cy-status--live">shipped · 2026</span>
+  </div>
+  <p class="cy-card__desc">I wanted to hear my own mix. Apple Music showed me an ad instead. Four hours later there was a media player — eleven weeks later it ran on two platforms, and I don't know a line of C#.</p>
+  <div class="cy-card__meta cy-meta">// opensource  ·  app  ·  macos  ·  windows  ·  ai</div>
+</article>
+
+  
+    <!--
+SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+
+  Project listing card. Param: project (a _projects item).
+  Filter contract (project_filter.js): the outer element MUST keep
+  class "project-item" + a comma-joined data-tags attribute, and the
+  default display comes from CSS (never an inline style).
+    front-matter used: title, url, tags, summary, status, wip
+-->
+<article class="project-item cy-card" data-tags="animation,music,worldbuilding">
+  <div class="cy-card__head">
+    <a class="cy-card__link" href="/projects/spirefall-ghost-code/">Spirefall: Ghost Code</a>
+    
+  </div>
+  <p class="cy-card__desc">The sound and vision behind Spirefall, an original cyberpunk animation series — fifteen years in the making.</p>
+  <div class="cy-card__meta cy-meta">// animation  ·  music  ·  worldbuilding</div>
+</article>
+
+  
+</div>
+</div>
+<script src="/assets/js/project_filter.js"></script>
+
+
+        </main>
+	  <footer>
+  <p>&copy; <a href="#" class="cy-reboot" aria-label="Reload and replay the intro">1999-2026 cyburdine</a></p>
+</footer>
+      
+    </div>
+      <!-- FRAME OVERLAY sits on top -->
+    <img src="/assets/images/terminal-full.webp" alt="Terminal Frame" class="terminal-frame" />
+    <!-- Easter eggs: invisible links over the "4" and "D" keys replay the boot -->
+    <a href="#" class="cy-egg cy-egg--four" aria-label="Reboot terminal"></a>
+    <a href="#" class="cy-egg cy-egg--d" aria-label="Reboot terminal"></a>
+  </div>
+  </div>
+
+
+<!-- site javascripts -->
+  <!-- boot.js first: sets the pre-paint guard + boot flag before others parse -->
+  <script src="/assets/js/boot.js"></script>
+  <script src="/assets/js/render.js"></script>
+  <script src="/assets/js/video_glitch.js"></script>
+  <script src="/assets/js/responsive.js"></script>
+</body>
+</html>
