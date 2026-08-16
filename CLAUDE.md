@@ -52,7 +52,7 @@ and no longer are.
 ## THE DUPLICATION RULE — read before editing any page
 
 There are no layouts and no includes. **The `<head>`, the nav header, the footer
-and the script tags are copied literally into all 10 HTML files.** This is the
+and the script tags are copied literally into all 11 HTML files.** This is the
 deliberate trade for having no build step.
 
 That means: **a change to the nav, the footer, the CSP meta tag or the script
@@ -65,7 +65,7 @@ deliberately omit it and close on their own `:: get it` links, so a change to
 those outbound links touches three files, not ten.
 
 ```bash
-# after any such change, confirm the count matches the page count (10)
+# after any such change, confirm the count matches the page count (11)
 grep -rl '<nav class="glow">' site --include='*.html' | wc -l
 ```
 
@@ -82,7 +82,7 @@ All scripts are IIFEs loaded on every page, in this order (boot.js first, so it
 can set `window.__CY_BOOT_PENDING__` to defer the others):
 
 - `assets/js/boot.js` — The first-visit CRT boot sequence (landing page only, gated by a `cy_booted` localStorage flag). Orchestrates the timeline in `playBoot()`: cold start → wide shot → zoom into the monitor → power-on flash → centered logo warm-up → boot log → through-screen handoff. Exposes `window.CyBoot.replay()` (wired to the `.cy-egg` easter eggs and the `.cy-reboot` footer link). Timeline constants live in the `T` object; boot overlays are confined to the CRT glass via the `--glass-*` CSS variables.
-- `assets/js/render.js` — The katakana render sequence that supersedes the old `decode.js`. Types each page in as Japanese glyphs, then resolves them to the real text, driving the site into "clean mode" (`html.cy-clean`). Sets `html.cy-rendering` while in progress and removes it on completion. Honours `prefers-reduced-motion: reduce` with an instant reveal. Exposes `window.CyRender.play()`. **A page can opt out with `<html data-cy-render="off">`**, which takes the same instant-reveal path — the effect types every visible character, so on a 12,000-character article it is a wait rather than a flourish. All six project detail pages are opted out. This skips the *effect only*: `cy-clean` is added by `boot.js`, not here, so an opted-out page still lands in the real site normally.
+- `assets/js/render.js` — The katakana render sequence that supersedes the old `decode.js`. Types each page in as Japanese glyphs, then resolves them to the real text, driving the site into "clean mode" (`html.cy-clean`). Sets `html.cy-rendering` while in progress and removes it on completion. Honours `prefers-reduced-motion: reduce` with an instant reveal. Exposes `window.CyRender.play()`. **A page can opt out with `<html data-cy-render="off">`**, which takes the same instant-reveal path — the effect types every visible character, so on a 12,000-character article it is a wait rather than a flourish. All seven project detail pages are opted out. This skips the *effect only*: `cy-clean` is added by `boot.js`, not here, so an opted-out page still lands in the real site normally.
 - `assets/js/video_glitch.js` — Canvas-based random horizontal glitch lines at ~30fps. Deferred when a boot is pending. Exposes `CyGlitch.start()`.
 - `assets/js/project_rotate.js` — **Not global.** Loaded inline by `projects.html` only, immediately after the card markup so the DOM is settled before `render.js` walks `<main>`. See the contract section below.
 - `assets/js/responsive.js` — Computes the `transform: scale()` that contains the monitor in the viewport and publishes it as `--cy-scale`. Exposes `CyResponsive.finalTransform()/wideTransform()/lock()/unlock()`, which `boot.js` drives during the zoom.

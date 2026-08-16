@@ -1530,3 +1530,85 @@ html.cy-clean main > article > .cy-frame > .project:first-child {
   font-size: 1.06rem;
   color: var(--cy-fg);
 }
+
+/* ── Visit-website block ──────────────────────────────────────────
+   Projects that have their own portal (RE:play, Periphony 8D, PagePress)
+   close their write-up with a screenshot of that site plus a "visit
+   website" line. The whole thing is ONE <a>, so the thumbnail and the
+   text are the same click target rather than two links to the same
+   place — which is also why the caption is not a separate link.
+
+   It sits inside the article's pre-wrap body, so like .cy-figure it has
+   to reset white-space or the newlines in its own markup would render. */
+html.cy-clean .cy-visit {
+  display: block;
+  white-space: normal;
+  margin: var(--cy-sp-5) 0;
+  border: 1px solid var(--cy-rule);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+html.cy-clean .cy-visit:hover {
+  border-color: var(--cy-link);
+  background: var(--cy-panel);
+  text-decoration: none;
+}
+html.cy-clean .cy-visit__shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: top center;
+  border-bottom: 1px solid var(--cy-rule);
+  transition: filter 150ms ease;
+  filter: saturate(0.92) contrast(1.02) brightness(0.9);
+}
+html.cy-clean .cy-visit:hover .cy-visit__shot { filter: none; }
+/* Stub projects have no site to screenshot yet. This stands in for the
+   missing shot rather than shipping a fabricated one, and is shared by the
+   visit block and the gallery card's media box. */
+html.cy-clean .cy-shot-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  background: var(--cy-panel);
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  color: var(--cy-fg-dim);
+}
+/* In the visit block it is the top half, so it carries the divider. */
+html.cy-clean .cy-visit .cy-shot-placeholder { border-bottom: 1px solid var(--cy-rule); }
+/* In a card the media box already sets the ratio and the divider. */
+html.cy-clean .cy-project__media .cy-shot-placeholder { height: 100%; aspect-ratio: auto; }
+html.cy-clean .cy-visit__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.9rem;
+  padding: var(--cy-sp-2) var(--cy-sp-3);
+}
+html.cy-clean .cy-visit__cta {
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  color: var(--cy-link);
+}
+/* The arrow is CSS, not literal text — render.js types out every
+   character in <main>, and chrome should never be part of that. */
+html.cy-clean .cy-visit__cta::after {
+  content: " \2192";
+  color: var(--cy-accent);
+}
+html.cy-clean .cy-visit:hover .cy-visit__cta { color: var(--cy-white); }
+html.cy-clean .cy-visit__host {
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  letter-spacing: 0.06em;
+  color: var(--cy-fg-dim);
+}
