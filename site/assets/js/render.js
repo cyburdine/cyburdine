@@ -20,6 +20,17 @@ SPDX-License-Identifier: BSD-3-Clause
   var REDUCE = window.matchMedia &&
                window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* Per-page opt-out: <html data-cy-render="off">.
+     The katakana pass types EVERY visible character, so on a long article it
+     stops being a flourish and becomes a wait — the project detail pages run
+     to 12,000 characters. Those pages set the attribute and take the same
+     instant-reveal path as reduced motion.
+
+     Note this only skips the EFFECT. Clean mode is owned by boot.js, which
+     adds cy-clean independently, so an opted-out page still lands in the real
+     site exactly as before. */
+  var SKIP = document.documentElement.getAttribute('data-cy-render') === 'off';
+
   /* Tuning. Typing is TIME-based (chars are revealed by elapsed time, not per
      frame) so the speed is constant and smooth on any refresh rate, and a
      dropped frame is caught up rather than stalling. Fast: ~3ms/char, and a
@@ -189,7 +200,7 @@ SPDX-License-Identifier: BSD-3-Clause
     var main = document.querySelector('main');
     if (!main) { finishRender(); return; }
     unrender(main);   /* clean slate if this page was rendered before (replay) */
-    if (REDUCE) { revealInstant(main); return; }
+    if (REDUCE || SKIP) { revealInstant(main); return; }
     running = true;
 
     var lines = tokenize(main);

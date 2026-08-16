@@ -34,7 +34,10 @@ Dropping the build step means the project list is no longer generated from a
 collection. Adding a project is **three edits**, and it is easy to forget the
 second and third:
 
-**1. Create the page.** Copy an existing detail page and edit it:
+**1. Create the page.** Copy an existing detail page and edit it. Copying is
+what keeps `<html data-cy-render="off">` on the new page — that attribute
+disables the katakana render effect, which is a wait rather than a flourish on
+a long article. All existing detail pages carry it, so a copy inherits it:
 
 ```bash
 cp -r site/projects/spirefall-ghost-code site/projects/<new-slug>
