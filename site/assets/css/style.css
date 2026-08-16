@@ -1458,17 +1458,6 @@ html.cy-clean .cy-figure figcaption {
   border-left: 1px solid var(--cy-rule-lit);
   padding-left: var(--cy-sp-2);
 }
-/* Attribution: not required by the Pexels licence, but cheap and honest. */
-html.cy-clean .cy-figure__credit {
-  display: block;
-  margin-top: 0.35rem;
-  color: var(--cy-rule-lit);
-  letter-spacing: var(--cy-tracking-meta);
-  text-transform: uppercase;
-  font-size: 0.62rem;
-}
-html.cy-clean .cy-figure__credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
-html.cy-clean .cy-figure__credit a:hover { color: var(--cy-accent); }
 
 /* ════════════════════════════════════════════════════════════════
    WIDE LAYOUT — gallery pages (projects.html)
