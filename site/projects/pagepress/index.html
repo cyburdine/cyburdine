@@ -1,0 +1,101 @@
+<!--
+SPDX-FileCopyrightText: © 2026 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+-->
+<!DOCTYPE html><html lang="en" data-cy-render="off">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self'; connect-src 'self'; frame-src https://www.youtube-nocookie.com;">
+  <title>PagePress</title>
+  <link rel="preload" href="/assets/fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/VT323.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <div class="terminal-wrapper">
+  <div class="terminal-container">
+    <div class="terminal-screen">
+	  <canvas id="glitchCanvas"></canvas>
+      <header>
+  <nav class="glow">
+    <a href="/">Home</a>
+    <a href="/projects">Projects</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+
+        <main>
+          <article>
+  <!--
+SPDX-FileCopyrightText: © 2026 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+
+  Framed page header. Params:
+    title   — heading text (required)
+    kicker  — small system label above the title (optional)
+    type    — meta chip, e.g. "LOG" / "PROJECT" (optional)
+    status  — status pill text (optional)
+    live    — truthy → cyan "live" pill instead of pink (optional)
+    date    — pre-formatted date string (optional)
+    tags    — array of tag strings (optional)
+-->
+<div class="cy-page-header">
+  
+  <h1>PagePress</h1>
+  
+  <div class="cy-statusbar">
+    <span class="cy-meta">PROJECT</span>
+    
+  </div>
+  
+  
+  <div class="cy-tags">
+    <span class="cy-tag">webapp</span><span class="cy-tag">app</span>
+  </div>
+  
+</div>
+
+  <div class="console cy-frame cy-frame--wip"><!--
+SPDX-FileCopyrightText: © 2026 Justin Burdine <justin@cyburdine.com>
+SPDX-License-Identifier: BSD-3-Clause
+-->
+<p>:: INIT // subject: PagePress<br />
+:: DESC // publishing tool &mdash; write-up to follow<br />
+:: STATUS // in progress // TBD</p>
+<p>// full doc coming soon</p>
+<div class="cy-meta cy-section-label">:: get it</div>
+<a class="cy-visit" href="https://pagepress.cyburdine.com" target="_blank" rel="noopener">
+  <!-- No screenshot yet: pagepress.cyburdine.com is not live. Swap this
+       placeholder for <img class="cy-visit__shot" src="/assets/images/articles/pagepress-portal.webp" …>
+       once the site exists. Do not ship a mocked-up screenshot in the meantime. -->
+  <span class="cy-shot-placeholder">site not live yet</span>
+  <span class="cy-visit__label">
+    <span class="cy-visit__cta">visit website</span>
+    <span class="cy-visit__host">pagepress.cyburdine.com</span>
+  </span>
+</a>
+</div>
+</article>
+
+        </main>
+	  <footer>
+  <p>&copy; <a href="#" class="cy-reboot" aria-label="Reload and replay the intro">1999-2026 cyburdine</a></p>
+</footer>
+      
+    </div>
+      <!-- FRAME OVERLAY sits on top -->
+    <img src="/assets/images/terminal-full.webp" alt="Terminal Frame" class="terminal-frame" width="3000" height="1688" />
+    <!-- Easter eggs: invisible links over the "4" and "D" keys replay the boot -->
+    <a href="#" class="cy-egg cy-egg--four" aria-label="Reboot terminal"></a>
+    <a href="#" class="cy-egg cy-egg--d" aria-label="Reboot terminal"></a>
+  </div>
+  </div>
+<!-- site javascripts -->
+  <!-- boot.js first: sets the pre-paint guard + boot flag before others parse -->
+  <script src="/assets/js/boot.js"></script>
+  <script src="/assets/js/render.js"></script>
+  <script src="/assets/js/video_glitch.js"></script>
+  <script src="/assets/js/responsive.js"></script>
+</body>
+</html>

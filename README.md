@@ -67,6 +67,26 @@ hero. Add `data-cy-rotate` to put the project into the featured rotation; leave
 it off to pin the card to the grid. Give the `<img>` its intrinsic `width` and
 `height` so the grid does not reflow as images load.
 
+**If the project has its own portal site**, close the write-up with a visit
+block after the `:: get it` label — one `<a>` wrapping the screenshot and the
+label, so the thumbnail and the text are a single click target:
+
+```html
+<a class="cy-visit" href="https://<slug>.cyburdine.com" target="_blank" rel="noopener">
+  <img class="cy-visit__shot" src="/assets/images/articles/<slug>-portal.webp"
+       alt="…" width="1280" height="720" loading="lazy" decoding="async">
+  <span class="cy-visit__label">
+    <span class="cy-visit__cta">visit website</span>
+    <span class="cy-visit__host"><slug>.cyburdine.com</span>
+  </span>
+</a>
+```
+
+Thumbnails are captured at a 16:9 crop and encoded to 1280x720 webp so they read
+as a matched set. If the portal is not live yet, swap the `<img>` for
+`<span class="cy-shot-placeholder">site not live yet</span>` — **do not ship a
+mocked-up screenshot of a site that does not exist.**
+
 There is no tag filter and no `data-tags` any more — the search box and
 dropdown were removed in August 2026, so a new tag needs no third edit.
 
