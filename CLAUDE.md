@@ -60,7 +60,7 @@ tags, or the contact block must be applied to every page in `site/`.** Changing
 one page only will silently desynchronise the site.
 
 ```bash
-# after any such change, confirm the count matches the page count (9)
+# after any such change, confirm the count matches the page count (10)
 grep -rl '<nav class="glow">' site --include='*.html' | wc -l
 ```
 
@@ -130,6 +130,14 @@ embed from a new origin, update the meta tag on *every* page.
 Deploys go from Justin's Mac to `deploy@10.0.22.35` (`cyb-proto4`) over SSH.
 There is **no CI deploy** — SSH to proto4 is not reachable from GitHub's
 runners. Pushing to `main` publishes nothing; only `./deploy.sh` does.
+
+`deploy.sh` rewrites `/assets/{css,js}/…` references in the release copy to
+carry `?v=<release timestamp>`. This is load-bearing: those files keep stable
+names and ship `Cache-Control: max-age=604800`, so without the query string
+Cloudflare serves a week-old `style.css` against new HTML and a restyle simply
+never appears. There is no Cloudflare purge in this pipeline. The rewrite
+touches the deployed copy only — never the working tree — so do not add
+`?v=` by hand in `site/`.
 
 Server details:
 - Document root `/opt/cyburdine.com/current` → `releases/<UTC timestamp>/` (atomic symlink flip, so no request sees a half-copied tree; no nginx reload needed)

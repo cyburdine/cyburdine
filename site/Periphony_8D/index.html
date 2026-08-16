@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Periphony 8D — Hear it move</title>
+<meta name="description" content="A macOS app that rebuilds a track through head-related impulse responses measured on the MIT KEMAR mannequin, so the music orbits your head on headphones. Free download.">
+
+<link rel="icon" href="assets/icon.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ─────────────────────────────────────────────────────────────
+   Periphony 8D — landing page
+   Instrument first: you land on the ring and the first thing you
+   can do is press play. The beam is anchored inside the ring, so it
+   travels with the instrument on scroll and keeps sweeping around
+   the inner circle rather than sitting fixed to the viewport.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  --void:#0a0810;
+  --deep:#12101c;
+  --line:#272338;
+  --line-soft:#1c1928;
+  --bone:#efe9e2;
+  --bone-dim:#9c95a6;
+  --bone-faint:#635c72;
+
+  --ear-l:#6aa9ff;
+  --ear-r:#ffa14d;
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'IBM Plex Sans',system-ui,sans-serif;
+  --data:'IBM Plex Mono',ui-monospace,monospace;
+
+  --gut:clamp(20px,5vw,56px);
+  --maxw:940px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--void);color:var(--bone);
+  font-family:var(--body);font-weight:300;font-size:17px;line-height:1.68;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.0;
+  letter-spacing:-0.035em;font-weight:800;font-stretch:96%}
+p{margin:0}
+a{color:inherit}
+img{max-width:100%;display:block}
+.wrap{max-width:var(--maxw);margin:0 auto;padding-inline:var(--gut)}
+.eyebrow{font-family:var(--data);font-size:11px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--bone-faint);margin-bottom:20px}
+:focus-visible{outline:2px solid var(--bone);outline-offset:3px;border-radius:3px}
+
+/* ── The beam ─────────────────────────────────────────────────
+   Anchored inside .stage rather than fixed to the viewport, so it
+   scrolls with the ring and keeps spinning around the inner circle.
+   The wheel is a full-spectrum conic gradient masked into an annulus
+   that hugs the ring; the lobe is a brighter head riding the source
+   position. Both blend with screen so they add light to the page. */
+/* ── The beam ─────────────────────────────────────────────────
+   A searchlight whose apex is pinned to the centre of the ring and
+   which sweeps round with the source. It is drawn as a bundle of
+   overlapping rays rather than one solid sector: each ray's length
+   and brightness is set by a field fixed in world space, so the beam
+   flows and striates like an aurora curtain as it passes through
+   them. Short falloff — it fades out around the tick ring. */
+.beam{position:absolute;inset:0;width:100%;height:100%;z-index:0;
+  pointer-events:none;opacity:0;transition:opacity .5s ease;
+  mix-blend-mode:screen;overflow:visible}
+.beam.on{opacity:1}
+
+main,header,footer{position:relative;z-index:1}
+
+.rail{position:absolute;top:0;left:0;right:0;z-index:40}
+.rail-in{display:flex;align-items:center;justify-content:space-between;
+  height:64px;max-width:var(--maxw);margin:0 auto;padding-inline:var(--gut)}
+.mark{font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:.02em;
+  text-transform:uppercase;font-stretch:88%}
+.mark span{color:var(--bone-faint)}
+
+.btn{font-family:var(--body);font-size:15px;font-weight:400;border-radius:6px;
+  padding:12px 26px;border:1px solid transparent;cursor:pointer;text-decoration:none;
+  display:inline-block;transition:background .18s,border-color .18s,color .18s}
+.btn-solid{background:var(--bone);color:var(--void);font-weight:500}
+.btn-solid:hover{background:#fff}
+.btn-ghost{border-color:var(--line);color:var(--bone-dim)}
+.btn-ghost:hover{border-color:var(--bone-faint);color:var(--bone)}
+.rail .btn{padding:8px 16px;font-size:13px}
+
+/* ── Hero IS the instrument ───────────────────────────────── */
+.hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:74px 0 34px}
+.hero h1{font-size:clamp(26px,3.5vw,42px);max-width:18ch}
+.hero .sub{margin-top:13px;color:var(--bone-dim);font-size:15.5px;max-width:50ch}
+
+.stage{position:relative;isolation:isolate;width:min(360px,62vw);aspect-ratio:1;margin:clamp(18px,2.4vw,28px) auto 0}
+.ring{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:1}
+.ring .tick{stroke:var(--line);stroke-width:2.5;stroke-linecap:round;transition:stroke .25s}
+.ring .arc-bg{fill:none;stroke:var(--line-soft);stroke-width:2}
+.ring .arc-fg{fill:none;stroke:var(--bone-faint);stroke-width:2;stroke-linecap:round}
+.ring .head{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:3 5}
+.ring .label{font-family:var(--data);font-size:9px;letter-spacing:.18em;
+  fill:var(--bone-faint);text-anchor:middle}
+.ring .src{fill:var(--bone);transition:opacity .3s ease}
+
+.core{position:absolute;inset:0;z-index:2}
+.core::before{content:'';position:absolute;left:50%;top:50%;
+  width:34%;height:34%;margin:-17% 0 0 -17%;border-radius:50%;z-index:-1;
+  background:radial-gradient(circle closest-side,
+    rgba(10,8,16,.5) 0%,rgba(10,8,16,.26) 58%,rgba(10,8,16,0) 100%)}
+.play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:64px;height:64px;border-radius:50%;border:1px solid var(--line);
+  background:rgba(18,16,28,.5);backdrop-filter:blur(3px);color:var(--bone);cursor:pointer;
+  display:grid;place-items:center;transition:border-color .2s,transform .2s}
+.play:hover{border-color:var(--bone-faint);transform:translate(-50%,-50%) scale(1.05)}
+.play svg{width:24px;height:24px;fill:currentColor}
+.readout{position:absolute;left:50%;top:74%;transform:translateX(-50%);
+  white-space:nowrap;font-family:var(--data);font-size:12px;letter-spacing:.16em;
+  color:var(--bone-dim);min-height:1.2em;text-shadow:0 1px 8px rgba(10,8,16,.95)}
+
+.ab{display:inline-flex;margin-top:clamp(18px,2.2vw,26px);border:1px solid var(--line);
+  border-radius:8px;padding:4px;background:rgba(18,16,28,.7)}
+.ab button{font-family:var(--body);font-size:15px;color:var(--bone-dim);background:transparent;
+  border:0;border-radius:5px;padding:11px 30px;cursor:pointer;transition:background .22s,color .22s}
+.ab button[aria-pressed="true"]{background:var(--bone);color:var(--void);font-weight:500}
+.ab button:disabled{opacity:.45;cursor:default}
+.demo-hint{margin-top:13px;color:var(--bone-dim);font-size:15px;min-height:1.5em;
+  max-width:44ch;margin-inline:auto}
+.demo-note{margin-top:10px;font-family:var(--data);font-size:11px;
+  letter-spacing:.14em;color:var(--bone-faint)}
+
+/* ── Body content, tighter and left-aligned ───────────────── */
+.sec{padding:clamp(66px,9vw,112px) 0;border-top:1px solid var(--line-soft)}
+.sec h2{font-size:clamp(28px,3.8vw,44px);max-width:18ch}
+.sec-lede{color:var(--bone-dim);max-width:56ch;margin-top:18px}
+
+.facts{margin-top:44px;display:grid;gap:2px;background:var(--line-soft);
+  border:1px solid var(--line-soft);border-radius:10px;overflow:hidden}
+.fact{background:var(--void);padding:28px}
+.fact h3{font-size:19px;font-stretch:100%;letter-spacing:-0.02em}
+.fact p{color:var(--bone-dim);font-size:15.5px;margin-top:10px}
+.fact .n{font-family:var(--data);font-size:10.5px;letter-spacing:.2em;
+  color:var(--bone-faint);display:block;margin-bottom:14px}
+@media (min-width:760px){.facts{grid-template-columns:repeat(3,1fr)}}
+
+.measure{margin-top:44px}
+/* The table is the one element that cannot reflow; let it scroll
+   inside its own box rather than overflow the page. */
+.measure{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.measure table{width:100%;min-width:430px;border-collapse:collapse;font-family:var(--data);font-size:13.5px}
+.measure th,.measure td{text-align:right;padding:13px 8px;border-bottom:1px solid var(--line-soft)}
+.measure th:first-child,.measure td:first-child{text-align:left;font-family:var(--body);
+  font-size:15.5px;color:var(--bone)}
+.measure th{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--bone-faint);font-weight:400}
+.measure td{color:var(--bone-dim)}
+.measure caption{caption-side:bottom;margin-top:16px;text-align:left;
+  color:var(--bone-faint);font-size:13.5px;font-family:var(--body)}
+
+.shots{display:grid;gap:22px;margin-top:40px}
+@media (min-width:760px){.shots{grid-template-columns:1.6fr 1fr}}
+.shots figure{margin:0}
+.shots img{border-radius:9px;box-shadow:0 26px 60px -26px rgba(0,0,0,.95),0 0 0 1px var(--line)}
+.shots figcaption{margin-top:14px;color:var(--bone-dim);font-size:14.5px}
+
+.form{margin-top:30px;display:flex;gap:10px;flex-wrap:wrap}
+.form input[type=email]{flex:1 1 280px;background:var(--deep);color:var(--bone);
+  border:1px solid var(--line);border-radius:6px;padding:13px 18px;
+  font-family:var(--body);font-size:16px;min-width:0}
+.form input[type=email]::placeholder{color:var(--bone-faint)}
+.form input[type=email]:focus{border-color:var(--bone-faint);outline:none}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.form-msg{margin-top:16px;font-size:15px;min-height:1.5em;color:var(--bone-dim)}
+.form-msg.err{color:var(--ear-r)}
+.form-msg.ok{color:var(--bone)}
+
+.steps{margin:44px 0 0;padding:0;list-style:none;counter-reset:step;max-width:56ch}
+.steps li{counter-increment:step;position:relative;padding-left:42px;margin-bottom:18px;
+  color:var(--bone-dim);font-size:15.5px}
+.steps li::before{content:counter(step);position:absolute;left:0;top:1px;width:25px;height:25px;
+  border-radius:6px;border:1px solid var(--line);display:grid;place-items:center;
+  font-family:var(--data);font-size:11.5px;color:var(--bone-faint)}
+.steps b{color:var(--bone);font-weight:500}
+.spec-list{margin-top:30px;font-family:var(--data);font-size:12px;letter-spacing:.09em;
+  color:var(--bone-faint);line-height:2}
+
+footer{border-top:1px solid var(--line-soft);padding:36px 0;color:var(--bone-faint);font-size:14px}
+.foot-in{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  max-width:var(--maxw);margin:0 auto;padding-inline:var(--gut)}
+footer a{color:var(--bone-dim);text-decoration:none}
+footer a:hover{color:var(--bone)}
+
+.rise{opacity:0;transform:translateY(18px);
+  transition:opacity .7s cubic-bezier(.2,.7,.3,1),transform .7s cubic-bezier(.2,.7,.3,1)}
+.rise.in{opacity:1;transform:none}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  .rise{opacity:1;transform:none}
+  .beam{opacity:.85}
+}
+</style>
+</head>
+<body>
+
+<header class="rail">
+  <div class="rail-in">
+    <div class="mark">Periphony <span>8D</span></div>
+    <a class="btn btn-ghost" href="#get">Download</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── The instrument is the hero ───────────────────────── -->
+  <section class="hero wrap">
+    <h1>Press play. Then press 8D.</h1>
+    <p class="sub">Both are playing already, in sync and at the same loudness.
+      The only difference you'll hear is that one of them is moving.</p>
+
+    <div class="stage">
+      <svg class="beam" id="beamSvg" viewBox="0 0 400 400" aria-hidden="true">
+        <defs>
+          <!-- Falloff from the apex: white-hot at the source, taking the
+               bearing's colour as it spreads, gone by the tick ring. -->
+          <radialGradient id="beamGrad" cx="200" cy="200" r="344"
+                          gradientUnits="userSpaceOnUse">
+            <stop offset="0"    stop-color="#ffffff" stop-opacity="1"></stop>
+            <stop offset="0.12" stop-color="#ffffff" stop-opacity="1"></stop>
+            <stop class="bg" offset="0.21" stop-opacity="1"></stop>
+            <stop class="bg" offset="0.42" stop-opacity="0.74"></stop>
+            <stop class="bg" offset="0.63" stop-opacity="0.38"></stop>
+            <stop class="bg" offset="0.83" stop-opacity="0.11"></stop>
+            <stop class="bg" offset="1"    stop-opacity="0"></stop>
+          </radialGradient>
+          <filter id="beamSoft" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="soft"></feGaussianBlur>
+            <feColorMatrix in="soft" type="saturate" values="1.5"></feColorMatrix>
+          </filter>
+        </defs>
+        <g id="rays" fill="url(#beamGrad)" filter="url(#beamSoft)"></g>
+        <!-- Sparks are deliberately outside the blur so they stay as points. -->
+        <g id="sparks"></g>
+      </svg>
+      <svg class="ring" id="ring" viewBox="0 0 400 400" aria-hidden="true"></svg>
+      <div class="core">
+        <button class="play" id="play" aria-label="Play the demo">
+          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div class="readout" id="readout">LOADING…</div>
+      </div>
+    </div>
+
+    <div class="ab" role="group" aria-label="Choose which version you hear">
+      <button id="btnOrig" aria-pressed="true" disabled>Original</button>
+      <button id="btn8d" aria-pressed="false" disabled>8D</button>
+    </div>
+    <p class="demo-hint" id="hint">Put headphones on — the effect does not exist on speakers.</p>
+    <p class="demo-note">SCRAP METAL · 127.8 BPM · ONE REVOLUTION EVERY 3.75 S</p>
+  </section>
+
+  <!-- ── What it is ───────────────────────────────────────── -->
+  <section class="sec wrap">
+    <p class="eyebrow">What it is</p>
+    <h2>A macOS app that does that to your own music.</h2>
+    <p class="sec-lede">Drop MP3s in, press convert, get files back. The rotation
+      is built from head-related impulse responses measured on a mannequin head at
+      MIT — not from a stereo widener, and not from an equation.</p>
+
+    <div class="facts">
+      <div class="fact rise">
+        <span class="n">36 POSITIONS</span>
+        <h3>Real ears, really measured</h3>
+        <p>Your track is convolved at 36 azimuths — one every 10° — and crossfaded
+           between neighbours sample by sample, so the source glides instead of stepping.</p>
+      </div>
+      <div class="fact rise">
+        <span class="n">TEMPO LOCKED</span>
+        <h3>One orbit, eight beats</h3>
+        <p>Each track's tempo is detected and the rotation locked to it, so the
+           movement lands with the music. Adjustable from 4 to 64 beats per orbit.</p>
+      </div>
+      <div class="fact rise">
+        <span class="n">FRONT AND BACK</span>
+        <h3>Not just left and right</h3>
+        <p>Bass below 150&nbsp;Hz stays centred. Above it, the room response tightens
+           in front and lengthens behind — the depth cue that stops it collapsing into panning.</p>
+      </div>
+    </div>
+
+    <div class="measure rise">
+      <table>
+        <caption>Measured on the reference track. The first three rows return to the
+          source; the last two are the spatial effect itself, and are meant to move.</caption>
+        <thead><tr><th>Measurement</th><th>Original</th><th>Periphony 8D</th></tr></thead>
+        <tbody>
+          <tr><td>Integrated loudness</td><td>−13.3 LUFS</td><td>−13.4 LUFS</td></tr>
+          <tr><td>Worst tonal deviation</td><td>—</td><td>+2.6 dB</td></tr>
+          <tr><td>Centre channel</td><td>−15.1 dB</td><td>−16.8 dB</td></tr>
+          <tr><td>L/R correlation</td><td>+0.91</td><td>+0.57</td></tr>
+          <tr><td>Stereo width (S−M)</td><td>−13.3 dB</td><td>−5.6 dB</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── The app ──────────────────────────────────────────── -->
+  <section class="sec wrap">
+    <p class="eyebrow">The app</p>
+    <h2>Drop files in. Press convert.</h2>
+    <p class="sec-lede">Runs entirely on your machine. No account, no telemetry,
+      no subscription. Output is 320&nbsp;kbps MP3.</p>
+    <div class="shots">
+      <figure class="rise">
+        <img src="assets/shot-main.png" width="700" height="648"
+             alt="The main window with six tracks queued, each showing a direction glyph, and the console open below.">
+        <figcaption>Per-track trajectory — clockwise, counter-clockwise, figure-eight
+          or random. The console reports what the engine measured and did.</figcaption>
+      </figure>
+      <figure class="rise">
+        <img src="assets/shot-about.png" width="440" height="512"
+             alt="The About panel showing the app icon, version and description.">
+        <figcaption>Version 1.2.0.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ── Download ─────────────────────────────────────────── -->
+  <section class="sec wrap" id="get">
+    <p class="eyebrow">Download</p>
+    <h2>Free. One email, one click.</h2>
+    <p class="sec-lede">We send a confirmation link; clicking it starts the download.
+      The address is used for that link and nothing else.</p>
+
+    <form class="form" id="signup" novalidate>
+      <label class="hp" for="company">Leave this field empty</label>
+      <input class="hp" type="text" id="company" name="company" tabindex="-1" autocomplete="off">
+      <label class="hp" for="email">Email address</label>
+      <input type="email" id="email" name="email" placeholder="you@example.com"
+             required autocomplete="email" spellcheck="false">
+      <button class="btn btn-solid" type="submit" id="signupBtn">Send the link</button>
+    </form>
+    <p class="form-msg" id="formMsg" role="status" aria-live="polite"></p>
+
+    <ol class="steps">
+      <li><b>Confirm your email.</b> Click the link we send. The download begins straight after.</li>
+      <li><b>Open it the first time with a right-click.</b> Right-click the app and choose
+          Open, then confirm. macOS warns because the app isn't signed by a paid developer
+          account — expected, and only once.</li>
+      <li><b>Put headphones on.</b> The effect is built from the difference between your
+          two ears. Speakers destroy it.</li>
+    </ol>
+
+    <p class="spec-list">
+      MACOS 12 OR LATER &nbsp;·&nbsp; APPLE SILICON &nbsp;·&nbsp; MP3 IN, 320 KBPS MP3 OUT<br>
+      VERSION 1.2.0 &nbsp;·&nbsp; RUNS ENTIRELY OFFLINE
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="foot-in">
+    <span>© <span id="year">2026</span> Cyburdine Systems</span>
+    <span><a href="mailto:justin@cyburdine.com">justin@cyburdine.com</a></span>
+  </div>
+</footer>
+
+<script src="assets/demo.js" defer></script>
+<!-- Return to the site. Landing pages keep their own visual world; this is
+     the consistent door back. Self-contained because this page does not load
+     the site stylesheet. -->
+<a href="/" class="cy-return">cyburdine.com</a>
+<style>
+.cy-return{position:fixed;left:0;bottom:0;z-index:90;display:inline-flex;align-items:center;
+  gap:.55rem;margin:.9rem;padding:.5rem .85rem;border:1px solid rgba(239,233,226,.18);
+  border-radius:6px;background:rgba(10,8,16,.82);backdrop-filter:blur(8px);color:#9c95a6;
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;text-decoration:none;transition:border-color .18s,color .18s}
+.cy-return:hover{border-color:#efe9e2;color:#efe9e2}
+.cy-return::before{content:"\2190";font-size:13px}
+@media (prefers-reduced-motion:reduce){.cy-return{transition:none}}
+</style>
+</body>
+</html>

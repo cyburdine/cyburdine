@@ -23,6 +23,22 @@ SPDX-License-Identifier: BSD-3-Clause
 
 /* Clean-mode body font — readable monospace once you're "through the screen". */
 @font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/assets/fonts/IBMPlexSans-Regular.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/assets/fonts/IBMPlexSans-Medium.woff2') format('woff2');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/assets/fonts/IBMPlexSans-SemiBold.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+
+@font-face {
   font-family: 'IBM Plex Mono';
   font-style: normal;
   font-weight: 400;
@@ -40,31 +56,37 @@ SPDX-License-Identifier: BSD-3-Clause
 /* ════════════════════════════════════════════════════════════════
    DESIGN TOKENS — consumed by CLEAN MODE only (html.cy-clean …).
    Inert to the CRT/boot rules, which keep their own literal hex, so
-   adding these cannot shift the intro's appearance. Single source of
-   truth for the "refined terminal OS" reading experience.
+   changing these cannot shift the intro's appearance.
+
+   THEME: "Instrument" — the site as a piece of lab equipment.
+   Cold blue-graphite ground, amber as the signal colour, cyan for
+   data/links, prose in a proportional face and mono demoted to
+   labels and readouts.
    ════════════════════════════════════════════════════════════════ */
 :root {
   /* palette */
-  --cy-bg:      #05070a;   /* near-black screen */
-  --cy-fg:      #7dffb0;   /* phosphor body text */
-  --cy-fg-dim:  #4f8f6b;   /* meta / labels / secondary */
-  --cy-link:    #33ffcc;   /* cyan = interactive */
-  --cy-accent:  #ff33cc;   /* pink = status / accent */
+  --cy-bg:      #0a0f14;   /* cold blue-graphite ground */
+  --cy-fg:      #d6e4ec;   /* body text — proportional, near-white */
+  --cy-fg-dim:  #7d95a3;   /* meta / labels / secondary */
+  --cy-link:    #4fd6d6;   /* cyan = data + interactive */
+  --cy-accent:  #ffb020;   /* amber = signal / status */
   --cy-white:   #ffffff;
-  --cy-rule:    #12332a;   /* frame + divider lines */
-  --cy-rule-lit:#1f5a48;   /* brighter rule on hover/focus */
-  --cy-panel:   rgba(51, 255, 204, 0.045);  /* faint card fill */
+  --cy-rule:    #1e2c37;   /* frame + divider lines */
+  --cy-rule-lit:#2f4757;   /* brighter rule on hover/focus */
+  --cy-panel:   rgba(79, 214, 214, 0.045);  /* faint card fill */
 
-  /* type */
-  --cy-font-display: 'VT323', monospace;
-  --cy-font-body:    'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --cy-fs-body: 18px;
-  --cy-lh:      1.6;
-  --cy-fs-h1:   2.6rem;
-  --cy-fs-h2:   1.9rem;
-  --cy-fs-h3:   1.45rem;
+  /* type — mono is now a LABEL face, not the body face */
+  --cy-font-display: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --cy-font-body:    'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --cy-font-mono:    'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --cy-fs-body: 17px;
+  --cy-lh:      1.68;
+  --cy-fs-h1:   2.35rem;
+  --cy-fs-h2:   1.6rem;
+  --cy-fs-h3:   1.25rem;
   --cy-fs-meta: 0.72rem;
   --cy-tracking-meta: 0.18em;
+  --cy-measure: 40rem;     /* reading column — proportional, not 72ch of mono */
 
   /* spacing rhythm (8px base) */
   --cy-sp-1: 0.5rem;
@@ -837,16 +859,16 @@ html.cy-dissolve .terminal-screen::before { opacity: 0; transition: opacity 0.9s
 /* Global scanlines run a flicker animation; animation overrides plain opacity,
    so stop it AND fade out. */
 html.cy-dissolve body::before { animation: none !important; opacity: 0 !important; transition: opacity 0.6s ease-out; }
-html.cy-dissolve .terminal-screen { background: #05070a; }   /* near-black already */
+html.cy-dissolve .terminal-screen { background: var(--cy-bg); }  /* == clean ground */
 /* Match the clean background everywhere so the landing swap has no bg edge. */
-html.cy-dissolve, html.cy-dissolve body, html.cy-dissolve .terminal-wrapper { background: #05070a; }
+html.cy-dissolve, html.cy-dissolve body, html.cy-dissolve .terminal-wrapper { background: var(--cy-bg); }
 html.cy-dissolve .glow, html.cy-dissolve .console, html.cy-dissolve pre,
 html.cy-dissolve nav.glow, html.cy-dissolve nav a, html.cy-dissolve a,
 html.cy-dissolve .char {
   text-shadow: none !important;
   transition: text-shadow 0.7s ease-out, color 1s ease-out;
 }
-html.cy-dissolve pre, html.cy-dissolve .glow { color: #7dffb0; }
+html.cy-dissolve pre, html.cy-dissolve .glow { color: var(--cy-fg); }  /* settle onto the clean body colour */
 html.cy-dissolve footer { opacity: 0; transition: opacity 0.4s ease-out; }  /* don't fly the footer */
 
 @media (prefers-reduced-motion: reduce) {
@@ -876,7 +898,7 @@ html.cy-clean .terminal-screen::before { display: none !important; }
 
 html.cy-clean .terminal-wrapper {
   height: auto !important;
-  background: #05070a;
+  background: var(--cy-bg);
   overflow: visible;
 }
 html.cy-clean .terminal-container {
@@ -888,27 +910,30 @@ html.cy-clean .terminal-container {
   z-index: auto;
 }
 html.cy-clean .terminal-screen {
-  position: static;
+  position: relative;                /* anchors the measurement rail */
   top: auto; left: auto;
   width: 100%;
-  max-width: 72ch;
+  max-width: var(--cy-measure);      /* proportional measure, not 72ch of mono */
   height: auto;
-  margin: 0;                         /* left-aligned, not centered */
-  padding: 2.5rem 1.5rem 4rem;
+  margin: 0 auto;                    /* centred column */
+  padding: 3rem 1.5rem 4rem 2.25rem; /* extra left padding clears the rail */
   background: transparent;
   overflow: visible;
-  font-size: 18px;                   /* no counter-scaling in clean mode */
-  line-height: 1.6;
+  font-size: var(--cy-fs-body);      /* no counter-scaling in clean mode */
+  line-height: var(--cy-lh);
 }
 
-/* Body copy lives inside <pre> — the UA stylesheet forces `monospace`, so pin
-   IBM Plex Mono explicitly to reach the actual content. */
+/* Body copy lives inside <pre>, and the UA stylesheet forces `monospace` on it,
+   so the proportional face has to be pinned explicitly to reach the content.
+   This is the single most important rule in the theme: 1,900-word articles are
+   not readable in a monospace face. Mono survives on labels and readouts only. */
 html.cy-clean pre,
 html.cy-clean .console,
 html.cy-clean main {
-  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  font-size: 18px;
-  line-height: 1.6;
+  font-family: var(--cy-font-body);
+  font-size: var(--cy-fs-body);
+  line-height: var(--cy-lh);
+  font-weight: 400;
 }
 
 /* Strip all neon glow. */
@@ -924,12 +949,16 @@ html.cy-clean a:hover { text-shadow: none !important; }
 html.cy-clean a { color: var(--cy-link); }
 html.cy-clean a:hover { color: var(--cy-white); text-decoration: underline; }
 
-/* Headings keep the VT323 identity. */
+/* Headings: tight grotesque, near-white. Colour is spent on the accents
+   (amber signal, cyan data), never on the headings themselves. */
 html.cy-clean h1, html.cy-clean h2, html.cy-clean h3,
 html.cy-clean .boot-logo-text {
   font-family: var(--cy-font-display);
-  letter-spacing: 1px;
-  color: var(--cy-link);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--cy-fg);
+  text-wrap: balance;
 }
 
 /* Nav: flat readable bar (the real nav is `.glow`, not `.console`), glow off. */
@@ -1036,7 +1065,7 @@ html.cy-clean main table {
 
 /* ── Meta / label style — small, uppercase, tracked-out, dim ── */
 html.cy-clean .cy-meta {
-  font-family: var(--cy-font-body);
+  font-family: var(--cy-font-mono);
   font-size: var(--cy-fs-meta);
   letter-spacing: var(--cy-tracking-meta);
   text-transform: uppercase;
@@ -1310,7 +1339,7 @@ html.cy-clean .char.foreign { font-family: var(--foreign-font), monospace; color
 
 /* Pre-paint + during typing: black screen, chrome hidden, <main> hidden until
    render.js reveals it (empty). */
-html.cy-rendering { background: #05070a; }
+html.cy-rendering { background: var(--cy-bg); }
 html.cy-rendering main   { visibility: hidden; }
 html.cy-rendering header,
 html.cy-rendering footer { visibility: hidden; }
@@ -1330,7 +1359,170 @@ html.cy-rendering footer { visibility: hidden; }
    render types the page. Sits above the CRT frame/overlays. */
 .cy-black {
   position: fixed; inset: 0; z-index: 100002;
-  background: #05070a; opacity: 0; pointer-events: none;
+  background: var(--cy-bg); opacity: 0; pointer-events: none;
 }
 .cy-black.on { opacity: 1; transition: opacity 260ms ease-in; }
 @media (prefers-reduced-motion: reduce) { .cy-black { display: none; } }
+
+/* ════════════════════════════════════════════════════════════════
+   INSTRUMENT — theme components (clean mode only)
+
+   Everything here is gated behind html.cy-clean, so the CRT boot
+   sequence is untouched. Appended last so it wins the cascade over
+   the earlier reading-experience rules without raising specificity.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── The measurement rail ──────────────────────────────────────
+   The signature of the theme: the reading column is edged like the
+   scale on a piece of test equipment. Purely decorative, so it is
+   hidden from assistive tech and drawn with a gradient rather than
+   markup. Ticks every 12px, a major tick every 60px. */
+html.cy-clean .terminal-screen::after {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 10px;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, var(--cy-rule) 0 100%) left / 1px 100% no-repeat,
+    repeating-linear-gradient(to bottom,
+      var(--cy-rule) 0 1px, transparent 1px 12px) left / 5px 100% no-repeat,
+    repeating-linear-gradient(to bottom,
+      var(--cy-rule-lit) 0 1px, transparent 1px 60px) left / 10px 100% no-repeat;
+}
+
+/* Body copy: ragged right. Justified text in any face opens rivers of
+   whitespace; the old rule justified a MONOSPACE face, which is the
+   worst case of it. */
+html.cy-clean .project,
+html.cy-clean .console,
+html.cy-clean pre {
+  text-align: left;
+  text-justify: auto;
+  hyphens: none;
+}
+
+/* Paragraph rhythm. Copy is authored as blank-line-separated text inside
+   pre-wrap blocks, so the spacing comes from the line box, not margins. */
+html.cy-clean .project {
+  color: var(--cy-fg);
+  max-width: 100%;
+}
+
+/* Section labels ( ":: like this" ) are the readout of the instrument:
+   mono, tracked out, amber. This is where the signal colour lives. */
+html.cy-clean .cy-section-label {
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  color: var(--cy-accent);
+  margin: var(--cy-sp-5) 0 var(--cy-sp-2);
+  padding-top: var(--cy-sp-2);
+  border-top: 1px solid var(--cy-rule);
+}
+
+/* Links: cyan is data. Underline on hover only, so running text stays calm. */
+html.cy-clean .project a,
+html.cy-clean main p a {
+  color: var(--cy-link);
+  text-decoration-color: var(--cy-rule-lit);
+  text-underline-offset: 3px;
+}
+
+/* Nav reads as an instrument header: mono, tracked, dim until hovered. */
+html.cy-clean nav a {
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  color: var(--cy-fg-dim);
+}
+html.cy-clean nav a:hover { color: var(--cy-accent); text-decoration: none; }
+
+/* ── Return bar ────────────────────────────────────────────────
+   The answer to "navigate in and out of landing pages easily".
+   Project landing pages keep their own visual world; this is the
+   consistent door back. Fixed, small, and out of the way. */
+.cy-return {
+  position: fixed;
+  left: 0; bottom: 0;
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.9rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 3px;
+  background: rgba(10,15,20,0.82);
+  backdrop-filter: blur(8px);
+  color: #d6e4ec;
+  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: border-color .18s, color .18s;
+}
+.cy-return:hover { border-color: #ffb020; color: #ffb020; }
+.cy-return::before { content: "\2190"; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) {
+  .cy-return { transition: none; }
+}
+
+/* ── Instrument: corrections after visual review ──────────────── */
+
+/* `html.cy-clean main h1` (0,1,3) outranks the heading rule above (0,1,2) and
+   was still painting headings cyan. Match its specificity and win on order:
+   headings are near-white, colour is spent on accents only. */
+html.cy-clean main h1,
+html.cy-clean main h2,
+html.cy-clean main h3 {
+  color: var(--cy-fg);
+  font-family: var(--cy-font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* Status pill: the old palette filled this with pink, which was tolerable.
+   Filled amber is a warning light — it dominates the page. Outline it so the
+   signal colour reads as a readout rather than an alert. */
+html.cy-clean .cy-status {
+  color: var(--cy-accent);
+  background: transparent;
+  border: 1px solid var(--cy-accent);
+  border-radius: 2px;
+  font-family: var(--cy-font-mono);
+  padding: 0.1rem 0.5rem;
+}
+html.cy-clean .cy-status--live {
+  color: var(--cy-link);
+  background: transparent;
+  border-color: var(--cy-link);
+}
+
+/* Nav is primary navigation, not metadata — dim was too quiet against the
+   ground. Near-white at rest, amber on hover. */
+html.cy-clean nav a { color: var(--cy-fg); }
+html.cy-clean nav a:hover { color: var(--cy-accent); }
+
+/* The measurement rail already edges the column, so the article's own frame
+   was a third border around the same content. Drop it for the reading frame
+   and keep it where a panel is genuinely a panel (the contact block). */
+html.cy-clean main > article > .cy-frame,
+html.cy-clean .console.cy-frame {
+  border: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Unbordering the reading frame left its corner brackets floating with no
+   frame to sit on, plus the padding the border used to justify. */
+html.cy-clean main > article > .cy-frame::before,
+html.cy-clean main > article > .cy-frame::after,
+html.cy-clean .console.cy-frame::before,
+html.cy-clean .console.cy-frame::after { display: none; }
+html.cy-clean main > article > .cy-frame,
+html.cy-clean .console.cy-frame { padding-top: 0; }
