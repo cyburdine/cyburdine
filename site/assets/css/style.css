@@ -1526,3 +1526,53 @@ html.cy-clean .console.cy-frame::before,
 html.cy-clean .console.cy-frame::after { display: none; }
 html.cy-clean main > article > .cy-frame,
 html.cy-clean .console.cy-frame { padding-top: 0; }
+
+/* ── Article figures ───────────────────────────────────────────
+   Figures sit BETWEEN .project blocks, never inside one: .project is
+   white-space:pre-wrap, so markup nested in it inherits the authored
+   line breaks and spaces out unpredictably.
+
+   Images are full-column and edged rather than floated — the reading
+   column is only 40rem, and a float would strand 20-character lines
+   beside it. */
+html.cy-clean .cy-figure {
+  margin: var(--cy-sp-5) 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--cy-sp-2);
+  /* The article body is pre-wrap, and a figure nested anywhere under it
+     inherits that — which turns the newlines and indentation in the caption
+     markup into literal blank lines. Reset it for the figure subtree. */
+  white-space: normal;
+}
+html.cy-clean .cy-figure figcaption,
+html.cy-clean .cy-figure figcaption * { white-space: normal; }
+html.cy-clean .cy-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--cy-rule);
+  border-radius: 2px;
+  background: var(--cy-panel);
+}
+html.cy-clean .cy-figure figcaption {
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  line-height: 1.55;
+  letter-spacing: 0.04em;
+  color: var(--cy-fg-dim);
+  border-left: 1px solid var(--cy-rule-lit);
+  padding-left: var(--cy-sp-2);
+}
+/* Attribution: not required by the Pexels licence, but cheap and honest. */
+html.cy-clean .cy-figure__credit {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--cy-rule-lit);
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  font-size: 0.62rem;
+}
+html.cy-clean .cy-figure__credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+html.cy-clean .cy-figure__credit a:hover { color: var(--cy-accent); }
