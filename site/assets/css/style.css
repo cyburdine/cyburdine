@@ -79,14 +79,15 @@ SPDX-License-Identifier: BSD-3-Clause
   --cy-font-display: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --cy-font-body:    'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   --cy-font-mono:    'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --cy-fs-body: 17px;
-  --cy-lh:      1.68;
+  --cy-fs-body: 18px;
+  --cy-lh:      1.7;
   --cy-fs-h1:   2.35rem;
   --cy-fs-h2:   1.6rem;
   --cy-fs-h3:   1.25rem;
   --cy-fs-meta: 0.72rem;
   --cy-tracking-meta: 0.18em;
-  --cy-measure: 40rem;     /* reading column — proportional, not 72ch of mono */
+  --cy-measure: 42rem;     /* reading column — proportional, not 72ch of mono */
+  --cy-measure-wide: 74rem;/* gallery column — pages with data-cy-layout="wide" */
 
   /* spacing rhythm (8px base) */
   --cy-sp-1: 0.5rem;
@@ -884,6 +885,11 @@ html.cy-clean,
 html.cy-clean body {
   height: auto;
   overflow: visible;
+  /* The CRT stage counter-scales the root font-size (16px / --cy-scale) so the
+     fixed 3000px terminal fits the viewport. Clean mode has no such stage, and
+     leaving that in place made every rem in the theme — measures, spacing,
+     type scale — silently shrink by whatever the scale happened to be. Pin it. */
+  font-size: 16px;
   background: var(--cy-bg);
   color: var(--cy-fg);               /* softer, high-contrast green */
   font-family: var(--cy-font-body);
@@ -981,32 +987,11 @@ html.cy-clean nav a:hover { color: var(--cy-white); }
 html.cy-clean pre,
 html.cy-clean .console { white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: visible; }
 
-/* ── "Inside the computer": once we're through and on the clean page, it reads
-   as a live monitor — a faint scanline flicker, and the text glitches now and
-   then. Kept subtle so the page stays readable. ── */
-html.cy-clean body::after {
-  content: "";
-  position: fixed; inset: 0; z-index: 9998; pointer-events: none;
-  background: repeating-linear-gradient(to bottom,
-    rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px,
-    rgba(0,0,0,0.11) 3px, rgba(0,0,0,0) 4px);
-  animation: cy-monitor-flicker 5s ease-in-out infinite;
-}
-@keyframes cy-monitor-flicker { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
-
-/* Occasional brief RGB-split glitch + flicker on the text (no position shift, so
-   it doesn't disturb reading). */
-html.cy-clean main { animation: cy-text-glitch 7.5s steps(1, end) infinite; }
-@keyframes cy-text-glitch {
-  0%, 84%, 100% { filter: none; opacity: 1; }
-  86% { filter: drop-shadow(2px 0 rgba(255,0,90,0.5)) drop-shadow(-2px 0 rgba(0,220,255,0.5)); opacity: 0.9; }
-  88% { filter: none; opacity: 1; }
-  90.5% { filter: drop-shadow(-3px 0 rgba(255,0,90,0.55)) drop-shadow(3px 0 rgba(0,220,255,0.55)); opacity: 0.85; }
-  92.5% { filter: none; opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  html.cy-clean body::after, html.cy-clean main { animation: none !important; }
-}
+/* Reading mode is deliberately still: no scanline flicker, no RGB-split on the
+   text. The CRT character lives in the boot cinematic and the render effect —
+   once you are through the screen and actually reading, nothing moves. Any
+   rule that animates `body::after` or `main` here belongs in the boot stage
+   instead; it fights a 2,000-word article. */
 
 /* Blinking terminal cursor — placed inline right after the last character of the
    content by boot.js (placeCursor), so it hugs the last line as if just typed. */
@@ -1184,17 +1169,6 @@ html.cy-clean .cy-tag {
   margin: 0 0.3rem 0.3rem 0;
   white-space: nowrap;
 }
-html.cy-clean .cy-status {
-  display: inline-block;
-  font-family: var(--cy-font-body);
-  font-size: var(--cy-fs-meta);
-  letter-spacing: var(--cy-tracking-meta);
-  text-transform: uppercase;
-  color: var(--cy-bg);
-  background: var(--cy-accent);
-  padding: 0.06rem 0.5rem;
-}
-html.cy-clean .cy-status--live { background: var(--cy-link); }
 
 /* ── Toolbar: styled search input + filter select ─────────────── */
 html.cy-clean .search-bar {
@@ -1279,6 +1253,109 @@ html.cy-clean .cy-card__meta { margin-top: var(--cy-sp-1); }
 html.cy-clean .cy-card__desc { margin: var(--cy-sp-1) 0 0; color: var(--cy-fg); }
 html.cy-clean .cy-card--stub { border-style: dashed; }
 html.cy-clean .cy-card--stub .cy-card__link { color: var(--cy-fg-dim); }
+
+/* ── Magazine-style hero images (projects page) ───────────────────
+   Duotone filter pulls stock photography toward the phosphor-green /
+   cyan palette so it reads as part of the terminal rather than a
+   photo pasted on top; a scanline overlay on the wrapper reinforces
+   the CRT surface. */
+html.cy-clean .cy-feature__media,
+html.cy-clean .cy-tile__media {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--cy-rule);
+  background: var(--cy-panel);
+}
+html.cy-clean .cy-feature__media > a,
+html.cy-clean .cy-tile__media > a { display: block; width: 100%; height: 100%; }
+html.cy-clean .cy-feature__img,
+html.cy-clean .cy-tile__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Photos read as photos. The old duotone pushed everything to phosphor green
+     and the images stopped being legible as images. */
+  filter: saturate(0.92) contrast(1.02) brightness(0.95);
+  transition: filter 150ms ease, transform 300ms ease;
+}
+html.cy-clean .cy-feature:hover .cy-feature__img,
+html.cy-clean .cy-tile:hover .cy-tile__img {
+  filter: none;
+  transform: scale(1.02);
+}
+html.cy-clean .cy-feature__credit,
+html.cy-clean .cy-tile__credit {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.4rem;
+  font-family: var(--cy-font-mono);
+  font-size: 0.6rem;
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+html.cy-clean .cy-feature__credit a,
+html.cy-clean .cy-tile__credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+html.cy-clean .cy-feature__credit a:hover,
+html.cy-clean .cy-tile__credit a:hover { color: var(--cy-accent); }
+
+/* ── Featured project (magazine cover story) ──────────────────── */
+html.cy-clean .cy-feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: var(--cy-sp-4);
+  align-items: start;
+  border: 1px solid var(--cy-rule);
+  padding: var(--cy-sp-3);
+  margin: 0 0 var(--cy-sp-4);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+html.cy-clean .cy-feature:hover { border-color: var(--cy-link); background: var(--cy-panel); }
+html.cy-clean .cy-feature__media { aspect-ratio: 16 / 9; }
+html.cy-clean .cy-feature__body { display: flex; flex-direction: column; justify-content: center; }
+html.cy-clean .cy-feature__eyebrow {
+  display: block;
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  color: var(--cy-accent);
+  margin: 0 0 var(--cy-sp-1);
+}
+html.cy-clean .cy-feature__link {
+  font-family: var(--cy-font-display);
+  font-size: var(--cy-fs-h1);
+  line-height: 1.05;
+  letter-spacing: 1px;
+  color: var(--cy-link);
+  margin: 0;
+}
+html.cy-clean .cy-feature:hover .cy-feature__link { color: var(--cy-white); }
+html.cy-clean .cy-feature__desc { margin: var(--cy-sp-2) 0 0; color: var(--cy-fg); max-width: 60ch; }
+@media (max-width: 720px) {
+  html.cy-clean .cy-feature { grid-template-columns: 1fr; }
+}
+
+/* ── Tile grid (remaining projects) ───────────────────────────── */
+html.cy-clean .cy-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: var(--cy-sp-3);
+}
+html.cy-clean .cy-tile {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--cy-rule);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+html.cy-clean .cy-tile:hover { border-color: var(--cy-link); background: var(--cy-panel); }
+html.cy-clean .cy-tile__media { aspect-ratio: 16 / 9; }
+html.cy-clean .cy-tile__body { padding: var(--cy-sp-2) var(--cy-sp-3) var(--cy-sp-3); }
+html.cy-clean .cy-tile .cy-card__link { font-size: 1.05rem; }
+html.cy-clean .cy-tile--stub .cy-card__link { color: var(--cy-fg-dim); }
+html.cy-clean .cy-tile--stub .cy-tile__img { opacity: 0.75; }
 
 /* ── Homepage hero ────────────────────────────────────────────── */
 html.cy-clean .cy-hero { margin: 0 0 var(--cy-sp-5); }
@@ -1486,22 +1563,6 @@ html.cy-clean main h3 {
   line-height: 1.1;
 }
 
-/* Status pill: the old palette filled this with pink, which was tolerable.
-   Filled amber is a warning light — it dominates the page. Outline it so the
-   signal colour reads as a readout rather than an alert. */
-html.cy-clean .cy-status {
-  color: var(--cy-accent);
-  background: transparent;
-  border: 1px solid var(--cy-accent);
-  border-radius: 2px;
-  font-family: var(--cy-font-mono);
-  padding: 0.1rem 0.5rem;
-}
-html.cy-clean .cy-status--live {
-  color: var(--cy-link);
-  background: transparent;
-  border-color: var(--cy-link);
-}
 
 /* Nav is primary navigation, not metadata — dim was too quiet against the
    ground. Near-white at rest, amber on hover. */
@@ -1576,3 +1637,116 @@ html.cy-clean .cy-figure__credit {
 }
 html.cy-clean .cy-figure__credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 html.cy-clean .cy-figure__credit a:hover { color: var(--cy-accent); }
+
+/* ════════════════════════════════════════════════════════════════
+   WIDE LAYOUT — gallery pages (projects.html)
+
+   Reading pages are capped at --cy-measure so prose keeps a sane
+   measure. A card gallery has the opposite need: squeezed into a
+   40rem column the tile grid collapses to one column and reads as
+   the vertical list it is trying not to be. Pages opt in with
+   <html data-cy-layout="wide"> and get --cy-measure-wide instead.
+   ════════════════════════════════════════════════════════════════ */
+html.cy-clean[data-cy-layout="wide"] .terminal-screen {
+  max-width: var(--cy-measure-wide);
+  padding: 3rem 2rem 4rem;          /* symmetric: no rail to clear */
+}
+/* The measurement rail edges a reading column; against a full-width
+   grid it just floats beside nothing. */
+html.cy-clean[data-cy-layout="wide"] .terminal-screen::after { display: none; }
+
+/* ── Gallery page header ──────────────────────────────────────── */
+html.cy-clean .cy-gallery-head {
+  margin: 0 0 var(--cy-sp-4);
+  padding-bottom: var(--cy-sp-3);
+  border-bottom: 1px solid var(--cy-rule);
+}
+html.cy-clean .cy-gallery-head h1 { margin: var(--cy-sp-1) 0 0; }
+html.cy-clean .cy-gallery-head__lede {
+  margin: var(--cy-sp-2) 0 0;
+  max-width: 54ch;
+  color: var(--cy-fg-dim);
+}
+
+/* ── Feature card at gallery width ────────────────────────────── */
+html.cy-clean[data-cy-layout="wide"] .cy-feature {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--cy-sp-4);
+  padding: var(--cy-sp-4);
+  margin-bottom: var(--cy-sp-5);
+}
+html.cy-clean[data-cy-layout="wide"] .cy-feature__desc {
+  font-size: 1.05rem;
+  max-width: 46ch;
+}
+
+/* ── Tile grid: three up at gallery width, never a single column
+   until the viewport genuinely can't hold two. ── */
+html.cy-clean[data-cy-layout="wide"] .cy-tiles {
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: var(--cy-sp-4) var(--cy-sp-3);
+}
+
+/* Tiles are the page's main content here, so give them room to breathe:
+   a taller image, a real title, and description text at reading size
+   rather than caption size. */
+html.cy-clean .cy-tile__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cy-sp-1);
+  padding: var(--cy-sp-3);
+  flex: 1;
+}
+html.cy-clean .cy-tile .cy-card__link { font-size: 1.15rem; line-height: 1.25; }
+html.cy-clean .cy-tile .cy-card__desc { margin: 0; color: var(--cy-fg-dim); }
+html.cy-clean .cy-tile .cy-card__meta { margin-top: auto; padding-top: var(--cy-sp-1); }
+
+/* The heads used to hold a status pill on the right; with the pill gone
+   the flex row has one child and only adds a baseline quirk. */
+html.cy-clean .cy-card__head { display: block; }
+
+/* ── Article reading refinements ──────────────────────────────────
+   Slightly more air between the title block and the body, and between
+   sections, so a 2,000-word piece has landmarks rather than one slab. */
+html.cy-clean .cy-page-header {
+  margin: 0 0 var(--cy-sp-5);
+  padding-bottom: var(--cy-sp-3);
+  border-bottom: 1px solid var(--cy-rule);
+}
+html.cy-clean .cy-page-header h1 { margin: 0 0 var(--cy-sp-2); }
+html.cy-clean .cy-page-header .cy-statusbar { margin: 0 0 var(--cy-sp-2); }
+html.cy-clean .cy-page-header .cy-tags { margin: 0; }
+
+/* Opening paragraph of an article carries a touch more presence. */
+html.cy-clean main > article > .cy-frame > .project:first-child {
+  font-size: 1.06rem;
+  color: var(--cy-fg);
+}
+
+/* Photo credits sit on top of the image now that the darkening duotone is gone,
+   so they need their own ground to stay legible over a bright frame. */
+html.cy-clean .cy-feature__credit,
+html.cy-clean .cy-tile__credit {
+  right: 0; bottom: 0;
+  padding: 0.2rem 0.5rem;
+  background: rgba(10, 15, 20, 0.72);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* The article body is authored as blank-line-separated text inside .project
+   blocks, but the .cy-frame WRAPPER is markup — inheriting pre-wrap made every
+   newline and indent between its child elements render as literal blank lines,
+   which is where the dead space under the title block came from. The wrapper
+   collapses whitespace; only the prose blocks keep it. */
+html.cy-clean .console.cy-frame { white-space: normal; }
+html.cy-clean .console.cy-frame > .project { white-space: pre-wrap; }
+
+/* Captions were set in tracked-out mono at meta size, which is a readout style
+   applied to a sentence — the hardest text on the page to read. Captions are
+   prose; set them like prose, just quieter than the body. */
+html.cy-clean .cy-figure figcaption {
+  font-family: var(--cy-font-body);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  letter-spacing: 0;
+}

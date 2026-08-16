@@ -31,7 +31,6 @@ SPDX-License-Identifier: BSD-3-Clause
   
   <div class="cy-statusbar">
     <span class="cy-meta">PROJECT</span>
-    <span class="cy-status">in use · 2026</span>
     
   </div>
   
@@ -43,8 +42,7 @@ SPDX-License-Identifier: BSD-3-Clause
 </div>
 
   <div class="console cy-frame">
-<div class="project">
-I write to music with no words in it.
+<div class="project">I write to music with no words in it.
 
 That isn't a preference, it's a requirement. I've been vibe coding for about two years now, and the thing that keeps me in the zone is instrumental — usually EDM, sometimes not — running the entire time. The second somebody starts singing, my brain locks onto the voice and the session is over. I have ADHD. The noise is the default state, and music without lyrics is one of the few things that reliably turns it down.
 
@@ -58,8 +56,7 @@ Then something better happened. It didn't just sound cool — it worked. The noi
 
 Which is where the problem started. The 8D tracks I could find were somebody else's taste, and most of them had vocals. One voice and the spell breaks. I wanted my genres, no lyrics, in this format — and that combination essentially did not exist.
 
-So I did the thing I always do, and asked Claude what this actually was and how it worked. These models are built to be eager to get you to your destination, so "what is this" became "how does it work" became "let's build the app" faster than I can honestly account for.
-</div>
+So I did the thing I always do, and asked Claude what this actually was and how it worked. These models are built to be eager to get you to your destination, so "what is this" became "how does it work" became "let's build the app" faster than I can honestly account for.</div>
 <figure class="cy-figure">
   <img src="/assets/images/articles/periphony-console.webp" alt="A darkened mixing console, its channel buttons lit in amber and cyan, faders running out of focus."
        width="1280" height="853" loading="lazy" decoding="async">
@@ -68,18 +65,15 @@ So I did the thing I always do, and asked Claude what this actually was and how 
   </figcaption>
 </figure>
 <div class="cy-meta cy-section-label">:: about that name</div>
-<div class="project">
-I need to get this out of the way: I think "8D" is a dumb name.
+<div class="project">I need to get this out of the way: I think "8D" is a dumb name.
 
 There is no eighth dimension. There aren't eight channels. It's binaural stereo — two channels, same as always — that has been processed so your brain reconstructs a position in space. The actual word for reproducing sound all the way around a listener is periphony. That's a real term with real history.
 
 I tried to resist. I lost. "8D" is what everybody searches for, it's what the format is called now, and pretending otherwise just means nobody finds the thing.
 
-You can watch me lose that fight in the repo's own history. It shipped as "8D Audio Converter," got renamed to "Periphony," and finally landed on "Periphony 8D" — the correct word and the dumb one, stapled together, because I wanted to be right and found anyway.
-</div>
+You can watch me lose that fight in the repo's own history. It shipped as "8D Audio Converter," got renamed to "Periphony," and finally landed on "Periphony 8D" — the correct word and the dumb one, stapled together, because I wanted to be right and found anyway.</div>
 <div class="cy-meta cy-section-label">:: at first it only panned</div>
-<div class="project">
-Version 1.0.0 went in on March 30th. It was wrong.
+<div class="project">Version 1.0.0 went in on March 30th. It was wrong.
 
 It sounded fine in the sense that audio came out. But with headphones on, the sound just slid left to right — a stereo pan with extra steps. Not the thing I'd heard on YouTube. Nothing ever went behind me.
 
@@ -87,11 +81,9 @@ The bug turned out to be a lookup. The MIT KEMAR measurements index positions by
 
 I want to be accurate about how it got fixed, because it says something. I'd been stuck on that math. What broke it loose was a model upgrade: a newer Claude landed, I put the problem back in front of it, and it solved in minutes what I had been circling for days. The fix went in on April 1st — circular azimuth lookup, energy normalization across positions, and a post-EQ pass.
 
-That was the first time it actually went around my head.
-</div>
+That was the first time it actually went around my head.</div>
 <div class="cy-meta cy-section-label">:: what it actually does</div>
-<div class="project">
-The premise is that your head is a filter. A sound arriving from behind and to the left reaches your left ear slightly sooner, slightly louder, and differently colored, because your skull shadows it and the folds of your ears notch certain frequencies depending on the angle. Your brain reads those differences and reports a direction. That whole transformation is a head-related impulse response — an HRIR — and it's different for every angle.
+<div class="project">The premise is that your head is a filter. A sound arriving from behind and to the left reaches your left ear slightly sooner, slightly louder, and differently colored, because your skull shadows it and the folds of your ears notch certain frequencies depending on the angle. Your brain reads those differences and reports a direction. That whole transformation is a head-related impulse response — an HRIR — and it's different for every angle.
 
 You can fake this with an equation. I didn't want to. Periphony uses real measured HRIRs from the KEMAR mannequin head at MIT — an actual dummy with microphones in its ear canals that had sound played at it from a lot of directions. The rotation is built from recorded human hearing rather than a model of it.
 
@@ -113,8 +105,7 @@ Then there's the part that took the longest and that nobody would ever list as a
 
 One more trap worth writing down, because it cost me a real amount of time. To cut a frequency hump by subtracting a filtered band, the filter has to be zero-phase. A normal causal filter hands the band back phase-shifted, so subtracting it doesn't notch — it combs. Measured on noise, the original version produced +2.7 dB at 1.5 kHz, −9.3 dB at 3 kHz, and +2.7 dB again at 5.5 kHz. A hole with boosted shoulders. It sounded like the whole mix was being played through cupped hands, and it took a measurement to see it, because by ear it just registered as "off."
 
-It's a single Python file. Drop MP3s on it, pick a direction, press convert, get 320 kbps MP3s back. It runs entirely on your machine — no account, no telemetry, nothing uploaded.
-</div>
+It's a single Python file. Drop MP3s on it, pick a direction, press convert, get 320 kbps MP3s back. It runs entirely on your machine — no account, no telemetry, nothing uploaded.</div>
 <figure class="cy-figure">
   <img src="/assets/images/articles/periphony-app.webp" alt="The Periphony 8D window with several tracks queued, each showing a direction glyph, and the console log open below."
        width="1280" height="1185" loading="lazy" decoding="async">
@@ -122,28 +113,23 @@ It's a single Python file. Drop MP3s on it, pick a direction, press convert, get
   </figcaption>
 </figure>
 <div class="cy-meta cy-section-label">:: four months on a shelf</div>
-<div class="project">
-After April 1st the repo goes silent until August 9th. Four months, zero commits.
+<div class="project">After April 1st the repo goes silent until August 9th. Four months, zero commits.
 
 That's not a dramatic story. That's just how I work. I have a lot of projects going, I hyperfocus on whichever one is interesting right now, and the rest go on a shelf until the time or the interest comes back around. The tool worked. It did what I needed. So I stopped touching it and used it.
 
 Which is the joke I didn't plan: this is an application whose entire purpose is producing hyperfocus, and its own development history is shaped by hyperfocus deciding what I was allowed to care about that month.
 
-What brought it back off the shelf was Infinite Volumes. I started upgrading that, and upgrading it meant this tool needed to be more than a personal script — so in one week in August the engine got its output stage rebuilt, the convolution got parallelized, it got drag and drop, it got a real .app bundle, it got renamed twice, and it got a landing page.
-</div>
+What brought it back off the shelf was Infinite Volumes. I started upgrading that, and upgrading it meant this tool needed to be more than a personal script — so in one week in August the engine got its output stage rebuilt, the convolution got parallelized, it got drag and drop, it got a real .app bundle, it got renamed twice, and it got a landing page.</div>
 <div class="cy-meta cy-section-label">:: what it feeds</div>
-<div class="project">
-Periphony isn't a standalone product in my life. It's a part in a pipeline.
+<div class="project">Periphony isn't a standalone product in my life. It's a part in a pipeline.
 
 Infinite Volumes is both a YouTube channel and the streaming software behind it, which I built. I generate the assets — the music, the thumbnail, and a seamlessly looping animation out of a custom ComfyUI workflow — and load them onto the server in batches I call eras. An era is a four-hour video, usually around a hundred songs, and it streams for two weeks. Meanwhile a separate system called Poster works the same assets into social posts across that fortnight.
 
 Periphony is the stage between "I have a hundred tracks" and "the era is 8D." The thing I originally went looking for and couldn't find — my genres, no lyrics, circling your head, running continuously — I ended up having to build the entire supply chain for.
 
-Infinite Volumes and Poster each deserve their own write-up, and they'll get one. This one is about the converter.
-</div>
+Infinite Volumes and Poster each deserve their own write-up, and they'll get one. This one is about the converter.</div>
 <div class="cy-meta cy-section-label">:: the honest part</div>
-<div class="project">
-I wrote about <a href="/projects/replay/">RE:play</a> a little while ago, and the whole spine of that piece was open source: BSD-3, handed to the world, source and issues and releases all public, right down to admitting I'd forgotten the license file.
+<div class="project">I wrote about <a href="/projects/replay/">RE:play</a> a little while ago, and the whole spine of that piece was open source: BSD-3, handed to the world, source and issues and releases all public, right down to admitting I'd forgotten the license file.
 
 This one isn't that. Periphony's repo is private and I'm not planning to open source it as of now. The app will be free — that part isn't changing — but the code stays mine for the moment.
 
@@ -151,14 +137,11 @@ I'm not going to dress that up as a principled stand. It's simply where this one
 
 And the honest status, since a piece like this usually implies you can go get the thing: you can't yet. The page is up, the app is at version 1.2.0, it runs every day on my machine and it's producing the audio for a live stream right now. But the signed build and the download flow behind that page aren't wired up. Publishing a landing page for software nobody can download is, I'm aware, an extremely on-brand move for someone who built a marketing site for RE:play and then never marketed it.
 
-It's coming. This is a project write-up, not a launch.
-</div>
+It's coming. This is a project write-up, not a launch.</div>
 <div class="cy-meta cy-section-label">:: get it</div>
-<div class="project">
-<a href="/Periphony_8D/">cyburdine.com/Periphony_8D</a> — what it is, and an A/B demo you can hear in the browser. Headphones required; the effect does not exist on speakers.
+<div class="project"><a href="/Periphony_8D/">cyburdine.com/Periphony_8D</a> — what it is, and an A/B demo you can hear in the browser. Headphones required; the effect does not exist on speakers.
 
-<a href="https://www.youtube.com/@InfiniteVolumes" target="_blank" rel="noopener">Infinite Volumes</a> — where the output ends up. macOS app, free, download coming.
-</div>
+<a href="https://www.youtube.com/@InfiniteVolumes" target="_blank" rel="noopener">Infinite Volumes</a> — where the output ends up. macOS app, free, download coming.</div>
 </div>
 </article>
 
