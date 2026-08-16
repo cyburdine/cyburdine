@@ -92,6 +92,24 @@ rsync -az --delete \
       -e 'ssh -o BatchMode=yes -o LogLevel=ERROR' \
       "$LOCAL_SITE/" "$SSH_TARGET:$RELEASE/"
 
+# Cache-bust the shared assets.
+#
+# style.css / boot.js / render.js keep stable names and are served with
+# `Cache-Control: public, max-age=604800`, so Cloudflare will happily serve a
+# 7-day-old stylesheet against freshly deployed HTML — a retheme simply does
+# not appear. There is no CI and no Cloudflare purge in this pipeline, so the
+# URL itself has to change. Stamping the release timestamp as a query string
+# does that, and because it is applied to the RELEASE COPY only, the working
+# tree and git history stay clean.
+#
+# Only absolute /assets/{css,js}/ references are rewritten — that is exactly
+# the set covered by the duplication rule. Project landing pages under their
+# own directory use relative asset paths and are deliberately left alone.
+note "cache-busting shared assets with ?v=$STAMP"
+remote "set -euo pipefail
+  find '$RELEASE' -name '*.html' -type f -print0 |
+    xargs -0 sed -i -E 's#(\"/assets/(css|js)/[A-Za-z0-9_.-]+\.(css|js))\"#\1?v=$STAMP\"#g'"
+
 # rsync'd files inherit the wrong SELinux label; without httpd_sys_content_t
 # nginx gets usr_t and every request 403s. The fcontext rule is already
 # registered for /opt/cyburdine.com/releases(/.*)? — this just applies it.
