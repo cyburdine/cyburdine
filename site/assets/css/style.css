@@ -10,7 +10,7 @@ SPDX-License-Identifier: BSD-3-Clause
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/assets/fonts/VT323.ttf') format('truetype');
+  src: url('/assets/fonts/VT323.woff2') format('woff2');
 }
 
 @font-face {
@@ -18,7 +18,7 @@ SPDX-License-Identifier: BSD-3-Clause
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/assets/fonts/NotoSansJP-subset.ttf') format('truetype');
+  src: url('/assets/fonts/NotoSansJP-subset.woff2') format('woff2');
 }
 
 /* Clean-mode body font — readable monospace once you're "through the screen". */
@@ -163,28 +163,6 @@ body::before {
   100% { opacity: 0.05; }
 }
 
-/* Decryption glow animation */
-@keyframes decrypt-glow {
-  0% {
-    color: #FF0000;
-    text-shadow:
-      0 0 4px currentColor,
-      0 0 8px currentColor;
-  }
-  50% {
-    color: #ffffff;
-    text-shadow:
-      0 0 4px currentColor,
-      0 0 8px currentColor;
-  }
-  100% {
-    color: inherit;
-    text-shadow:
-      0 0 4px currentColor,
-      0 0 8px currentColor;
-  }
-}
-
 .char {
   font-family: 'VT323', monospace;
   display: inline;
@@ -200,26 +178,6 @@ body::before {
     text-shadow:
     0 0 4px currentColor,  /* small inner glow using each element’s own color */
     0 0 8px currentColor;
-}
-
-.char.decrypting {
-  animation: decrypt-glow 0.4s ease-out;
-    text-shadow:
-    0 0 4px currentColor,  /* small inner glow using each element’s own color */
-    0 0 8px currentColor;
-}
-
-/* Blog overlay image */
-.blog-overlay {
-  position: absolute;
-  top: 4rem;
-  left: 0;
-  width: 100%;
-  height: auto;
-  opacity: 0.05;
-  z-index: 0;
-  pointer-events: none;
-  mix-blend-mode: lighten;
 }
 
 /* Terminal frame: fixed at native 3000×1688 px */
@@ -508,12 +466,6 @@ html.cy-booting body {
   background: #000;
 }
 
-/* The container transform is driven by boot.js; this just makes the
-   zoom interpolate smoothly. boot.js toggles the transition on/off. */
-.terminal-container.boot-zoom {
-  transition: transform 1.5s cubic-bezier(0.45, 0.05, 0.25, 1);
-}
-
 /* ── CRT "off" layer: an opaque black sheet over the screen during the
    wide shot, hiding the boot console until the tube powers on. ── */
 .crt-off {
@@ -625,11 +577,6 @@ html.cy-booting body {
   animation: crt-settle-flicker 0.7s ease-out;
 }
 
-.boot-console.fading {
-  transition: opacity 1s ease-out;
-  opacity: 0;
-}
-
 /* "Screen goes blank": the logo + boot log clear and the tube holds a black
    screen (monitor still on) before the site is brought up. */
 .boot-console.blank {
@@ -641,8 +588,8 @@ html.cy-booting body {
   opacity: 0;
 }
 
-/* Main page is held hidden during boot; the blank black console fades away
-   (see .boot-console.fading) to reveal it from black. */
+/* Main page is held hidden during boot; the blank black console clears to
+   reveal it from black. */
 .boot-active main,
 .boot-active footer {
   visibility: hidden;
@@ -740,7 +687,6 @@ html.cy-booting body {
 /* Honour reduced-motion: boot.js skips the cinematics, but make sure no
    stray animation runs if these classes are applied. */
 @media (prefers-reduced-motion: reduce) {
-  .terminal-container.boot-zoom { transition: none; }
   .crt-flash.fire,
   .boot-console.powered,
   .boot-cursor::after { animation: none; }
@@ -752,22 +698,6 @@ html.cy-booting body {
    the site REDRAWS (drawn back line-by-line). Then charZoom zooms INTO a real
    character of the page, glitches it electronically, and zooms back out clean.
    ════════════════════════════════════════════════════════════════ */
-
-/* CLEAR — erase the finished boot log top→down (CRT screen-clear). */
-.boot-console.cy-clearing { animation: crt-erase 0.5s steps(16, end) forwards; }
-@keyframes crt-erase {
-  0%   { clip-path: inset(0 0 0 0); }
-  100% { clip-path: inset(100% 0 0 0); }
-}
-
-/* REDRAW — draw the site content back top→down, chunky (line-by-line). */
-html.cy-redraw main, html.cy-redraw header {
-  animation: crt-draw 0.75s steps(22, end) forwards;
-}
-@keyframes crt-draw {
-  0%   { clip-path: inset(0 0 100% 0); }
-  100% { clip-path: inset(0 0 0 0); }
-}
 
 /* SCAN-BLOOM — CRT scanlines that glow and BLUR more and more as we zoom into
    the letter, building to an immense glow as we pass through the screen, then
@@ -977,8 +907,6 @@ html.cy-clean nav {
   margin-bottom: 1.5rem;
   border-bottom: 1px solid var(--cy-rule);
 }
-html.cy-clean nav a { color: var(--cy-link); margin-right: 0; }
-html.cy-clean nav a:hover { color: var(--cy-white); }
 
 /* Let long pre content wrap so it stays readable without horizontal scroll.
    overflow-x:visible removes the base .console scroll container (content
@@ -1017,25 +945,28 @@ html.cy-clean .console { white-space: pre-wrap; overflow-wrap: anywhere; overflo
 html.cy-clean main h1 {
   font-family: var(--cy-font-display);
   font-size: var(--cy-fs-h1);
-  line-height: 1.05;
-  letter-spacing: 1px;
-  color: var(--cy-link);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--cy-fg);
   margin: 0 0 var(--cy-sp-3);
 }
 html.cy-clean main h2 {
   font-family: var(--cy-font-display);
   font-size: var(--cy-fs-h2);
+  font-weight: 600;
   line-height: 1.1;
-  letter-spacing: 1px;
-  color: var(--cy-link);
+  letter-spacing: -0.02em;
+  color: var(--cy-fg);
   margin: var(--cy-sp-5) 0 var(--cy-sp-2);
 }
 html.cy-clean main h3 {
   font-family: var(--cy-font-display);
   font-size: var(--cy-fs-h3);
-  line-height: 1.15;
-  letter-spacing: 1px;
-  color: var(--cy-link);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--cy-fg);
   margin: var(--cy-sp-4) 0 var(--cy-sp-1);
 }
 
@@ -1059,7 +990,6 @@ html.cy-clean .cy-meta {
 /* Semantic colour helpers (replace the old inline style="color:…" spans). */
 html.cy-clean .cy-accent { color: var(--cy-accent); }
 html.cy-clean .cy-dim    { color: var(--cy-fg-dim); }
-html.cy-clean .cy-link   { color: var(--cy-link); }
 
 /* ── Prose links: undo the global uppercase/bold/margin-right meant for nav,
    so inline links inside body copy read naturally. Card titles & marks opt
@@ -1141,13 +1071,6 @@ html.cy-clean .cy-mark::before {
   color: var(--cy-accent);
 }
 
-/* Divider rule. */
-html.cy-clean .cy-rule {
-  border: 0;
-  border-top: 1px solid var(--cy-rule);
-  margin: var(--cy-sp-4) 0;
-}
-
 /* Status bar — a flex row of meta chips, e.g. type · status · date. */
 html.cy-clean .cy-statusbar {
   display: flex;
@@ -1215,27 +1138,9 @@ html.cy-clean .cy-select::after {
 
 /* ── Cards (project / post rows) ──────────────────────────────── */
 html.cy-clean .cy-cards { margin: 0 0 var(--cy-sp-4); }
-html.cy-clean .cy-card {
-  display: block;
-  position: relative;
-  box-sizing: border-box;
-  border: 1px solid var(--cy-rule);
-  background: transparent;
-  padding: var(--cy-sp-3);
-  margin: 0 0 var(--cy-sp-2);
-  transition: border-color 120ms ease, background-color 120ms ease;
-}
-html.cy-clean .cy-card:hover {
-  border-color: var(--cy-link);
-  background: var(--cy-panel);
-}
-html.cy-clean .cy-card__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
+/* Card titles. This used to be a flex row pairing the title with a status
+   pill on the right; the pills are gone, so it is simply the title line. */
+html.cy-clean .cy-card__head { display: block; }
 html.cy-clean .cy-card__link {
   font-family: var(--cy-font-display);
   font-size: var(--cy-fs-h3);
@@ -1251,8 +1156,6 @@ html.cy-clean .cy-card__link::before {
 html.cy-clean .cy-card:hover .cy-card__link { color: var(--cy-white); }
 html.cy-clean .cy-card__meta { margin-top: var(--cy-sp-1); }
 html.cy-clean .cy-card__desc { margin: var(--cy-sp-1) 0 0; color: var(--cy-fg); }
-html.cy-clean .cy-card--stub { border-style: dashed; }
-html.cy-clean .cy-card--stub .cy-card__link { color: var(--cy-fg-dim); }
 
 /* ── Magazine-style hero images (projects page) ───────────────────
    Duotone filter pulls stock photography toward the phosphor-green /
@@ -1285,16 +1188,20 @@ html.cy-clean .cy-tile:hover .cy-tile__img {
   filter: none;
   transform: scale(1.02);
 }
+/* Credits sit directly on the photo now that the darkening duotone is gone,
+   so they carry their own ground to stay legible over a bright frame. */
 html.cy-clean .cy-feature__credit,
 html.cy-clean .cy-tile__credit {
   position: absolute;
-  right: 0.5rem;
-  bottom: 0.4rem;
+  right: 0;
+  bottom: 0;
+  padding: 0.2rem 0.5rem;
+  background: rgba(10, 15, 20, 0.72);
   font-family: var(--cy-font-mono);
   font-size: 0.6rem;
   letter-spacing: var(--cy-tracking-meta);
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.72);
 }
 html.cy-clean .cy-feature__credit a,
 html.cy-clean .cy-tile__credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
@@ -1352,28 +1259,28 @@ html.cy-clean .cy-tile {
 }
 html.cy-clean .cy-tile:hover { border-color: var(--cy-link); background: var(--cy-panel); }
 html.cy-clean .cy-tile__media { aspect-ratio: 16 / 9; }
-html.cy-clean .cy-tile__body { padding: var(--cy-sp-2) var(--cy-sp-3) var(--cy-sp-3); }
-html.cy-clean .cy-tile .cy-card__link { font-size: 1.05rem; }
-html.cy-clean .cy-tile--stub .cy-card__link { color: var(--cy-fg-dim); }
-html.cy-clean .cy-tile--stub .cy-tile__img { opacity: 0.75; }
+/* Tiles are the projects page's main content, so they get room to breathe:
+   a real title, description at reading weight, tags pushed to the bottom
+   so cards in a row align on their meta line. */
+html.cy-clean .cy-tile__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cy-sp-1);
+  padding: var(--cy-sp-3);
+  flex: 1;
+}
+html.cy-clean .cy-tile .cy-card__link { font-size: 1.15rem; line-height: 1.25; }
+html.cy-clean .cy-tile .cy-card__desc { margin: 0; color: var(--cy-fg-dim); }
+html.cy-clean .cy-tile .cy-card__meta { margin-top: auto; padding-top: var(--cy-sp-1); }
 
 /* ── Homepage hero ────────────────────────────────────────────── */
 html.cy-clean .cy-hero { margin: 0 0 var(--cy-sp-5); }
-html.cy-clean .cy-hero__id {
-  font-family: var(--cy-font-display);
-  font-size: var(--cy-fs-h1);
-  line-height: 1.05;
-  letter-spacing: 1px;
-  color: var(--cy-link);
-  margin: 0 0 var(--cy-sp-2);
-}
 html.cy-clean .cy-hero__roles { margin: 0 0 var(--cy-sp-3); }
 html.cy-clean .cy-hero__tagline {
   color: var(--cy-fg);
   max-width: 60ch;
   margin: 0 0 var(--cy-sp-4);
 }
-html.cy-clean .cy-section-label { margin: 0 0 var(--cy-sp-2); }
 
 /* ── Responsive video embed (16:9) ────────────────────────────── */
 html.cy-clean .cy-video {
@@ -1507,13 +1414,15 @@ html.cy-clean main p a {
   text-underline-offset: 3px;
 }
 
-/* Nav reads as an instrument header: mono, tracked, dim until hovered. */
+/* Nav reads as an instrument header: mono, tracked, near-white. It is primary
+   navigation rather than metadata, so it does not get the dim meta colour. */
 html.cy-clean nav a {
   font-family: var(--cy-font-mono);
   font-size: var(--cy-fs-meta);
   letter-spacing: var(--cy-tracking-meta);
   text-transform: uppercase;
-  color: var(--cy-fg-dim);
+  color: var(--cy-fg);
+  margin-right: 0;
 }
 html.cy-clean nav a:hover { color: var(--cy-accent); text-decoration: none; }
 
@@ -1548,45 +1457,28 @@ html.cy-clean nav a:hover { color: var(--cy-accent); text-decoration: none; }
   .cy-return { transition: none; }
 }
 
-/* ── Instrument: corrections after visual review ──────────────── */
 
-/* `html.cy-clean main h1` (0,1,3) outranks the heading rule above (0,1,2) and
-   was still painting headings cyan. Match its specificity and win on order:
-   headings are near-white, colour is spent on accents only. */
-html.cy-clean main h1,
-html.cy-clean main h2,
-html.cy-clean main h3 {
-  color: var(--cy-fg);
-  font-family: var(--cy-font-display);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
+/* The reading panel is not a panel. The measurement rail already edges the
+   column, so the article's own frame was a third border around the same
+   content; unbordering it also strands the corner brackets and the padding the
+   border used to justify. The .cy-frame primitive keeps its border where a
+   panel is genuinely a panel (the contact block).
 
-
-/* Nav is primary navigation, not metadata — dim was too quiet against the
-   ground. Near-white at rest, amber on hover. */
-html.cy-clean nav a { color: var(--cy-fg); }
-html.cy-clean nav a:hover { color: var(--cy-accent); }
-
-/* The measurement rail already edges the column, so the article's own frame
-   was a third border around the same content. Drop it for the reading frame
-   and keep it where a panel is genuinely a panel (the contact block). */
+   It is also a WRAPPER, not text. It inherits pre-wrap from .console, which
+   made the newlines and indentation between its child elements render as
+   literal blank lines — that was the dead space under every article title.
+   The wrapper collapses whitespace; only the prose blocks keep it. */
 html.cy-clean main > article > .cy-frame,
 html.cy-clean .console.cy-frame {
   border: 0;
-  padding-left: 0;
-  padding-right: 0;
+  padding: 0;
+  white-space: normal;
 }
-
-/* Unbordering the reading frame left its corner brackets floating with no
-   frame to sit on, plus the padding the border used to justify. */
 html.cy-clean main > article > .cy-frame::before,
 html.cy-clean main > article > .cy-frame::after,
 html.cy-clean .console.cy-frame::before,
 html.cy-clean .console.cy-frame::after { display: none; }
-html.cy-clean main > article > .cy-frame,
-html.cy-clean .console.cy-frame { padding-top: 0; }
+html.cy-clean .console.cy-frame > .project { white-space: pre-wrap; }
 
 /* ── Article figures ───────────────────────────────────────────
    Figures sit BETWEEN .project blocks, never inside one: .project is
@@ -1617,11 +1509,12 @@ html.cy-clean .cy-figure img {
   border-radius: 2px;
   background: var(--cy-panel);
 }
+/* Captions are prose, not readouts — tracked-out mono at meta size was the
+   hardest text on the page to read. Body face, just quieter than the body. */
 html.cy-clean .cy-figure figcaption {
-  font-family: var(--cy-font-mono);
-  font-size: var(--cy-fs-meta);
-  line-height: 1.55;
-  letter-spacing: 0.04em;
+  font-family: var(--cy-font-body);
+  font-size: 0.9rem;
+  line-height: 1.6;
   color: var(--cy-fg-dim);
   border-left: 1px solid var(--cy-rule-lit);
   padding-left: var(--cy-sp-2);
@@ -1687,24 +1580,6 @@ html.cy-clean[data-cy-layout="wide"] .cy-tiles {
   gap: var(--cy-sp-4) var(--cy-sp-3);
 }
 
-/* Tiles are the page's main content here, so give them room to breathe:
-   a taller image, a real title, and description text at reading size
-   rather than caption size. */
-html.cy-clean .cy-tile__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cy-sp-1);
-  padding: var(--cy-sp-3);
-  flex: 1;
-}
-html.cy-clean .cy-tile .cy-card__link { font-size: 1.15rem; line-height: 1.25; }
-html.cy-clean .cy-tile .cy-card__desc { margin: 0; color: var(--cy-fg-dim); }
-html.cy-clean .cy-tile .cy-card__meta { margin-top: auto; padding-top: var(--cy-sp-1); }
-
-/* The heads used to hold a status pill on the right; with the pill gone
-   the flex row has one child and only adds a baseline quirk. */
-html.cy-clean .cy-card__head { display: block; }
-
 /* ── Article reading refinements ──────────────────────────────────
    Slightly more air between the title block and the body, and between
    sections, so a 2,000-word piece has landmarks rather than one slab. */
@@ -1721,32 +1596,4 @@ html.cy-clean .cy-page-header .cy-tags { margin: 0; }
 html.cy-clean main > article > .cy-frame > .project:first-child {
   font-size: 1.06rem;
   color: var(--cy-fg);
-}
-
-/* Photo credits sit on top of the image now that the darkening duotone is gone,
-   so they need their own ground to stay legible over a bright frame. */
-html.cy-clean .cy-feature__credit,
-html.cy-clean .cy-tile__credit {
-  right: 0; bottom: 0;
-  padding: 0.2rem 0.5rem;
-  background: rgba(10, 15, 20, 0.72);
-  color: rgba(255, 255, 255, 0.72);
-}
-
-/* The article body is authored as blank-line-separated text inside .project
-   blocks, but the .cy-frame WRAPPER is markup — inheriting pre-wrap made every
-   newline and indent between its child elements render as literal blank lines,
-   which is where the dead space under the title block came from. The wrapper
-   collapses whitespace; only the prose blocks keep it. */
-html.cy-clean .console.cy-frame { white-space: normal; }
-html.cy-clean .console.cy-frame > .project { white-space: pre-wrap; }
-
-/* Captions were set in tracked-out mono at meta size, which is a readout style
-   applied to a sentence — the hardest text on the page to read. Captions are
-   prose; set them like prose, just quieter than the body. */
-html.cy-clean .cy-figure figcaption {
-  font-family: var(--cy-font-body);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  letter-spacing: 0;
 }
