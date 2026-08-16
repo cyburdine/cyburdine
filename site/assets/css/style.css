@@ -1093,159 +1093,101 @@ html.cy-clean .cy-tag {
   white-space: nowrap;
 }
 
-/* ── Toolbar: styled search input + filter select ─────────────── */
-html.cy-clean .search-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--cy-sp-2);
-  margin: 0 0 var(--cy-sp-4);
-}
-html.cy-clean .search-bar input[type="text"],
-html.cy-clean .search-bar select {
-  font-family: var(--cy-font-body);
-  font-size: 0.95rem;
-  color: var(--cy-fg);
-  background: var(--cy-bg);
+/* ── Project cards ────────────────────────────────────────────────
+   One component, two variants. Every project on projects.html is authored
+   with identical markup; `cy-feature` (the hero) and `cy-tile` (a grid cell)
+   are the only difference, which is what lets project_rotate.js promote a
+   project to the feature slot with a node move and a class swap. Anything
+   shared lives on .cy-project__*; anything that differs is stated under the
+   variant. Keep it that way — a rule that only works in one variant but is
+   written on the shared class will break the rotation. */
+html.cy-clean .cy-cards { margin: 0 0 var(--cy-sp-4); }
+
+html.cy-clean .cy-project {
   border: 1px solid var(--cy-rule);
-  border-radius: 0;
-  padding: 0.55rem 0.8rem;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  transition: border-color 120ms ease, background-color 120ms ease;
 }
-html.cy-clean .search-bar input[type="text"] { flex: 1 1 16rem; min-width: 0; }
-html.cy-clean .search-bar input[type="text"]::placeholder { color: var(--cy-fg-dim); }
-html.cy-clean .search-bar input[type="text"]:focus,
-html.cy-clean .search-bar select:focus {
-  outline: none;
+html.cy-clean .cy-project:hover {
   border-color: var(--cy-link);
-  box-shadow: 0 0 0 1px var(--cy-link);
-}
-/* Custom caret for the select (native arrow removed by appearance:none).
-   Wrapper .cy-select carries the caret; CSP-safe (no image asset). */
-html.cy-clean .cy-select { position: relative; display: inline-flex; }
-html.cy-clean .cy-select select { width: 100%; padding-right: 2rem; cursor: pointer; }
-html.cy-clean .cy-select::after {
-  content: "▾";
-  position: absolute;
-  right: 0.7rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--cy-link);
-  pointer-events: none;
-  font-size: 0.8rem;
+  background: var(--cy-panel);
 }
 
-/* ── Cards (project / post rows) ──────────────────────────────── */
-html.cy-clean .cy-cards { margin: 0 0 var(--cy-sp-4); }
-/* Card titles. This used to be a flex row pairing the title with a status
-   pill on the right; the pills are gone, so it is simply the title line. */
-html.cy-clean .cy-card__head { display: block; }
-html.cy-clean .cy-card__link {
+html.cy-clean .cy-project__media {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-bottom: 1px solid var(--cy-rule);
+  background: var(--cy-panel);
+}
+html.cy-clean .cy-project__media > a { display: block; width: 100%; height: 100%; }
+html.cy-clean .cy-project__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Photos read as photos. The old duotone pushed everything to phosphor
+     green and the images stopped being legible as images. */
+  filter: saturate(0.92) contrast(1.02) brightness(0.95);
+  transition: filter 150ms ease, transform 300ms ease;
+}
+html.cy-clean .cy-project:hover .cy-project__img {
+  filter: none;
+  transform: scale(1.02);
+}
+
+html.cy-clean .cy-project__title {
   font-family: var(--cy-font-display);
-  font-size: var(--cy-fs-h3);
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--cy-link);
   margin: 0;
 }
-html.cy-clean .cy-card__link::before {
+html.cy-clean .cy-project__title::before {
   content: "▸ ";
   color: var(--cy-accent);
 }
-html.cy-clean .cy-card:hover .cy-card__link { color: var(--cy-white); }
-html.cy-clean .cy-card__meta { margin-top: var(--cy-sp-1); }
-html.cy-clean .cy-card__desc { margin: var(--cy-sp-1) 0 0; color: var(--cy-fg); }
-
-/* ── Magazine-style hero images (projects page) ───────────────────
-   Duotone filter pulls stock photography toward the phosphor-green /
-   cyan palette so it reads as part of the terminal rather than a
-   photo pasted on top; a scanline overlay on the wrapper reinforces
-   the CRT surface. */
-html.cy-clean .cy-feature__media,
-html.cy-clean .cy-tile__media {
+html.cy-clean .cy-project:hover .cy-project__title { color: var(--cy-white); }
+html.cy-clean .cy-project__eyebrow {
   display: block;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--cy-rule);
-  background: var(--cy-panel);
+  color: var(--cy-accent);
+  margin: 0 0 var(--cy-sp-1);
 }
-html.cy-clean .cy-feature__media > a,
-html.cy-clean .cy-tile__media > a { display: block; width: 100%; height: 100%; }
-html.cy-clean .cy-feature__img,
-html.cy-clean .cy-tile__img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Photos read as photos. The old duotone pushed everything to phosphor green
-     and the images stopped being legible as images. */
-  filter: saturate(0.92) contrast(1.02) brightness(0.95);
-  transition: filter 150ms ease, transform 300ms ease;
-}
-html.cy-clean .cy-feature:hover .cy-feature__img,
-html.cy-clean .cy-tile:hover .cy-tile__img {
-  filter: none;
-  transform: scale(1.02);
-}
-/* Credits sit directly on the photo now that the darkening duotone is gone,
-   so they carry their own ground to stay legible over a bright frame. */
-html.cy-clean .cy-feature__credit,
-html.cy-clean .cy-tile__credit {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  padding: 0.2rem 0.5rem;
-  background: rgba(10, 15, 20, 0.72);
-  font-family: var(--cy-font-mono);
-  font-size: 0.6rem;
-  letter-spacing: var(--cy-tracking-meta);
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.72);
-}
-html.cy-clean .cy-feature__credit a,
-html.cy-clean .cy-tile__credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
-html.cy-clean .cy-feature__credit a:hover,
-html.cy-clean .cy-tile__credit a:hover { color: var(--cy-accent); }
 
-/* ── Featured project (magazine cover story) ──────────────────── */
+/* ── Variant: the feature (magazine cover story) ──────────────── */
 html.cy-clean .cy-feature {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   gap: var(--cy-sp-4);
   align-items: start;
-  border: 1px solid var(--cy-rule);
   padding: var(--cy-sp-3);
   margin: 0 0 var(--cy-sp-4);
-  transition: border-color 120ms ease, background-color 120ms ease;
 }
-html.cy-clean .cy-feature:hover { border-color: var(--cy-link); background: var(--cy-panel); }
-html.cy-clean .cy-feature__media { aspect-ratio: 16 / 9; }
-html.cy-clean .cy-feature__body { display: flex; flex-direction: column; justify-content: center; }
-html.cy-clean .cy-feature__eyebrow {
-  display: block;
-  font-family: var(--cy-font-mono);
-  font-size: var(--cy-fs-meta);
-  letter-spacing: var(--cy-tracking-meta);
-  text-transform: uppercase;
-  color: var(--cy-accent);
-  margin: 0 0 var(--cy-sp-1);
+html.cy-clean .cy-feature .cy-project__media { border-bottom: 0; }
+html.cy-clean .cy-feature .cy-project__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-html.cy-clean .cy-feature__link {
-  font-family: var(--cy-font-display);
+html.cy-clean .cy-feature .cy-project__title {
   font-size: var(--cy-fs-h1);
   line-height: 1.05;
-  letter-spacing: 1px;
-  color: var(--cy-link);
-  margin: 0;
+  text-transform: none;
 }
-html.cy-clean .cy-feature:hover .cy-feature__link { color: var(--cy-white); }
-html.cy-clean .cy-feature__desc { margin: var(--cy-sp-2) 0 0; color: var(--cy-fg); max-width: 60ch; }
+/* The ▸ marker is a grid-tile affordance; the hero is already the loudest
+   thing on the page and does not need pointing at. */
+html.cy-clean .cy-feature .cy-project__title::before { content: none; }
+html.cy-clean .cy-feature .cy-project__desc {
+  margin: var(--cy-sp-2) 0 0;
+  color: var(--cy-fg);
+  max-width: 60ch;
+}
+html.cy-clean .cy-feature .cy-project__meta { margin-top: var(--cy-sp-1); }
 @media (max-width: 720px) {
   html.cy-clean .cy-feature { grid-template-columns: 1fr; }
 }
 
-/* ── Tile grid (remaining projects) ───────────────────────────── */
+/* ── Variant: a grid tile ─────────────────────────────────────── */
 html.cy-clean .cy-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
@@ -1254,24 +1196,21 @@ html.cy-clean .cy-tiles {
 html.cy-clean .cy-tile {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--cy-rule);
-  transition: border-color 120ms ease, background-color 120ms ease;
 }
-html.cy-clean .cy-tile:hover { border-color: var(--cy-link); background: var(--cy-panel); }
-html.cy-clean .cy-tile__media { aspect-ratio: 16 / 9; }
-/* Tiles are the projects page's main content, so they get room to breathe:
-   a real title, description at reading weight, tags pushed to the bottom
-   so cards in a row align on their meta line. */
-html.cy-clean .cy-tile__body {
+/* Only the hero announces itself as the featured build. */
+html.cy-clean .cy-tile .cy-project__eyebrow { display: none; }
+/* Tiles are the page's main content, so they get room to breathe, and the
+   meta line is pushed down so cards in a row align along it. */
+html.cy-clean .cy-tile .cy-project__body {
   display: flex;
   flex-direction: column;
   gap: var(--cy-sp-1);
   padding: var(--cy-sp-3);
   flex: 1;
 }
-html.cy-clean .cy-tile .cy-card__link { font-size: 1.15rem; line-height: 1.25; }
-html.cy-clean .cy-tile .cy-card__desc { margin: 0; color: var(--cy-fg-dim); }
-html.cy-clean .cy-tile .cy-card__meta { margin-top: auto; padding-top: var(--cy-sp-1); }
+html.cy-clean .cy-tile .cy-project__title { font-size: 1.15rem; line-height: 1.25; }
+html.cy-clean .cy-tile .cy-project__desc { margin: 0; color: var(--cy-fg-dim); }
+html.cy-clean .cy-tile .cy-project__meta { margin-top: auto; padding-top: var(--cy-sp-1); }
 
 /* ── Homepage hero ────────────────────────────────────────────── */
 html.cy-clean .cy-hero { margin: 0 0 var(--cy-sp-5); }
@@ -1549,17 +1488,22 @@ html.cy-clean[data-cy-layout="wide"] .terminal-screen {
 html.cy-clean[data-cy-layout="wide"] .terminal-screen::after { display: none; }
 
 /* ── Gallery page header ──────────────────────────────────────── */
-html.cy-clean .cy-gallery-head {
-  margin: 0 0 var(--cy-sp-4);
-  padding-bottom: var(--cy-sp-3);
-  border-bottom: 1px solid var(--cy-rule);
+/* The gallery header is one line: PROJECTS // BUILD LOG. It is still an <h1>
+   so the page keeps a document heading, but it is sized as a label rather
+   than a headline — the cards are the content, and a big title above them
+   was just a second thing competing with the hero. */
+html.cy-clean .cy-gallery-head { margin: 0 0 var(--cy-sp-4); }
+html.cy-clean .cy-gallery-head__label {
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  font-weight: 400;
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  line-height: 1.4;
+  margin: 0;
 }
-html.cy-clean .cy-gallery-head h1 { margin: var(--cy-sp-1) 0 0; }
-html.cy-clean .cy-gallery-head__lede {
-  margin: var(--cy-sp-2) 0 0;
-  max-width: 54ch;
-  color: var(--cy-fg-dim);
-}
+html.cy-clean .cy-gallery-head__name { color: var(--cy-fg); }
+html.cy-clean .cy-gallery-head__kicker { color: var(--cy-fg-dim); }
 
 /* ── Feature card at gallery width ────────────────────────────── */
 html.cy-clean[data-cy-layout="wide"] .cy-feature {
@@ -1568,7 +1512,7 @@ html.cy-clean[data-cy-layout="wide"] .cy-feature {
   padding: var(--cy-sp-4);
   margin-bottom: var(--cy-sp-5);
 }
-html.cy-clean[data-cy-layout="wide"] .cy-feature__desc {
+html.cy-clean[data-cy-layout="wide"] .cy-feature .cy-project__desc {
   font-size: 1.05rem;
   max-width: 46ch;
 }

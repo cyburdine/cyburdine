@@ -31,8 +31,8 @@ nothing. See `CLAUDE.md` for the server layout and TLS details.
 ## Adding a project
 
 Dropping the build step means the project list is no longer generated from a
-collection. Adding a project is **three edits**, and it is easy to forget the
-second and third:
+collection. Adding a project is **two edits**, and it is easy to forget the
+second:
 
 **1. Create the page.** Copy an existing detail page and edit it. Copying is
 what keeps `<html data-cy-render="off">` on the new page — that attribute
@@ -45,28 +45,30 @@ $EDITOR site/projects/<new-slug>/index.html
 ```
 
 **2. Add its card to `site/projects.html`.** Jekyll used to generate this from
-the `_projects` collection; now it is written by hand. Add an `<article>` to the
-`.cy-cards` list, copying the shape of the ones already there:
+the `_projects` collection; now it is written by hand. Add an `<article>` inside
+`.cy-tiles`, copying the shape of the ones already there — the markup is
+identical for every project, hero included:
 
 ```html
-<article class="project-item cy-card" data-tags="vfx,diy">
-  ...
+<article class="cy-project cy-tile" data-slug="<new-slug>">
+  <div class="cy-project__media"> … </div>
+  <div class="cy-project__body">
+    <span class="cy-project__eyebrow cy-meta">// featured build</span>
+    <a class="cy-project__title" href="/projects/<new-slug>/">Title</a>
+    <p class="cy-project__desc">…</p>
+    <div class="cy-project__meta cy-meta">// tag &middot; tag</div>
+  </div>
 </article>
 ```
 
-`data-tags` must be **comma-joined with no spaces** — `assets/js/project_filter.js`
-matches each tag exactly. Add `cy-card--stub` alongside `cy-card` for a
-placeholder entry. Never put an inline `display` style on a card; the filter
-toggles `style.display` and relies on CSS for the default.
+Keep the eyebrow even on a tile — it is hidden by CSS there, and it has to be
+present for the card to work if `project_rotate.js` ever promotes it to the
+hero. Add `data-cy-rotate` to put the project into the featured rotation; leave
+it off to pin the card to the grid. Give the `<img>` its intrinsic `width` and
+`height` so the grid does not reflow as images load.
 
-**3. If the project introduces a new tag, add it to the filter dropdown.** The
-`<select id="projectTagFilter">` in `site/projects.html` has a literal `<option>`
-per tag, kept in alphabetical order. A tag that exists only in `data-tags` will
-filter correctly if selected but will never appear as a choice:
-
-```html
-<option value="newtag">newtag</option>
-```
+There is no tag filter and no `data-tags` any more — the search box and
+dropdown were removed in August 2026, so a new tag needs no third edit.
 
 Then `./deploy.sh`.
 

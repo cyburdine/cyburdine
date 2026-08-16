@@ -84,6 +84,7 @@ can set `window.__CY_BOOT_PENDING__` to defer the others):
 - `assets/js/boot.js` — The first-visit CRT boot sequence (landing page only, gated by a `cy_booted` localStorage flag). Orchestrates the timeline in `playBoot()`: cold start → wide shot → zoom into the monitor → power-on flash → centered logo warm-up → boot log → through-screen handoff. Exposes `window.CyBoot.replay()` (wired to the `.cy-egg` easter eggs and the `.cy-reboot` footer link). Timeline constants live in the `T` object; boot overlays are confined to the CRT glass via the `--glass-*` CSS variables.
 - `assets/js/render.js` — The katakana render sequence that supersedes the old `decode.js`. Types each page in as Japanese glyphs, then resolves them to the real text, driving the site into "clean mode" (`html.cy-clean`). Sets `html.cy-rendering` while in progress and removes it on completion. Honours `prefers-reduced-motion: reduce` with an instant reveal. Exposes `window.CyRender.play()`. **A page can opt out with `<html data-cy-render="off">`**, which takes the same instant-reveal path — the effect types every visible character, so on a 12,000-character article it is a wait rather than a flourish. All six project detail pages are opted out. This skips the *effect only*: `cy-clean` is added by `boot.js`, not here, so an opted-out page still lands in the real site normally.
 - `assets/js/video_glitch.js` — Canvas-based random horizontal glitch lines at ~30fps. Deferred when a boot is pending. Exposes `CyGlitch.start()`.
+- `assets/js/project_rotate.js` — **Not global.** Loaded inline by `projects.html` only, immediately after the card markup so the DOM is settled before `render.js` walks `<main>`. See the contract section below.
 - `assets/js/responsive.js` — Computes the `transform: scale()` that contains the monitor in the viewport and publishes it as `--cy-scale`. Exposes `CyResponsive.finalTransform()/wideTransform()/lock()/unlock()`, which `boot.js` drives during the zoom.
 
 **Verifying animations in a browser-automation tab does not work reliably** —
@@ -91,16 +92,29 @@ rAF is throttled there, so `render.js` can sit in `cy-rendering` indefinitely an
 page text stays empty. That is an artifact of the automation tab, not a bug; the
 live site behaves identically under it. Check animations in a normal window.
 
-## The `project_filter.js` Contract
+## The `project_rotate.js` Contract
 
-`site/assets/js/project_filter.js` runs only on `projects.html` and has **no
-crash guard** — it throws if its elements are missing, so do not load it on
-other pages. It requires:
+`site/assets/js/project_rotate.js` runs only on `projects.html`. It replaced
+`project_filter.js`, which was removed in August 2026 along with the search box
+and tag dropdown it drove — there is **no filtering on the site any more**, so
+`project-item`, `data-tags` and the `<option>` list are all gone too.
 
-- `#projectSearchInput` (text input) and `#projectTagFilter` (`<select>`, empty value = all tags)
-- Cards carrying class `project-item`, each with `data-tags` as a **comma-joined string with no spaces** (`data-tags="vfx,diy"`) — matching is exact per tag
-- Search matches `item.textContent`, so all searchable text must be rendered as text inside the card
-- Visibility is toggled via `item.style.display = "" | "none"`, so **a card's default display must come from CSS — never set an inline `display` on a card**
+It rotates which project holds the hero slot, so the page leads with something
+different each load. The contract:
+
+- **Every project is authored with identical markup.** `cy-feature` (hero) vs
+  `cy-tile` (grid cell) on the `<article>` is the *only* difference between
+  them. That is what makes promotion a node move plus a class swap — so a CSS
+  rule that only makes sense in one variant must be written under that variant,
+  never on the shared `.cy-project__*` classes.
+- **`data-cy-rotate` marks an article as eligible** for the hero slot. Exactly
+  one article is `cy-feature` in the HTML; that is also the no-JS result, so the
+  page is complete without the script. Currently RE:play and Periphony 8D
+  rotate; drop the attribute to pin a project to the grid.
+- The picked article is swapped **in place** with the current feature, so the
+  featured build never also appears in the grid below.
+- Unlike the script it replaced, it **no-ops instead of throwing** when its
+  elements are absent, so it is harmless if it ever loads on another page.
 
 ## CSS Design
 
