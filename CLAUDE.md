@@ -51,13 +51,18 @@ and no longer are.
 
 ## THE DUPLICATION RULE — read before editing any page
 
-There are no layouts and no includes. **The `<head>`, the nav header, the footer,
-the contact block, and the script tags are copied literally into all 9 HTML
-files.** This is the deliberate trade for having no build step.
+There are no layouts and no includes. **The `<head>`, the nav header, the footer
+and the script tags are copied literally into all 10 HTML files.** This is the
+deliberate trade for having no build step.
 
-That means: **a change to the nav, the footer, the CSP meta tag, the script
-tags, or the contact block must be applied to every page in `site/`.** Changing
-one page only will silently desynchronise the site.
+That means: **a change to the nav, the footer, the CSP meta tag or the script
+tags must be applied to every page in `site/`.** Changing one page only will
+silently desynchronise the site.
+
+The `:: open channel` contact block is the exception — it is **not** universal.
+It lives on `index.html`, `about.html` and `404.html` only. The project posts
+deliberately omit it and close on their own `:: get it` links, so a change to
+those outbound links touches three files, not ten.
 
 ```bash
 # after any such change, confirm the count matches the page count (10)
