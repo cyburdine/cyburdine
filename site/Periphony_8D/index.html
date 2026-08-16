@@ -372,5 +372,19 @@ footer a:hover{color:var(--bone)}
 </footer>
 
 <script src="assets/demo.js" defer></script>
+<!-- Return to the site. Landing pages keep their own visual world; this is
+     the consistent door back. Self-contained because this page does not load
+     the site stylesheet. -->
+<a href="/" class="cy-return">cyburdine.com</a>
+<style>
+.cy-return{position:fixed;left:0;bottom:0;z-index:90;display:inline-flex;align-items:center;
+  gap:.55rem;margin:.9rem;padding:.5rem .85rem;border:1px solid rgba(239,233,226,.18);
+  border-radius:6px;background:rgba(10,8,16,.82);backdrop-filter:blur(8px);color:#9c95a6;
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;text-decoration:none;transition:border-color .18s,color .18s}
+.cy-return:hover{border-color:#efe9e2;color:#efe9e2}
+.cy-return::before{content:"\2190";font-size:13px}
+@media (prefers-reduced-motion:reduce){.cy-return{transition:none}}
+</style>
 </body>
 </html>
