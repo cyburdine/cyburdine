@@ -32,160 +32,108 @@ SPDX-License-Identifier: BSD-3-Clause
 -->
 <div class="glow">
 <div class="cy-gallery-head">
-  <span class="cy-meta">// build log</span>
-  <h1>Projects</h1>
-  <p class="cy-gallery-head__lede">Things I have built, and the write-ups that go with them &mdash; apps, startups, animation, and a fair amount of workshop hardware.</p>
-</div>
-<div class="search-bar">
-  <input type="text" id="projectSearchInput" placeholder="// enter query" />
-  <div class="cy-select">
-    <select id="projectTagFilter">
-      <option value="">// all tags</option>
-      
-      
-        <option value="ai">ai</option>
-      
-        <option value="animation">animation</option>
-      
-        <option value="app">app</option>
-      
-        <option value="diy">diy</option>
-      
-        <option value="macos">macos</option>
-      
-        <option value="music">music</option>
-      
-        <option value="opensource">opensource</option>
-      
-        <option value="startup">startup</option>
-      
-        <option value="vfx">vfx</option>
-      
-        <option value="webapp">webapp</option>
-      
-        <option value="windows">windows</option>
-      
-        <option value="worldbuilding">worldbuilding</option>
-      
-    </select>
-  </div>
+  <h1 class="cy-gallery-head__label"><span class="cy-gallery-head__name">Projects</span> <span class="cy-gallery-head__kicker">// build log</span></h1>
 </div>
 
 <div class="cy-cards" id="projectList">
 
   <!--
-  Featured project card. Filter contract (project_filter.js): the outer
-  element MUST keep class "project-item" + a comma-joined data-tags
-  attribute, and the default display comes from CSS (never an inline style).
+  Every project is authored with IDENTICAL markup; `cy-feature` vs `cy-tile` on
+  the <article> is the only difference, so promoting one to the hero slot is a
+  node move plus a class swap. See assets/js/project_rotate.js.
+
+  Rotation contract: an article marked `data-cy-rotate` is eligible for the
+  feature slot. The script picks one per page load and swaps it with whatever
+  is currently `cy-feature`, so the featured build never also appears in the
+  grid below. Remove the attribute to pin a project to the grid.
   -->
-  <article class="project-item cy-feature" data-tags="opensource,app,macos,windows,ai">
-    <div class="cy-feature__media">
+  <article class="cy-project cy-feature" data-slug="replay" data-cy-rotate>
+    <div class="cy-project__media">
       <a href="/projects/replay/" tabindex="-1" aria-hidden="true">
-        <img class="cy-feature__img" src="/assets/images/articles/replay-site.webp" alt="The RE:play marketing site: a large gradient play triangle beside the headline Less player. More play." loading="eager" width="1280" height="728">
+        <img class="cy-project__img" src="/assets/images/articles/replay-site.webp" alt="The RE:play marketing site: a large gradient play triangle beside the headline Less player. More play." width="1280" height="728" loading="eager">
       </a>
-      <span class="cy-feature__credit">Photo: <a href="https://www.pexels.com/" target="_blank" rel="noopener" tabindex="-1">Pexels</a></span>
     </div>
-    <div class="cy-feature__body">
-      <span class="cy-feature__eyebrow">// featured build</span>
-      <div class="cy-card__head">
-        <a class="cy-feature__link" href="/projects/replay/">RE:play</a>
-      </div>
-      <p class="cy-feature__desc">I wanted to hear my own mix. Apple Music showed me an ad instead. Four hours later there was a media player — eleven weeks later it ran on two platforms, and I don't know a line of C#.</p>
-      <div class="cy-card__meta cy-meta">// opensource  ·  app  ·  macos  ·  windows  ·  ai</div>
+    <div class="cy-project__body">
+      <span class="cy-project__eyebrow cy-meta">// featured build</span>
+      <a class="cy-project__title" href="/projects/replay/">RE:play</a>
+      <p class="cy-project__desc">I wanted to hear my own mix. Apple Music showed me an ad instead. Four hours later there was a media player &mdash; eleven weeks later it ran on two platforms, and I don't know a line of C#.</p>
+      <div class="cy-project__meta cy-meta">// opensource  &middot;  app  &middot;  macos  &middot;  windows  &middot;  ai</div>
     </div>
   </article>
 
   <div class="cy-tiles">
 
-    <!--
-    Project listing tile. Filter contract (project_filter.js): the outer
-    element MUST keep class "project-item" + a comma-joined data-tags
-    attribute, and the default display comes from CSS (never an inline style).
-    -->
-    <article class="project-item cy-tile" data-tags="app,macos,music,ai">
-      <div class="cy-tile__media">
+
+    <article class="cy-project cy-tile" data-slug="periphony" data-cy-rotate>
+      <div class="cy-project__media">
         <a href="/projects/periphony/" tabindex="-1" aria-hidden="true">
-          <img class="cy-tile__img" src="/assets/images/articles/periphony-console.webp" alt="A darkened mixing console, its channel buttons lit in amber and cyan, faders running out of focus." loading="lazy" width="1280" height="853">
+          <img class="cy-project__img" src="/assets/images/articles/periphony-console.webp" alt="A darkened mixing console, its channel buttons lit in amber and cyan, faders running out of focus." width="1280" height="853" loading="lazy">
         </a>
-        <span class="cy-tile__credit">Photo: <a href="https://www.pexels.com/" target="_blank" rel="noopener" tabindex="-1">Pexels</a></span>
       </div>
-      <div class="cy-tile__body">
-        <div class="cy-card__head">
-          <a class="cy-card__link" href="/projects/periphony/">Periphony 8D</a>
-        </div>
-        <p class="cy-card__desc">Music that circles your head shuts the noise off and lets me hyperfocus — but nobody was making it without vocals in the genres I wanted. So I built the converter, out of real measured ears.</p>
-        <div class="cy-card__meta cy-meta">// app  ·  macos  ·  music  ·  ai</div>
+      <div class="cy-project__body">
+        <span class="cy-project__eyebrow cy-meta">// featured build</span>
+        <a class="cy-project__title" href="/projects/periphony/">Periphony 8D</a>
+        <p class="cy-project__desc">Music that circles your head shuts the noise off and lets me hyperfocus &mdash; but nobody was making it without vocals in the genres I wanted. So I built the converter, out of real measured ears.</p>
+        <div class="cy-project__meta cy-meta">// app  &middot;  macos  &middot;  music  &middot;  ai</div>
       </div>
     </article>
-
-    <article class="project-item cy-tile" data-tags="webapp,startup">
-      <div class="cy-tile__media">
+    <article class="cy-project cy-tile" data-slug="firepype">
+      <div class="cy-project__media">
         <a href="/projects/firepype/" tabindex="-1" aria-hidden="true">
-          <img class="cy-tile__img" src="/assets/images/articles/firepype-hero.webp" alt="A drive sliding out of a server rack in a data center, mid-swap." loading="lazy" width="1600" height="900">
+          <img class="cy-project__img" src="/assets/images/articles/firepype-hero.webp" alt="A drive sliding out of a server rack in a data center, mid-swap." width="1600" height="900" loading="lazy">
         </a>
-        <span class="cy-tile__credit">Photo: <a href="https://www.pexels.com/" target="_blank" rel="noopener" tabindex="-1">Pexels</a></span>
       </div>
-      <div class="cy-tile__body">
-        <div class="cy-card__head">
-          <a class="cy-card__link" href="/projects/firepype/">Startup 01: Firepype</a>
-        </div>
-        <p class="cy-card__desc">Media-distribution automation — drop a file, get it encoded and pushed everywhere. Later: live podcast analytics and dynamic ad insertion.</p>
-        <div class="cy-card__meta cy-meta">// webapp  ·  startup</div>
+      <div class="cy-project__body">
+        <span class="cy-project__eyebrow cy-meta">// featured build</span>
+        <a class="cy-project__title" href="/projects/firepype/">Startup 01: Firepype</a>
+        <p class="cy-project__desc">Media-distribution automation &mdash; drop a file, get it encoded and pushed everywhere. Later: live podcast analytics and dynamic ad insertion.</p>
+        <div class="cy-project__meta cy-meta">// webapp  &middot;  startup</div>
       </div>
     </article>
-
-    <article class="project-item cy-tile" data-tags="animation,music,worldbuilding">
-      <div class="cy-tile__media">
+    <article class="cy-project cy-tile" data-slug="spirefall-ghost-code">
+      <div class="cy-project__media">
         <a href="/projects/spirefall-ghost-code/" tabindex="-1" aria-hidden="true">
-          <img class="cy-tile__img" src="/assets/images/articles/spirefall-hero.webp" alt="A neon-lit cyberpunk alleyway crowded with glowing signage." loading="lazy" width="1600" height="900">
+          <img class="cy-project__img" src="/assets/images/articles/spirefall-hero.webp" alt="A neon-lit cyberpunk alleyway crowded with glowing signage." width="1600" height="900" loading="lazy">
         </a>
-        <span class="cy-tile__credit">Photo: <a href="https://www.pexels.com/" target="_blank" rel="noopener" tabindex="-1">Pexels</a></span>
       </div>
-      <div class="cy-tile__body">
-        <div class="cy-card__head">
-          <a class="cy-card__link" href="/projects/spirefall-ghost-code/">Spirefall: Ghost Code</a>
-        </div>
-        <p class="cy-card__desc">The sound and vision behind Spirefall, an original cyberpunk animation series — fifteen years in the making.</p>
-        <div class="cy-card__meta cy-meta">// animation  ·  music  ·  worldbuilding</div>
+      <div class="cy-project__body">
+        <span class="cy-project__eyebrow cy-meta">// featured build</span>
+        <a class="cy-project__title" href="/projects/spirefall-ghost-code/">Spirefall: Ghost Code</a>
+        <p class="cy-project__desc">The sound and vision behind Spirefall, an original cyberpunk animation series &mdash; fifteen years in the making.</p>
+        <div class="cy-project__meta cy-meta">// animation  &middot;  music  &middot;  worldbuilding</div>
       </div>
     </article>
-
-    <article class="project-item cy-tile" data-tags="vfx,diy">
-      <div class="cy-tile__media">
+    <article class="cy-project cy-tile" data-slug="active-green-screen">
+      <div class="cy-project__media">
         <a href="/projects/active-green-screen/" tabindex="-1" aria-hidden="true">
-          <img class="cy-tile__img" src="/assets/images/articles/active-greenscreen-hero.webp" alt="A television studio with two broadcast cameras aimed at an empty green screen set." loading="lazy" width="1600" height="900">
+          <img class="cy-project__img" src="/assets/images/articles/active-greenscreen-hero.webp" alt="A television studio with two broadcast cameras aimed at an empty green screen set." width="1600" height="900" loading="lazy">
         </a>
-        <span class="cy-tile__credit">Photo: <a href="https://www.pexels.com/" target="_blank" rel="noopener" tabindex="-1">Pexels</a></span>
       </div>
-      <div class="cy-tile__body">
-        <div class="cy-card__head">
-          <a class="cy-card__link" href="/projects/active-green-screen/">Active Greenscreen</a>
-        </div>
-        <p class="cy-card__desc">A retroreflective screen that pulls mattes dynamically across multiple key colors.</p>
-        <div class="cy-card__meta cy-meta">// vfx  ·  diy</div>
+      <div class="cy-project__body">
+        <span class="cy-project__eyebrow cy-meta">// featured build</span>
+        <a class="cy-project__title" href="/projects/active-green-screen/">Active Greenscreen</a>
+        <p class="cy-project__desc">A retroreflective screen that pulls mattes dynamically across multiple key colors.</p>
+        <div class="cy-project__meta cy-meta">// vfx  &middot;  diy</div>
       </div>
     </article>
-
-    <article class="project-item cy-tile" data-tags="vfx,diy">
-      <div class="cy-tile__media">
+    <article class="cy-project cy-tile" data-slug="motion-capture">
+      <div class="cy-project__media">
         <a href="/projects/motion-capture/" tabindex="-1" aria-hidden="true">
-          <img class="cy-tile__img" src="/assets/images/articles/motion-capture-hero.webp" alt="A figure in a motion-capture suit marked with tracking dots, walking against a green screen." loading="lazy" width="1600" height="900">
+          <img class="cy-project__img" src="/assets/images/articles/motion-capture-hero.webp" alt="A figure in a motion-capture suit marked with tracking dots, walking against a green screen." width="1600" height="900" loading="lazy">
         </a>
-        <span class="cy-tile__credit">Photo: <a href="https://www.pexels.com/" target="_blank" rel="noopener" tabindex="-1">Pexels</a></span>
       </div>
-      <div class="cy-tile__body">
-        <div class="cy-card__head">
-          <a class="cy-card__link" href="/projects/motion-capture/">Motion Capture</a>
-        </div>
-        <p class="cy-card__desc">Building a DIY motion-capture studio.</p>
-        <div class="cy-card__meta cy-meta">// vfx  ·  diy</div>
+      <div class="cy-project__body">
+        <span class="cy-project__eyebrow cy-meta">// featured build</span>
+        <a class="cy-project__title" href="/projects/motion-capture/">Motion Capture</a>
+        <p class="cy-project__desc">Building a DIY motion-capture studio.</p>
+        <div class="cy-project__meta cy-meta">// vfx  &middot;  diy</div>
       </div>
     </article>
 
   </div>
 </div>
 </div>
-<script src="/assets/js/project_filter.js"></script>
+<script src="/assets/js/project_rotate.js"></script>
 
 
         </main>
