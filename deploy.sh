@@ -16,7 +16,7 @@ set -euo pipefail
 DEPLOY_HOST="${DEPLOY_HOST:-10.0.22.35}"
 DEPLOY_USER="${DEPLOY_USER:-deploy}"
 REMOTE_ROOT="${REMOTE_ROOT:-/opt/cyburdine.com}"
-VERIFY_URL="${VERIFY_URL:-https://new.cyburdine.com}"
+VERIFY_URL="${VERIFY_URL:-https://cyburdine.com}"
 KEEP_RELEASES="${KEEP_RELEASES:-5}"
 
 SSH_TARGET="${DEPLOY_USER}@${DEPLOY_HOST}"
