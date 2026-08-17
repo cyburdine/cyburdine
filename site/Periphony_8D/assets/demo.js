@@ -11,6 +11,7 @@
 const ORBIT_HZ   = 0.2663352272727273;  // revolutions per second
 const PHASE0_DEG = 300.938;             // orbit phase at the clip's first sample
 const POSITIONS  = 36;                  // KEMAR azimuths the engine pre-convolves
+const BPM        = 127.8;               // the demo clip's tempo, as printed under the ring
 
 /* Aurora stops, matching the conic gradient in the stylesheet so the lobe's
    colour is always the wheel's colour at the same bearing. */
@@ -101,6 +102,34 @@ const rayEls = (() => {
   return out;
 })();
 
+/* In 8D every ray is the one bearing's colour, so they can all share
+   #beamGrad and the frame rewrites five stops. In stereo each ray points
+   at a DIFFERENT bearing, so it needs its own gradient — but those colours
+   are fixed for the life of the page, so they are written once here and the
+   frame only ever swaps which gradient a ray is filled with. */
+const STEREO_SPAN = 360 / RAYS;
+const HALO_LEN    = 196;          // stays inside the tick ring
+const HALO_R      = 206;          // gradient reach: the rays must be fully faded
+                                  // by their own tips, or they end in hard edges
+(function buildStereoGradients(){
+  const defs = $('#beamSvg defs'), tmpl = $('#beamGrad');
+  for (let i = 0; i < RAYS; i++){
+    const g = tmpl.cloneNode(true);
+    g.id = `beamGrad${i}`;
+    g.setAttribute('r', HALO_R);
+    const [r, gr, b] = auroraAt(i * STEREO_SPAN);
+    for (const st of g.querySelectorAll('.bg')) st.setAttribute('stop-color', `rgb(${r},${gr},${b})`);
+    defs.appendChild(g);
+  }
+})();
+
+let rayFill = null;
+function setRayFills(perRay){
+  if (rayFill === perRay) return;
+  rayFill = perRay;
+  rayEls.forEach((el, i) => el.setAttribute('fill', perRay ? `url(#beamGrad${i})` : 'url(#beamGrad)'));
+}
+
 /* ── Sparks ─────────────────────────────────────────────────────
    Emitted at the centre inside the cone, then travelling along a FIXED
    radial line. Because each keeps the bearing and colour it was born
@@ -122,26 +151,37 @@ const sparkEls = (() => {
 const sparks = Array.from({length: SPARKS}, () => ({r: -1}));
 let lastPos = null;
 
-function spawn(sp, deg){
+/* `omni` is the stereo case: no cone to cluster in, so bearings are drawn
+   flat across the whole circle and the particles drift out slower and
+   dimmer. Nothing is moving in the original, and the debris must not
+   suggest otherwise. */
+function spawn(sp, deg, omni){
   // Three uniforms averaged: a cheap bell, so emission clusters on the axis.
   const u = (Math.random() + Math.random() + Math.random()) / 3;
-  const off = (u * 2 - 1) * BEAM_HALF;
+  const off = omni ? Math.random() * 360 : (u * 2 - 1) * BEAM_HALF;
   sp.a    = (deg + off) * Math.PI / 180;
   sp.r    = 5 + Math.random() * 12;
-  sp.v    = 58 + Math.random() * 150;
-  sp.size = 0.7 + Math.random() * 1.9;
+  sp.v    = omni ? 22 + Math.random() * 46  : 58 + Math.random() * 150;
+  sp.size = omni ? 0.6 + Math.random() * 1.2 : 0.7 + Math.random() * 1.9;
   sp.tw   = 0.8 + Math.random() * 3.2;
   sp.ph   = Math.random() * 6.283;
+  sp.dim  = omni ? 0.5 : 1;
   const [r, g, b] = auroraAt(deg + off);
   sp.col = `rgb(${r},${g},${b})`;
   return sp;
 }
 
-function drawSparks(deg, pos, dt){
+function drawSparks(deg, pos, dt, omni){
   for (let i = 0; i < SPARKS; i++){
     const sp = sparks[i], el = sparkEls[i];
+    // Half the field sits out the stereo case, so the halo stays a hint
+    // of light rather than the full storm the orbit throws off.
+    if (omni && (i & 1)){
+      if (sp.r >= 0){ sp.r = -1; el.setAttribute('opacity', '0'); }
+      continue;
+    }
     if (sp.r < 0 || sp.r > SPARK_MAX){
-      spawn(sp, deg);
+      spawn(sp, deg, omni);
       el.setAttribute('fill', sp.col);
       el.setAttribute('r', sp.size.toFixed(2));
     }
@@ -151,6 +191,7 @@ function drawSparks(deg, pos, dt){
     if (sp.r > SPARK_FADE)
       a *= Math.max(0, 1 - (sp.r - SPARK_FADE) / (SPARK_MAX - SPARK_FADE));
     a *= 0.66 + 0.34 * Math.sin(pos * sp.tw + sp.ph);         // twinkle, never to zero
+    a *= sp.dim;
 
     el.setAttribute('cx', (CX + sp.r * Math.sin(sp.a)).toFixed(1));
     el.setAttribute('cy', (CY - sp.r * Math.cos(sp.a)).toFixed(1));
@@ -180,6 +221,32 @@ function drawBeam(deg, t){
       `M${CX} ${CY}L${(CX + len * Math.sin(a1)).toFixed(1)} ${(CY - len * Math.cos(a1)).toFixed(1)}` +
       `L${(CX + len * Math.sin(a2)).toFixed(1)} ${(CY - len * Math.cos(a2)).toFixed(1)}Z`);
     el.setAttribute('opacity', (env * (0.30 + 0.70 * n)).toFixed(3));
+  }
+}
+
+/* ── The halo (stereo) ──────────────────────────────────────────
+   The same rays, but spread evenly over the full circle instead of
+   bundled into a cone: every bearing lit at once, at its own colour,
+   with no envelope and no bearing to travel along. That is the point
+   — a stereo image is everywhere and nowhere, so the ring glows
+   uniformly and only shimmers in place. The striation field is read
+   at absolute angle exactly as the beam reads it, so the two share a
+   texture and the 8D switch reads as the same light being gathered
+   up into one direction. */
+function drawHalo(t){
+  const w = STEREO_SPAN * 1.5;               // overlap, so there are no gaps
+  const breathe = 0.86 + 0.14 * Math.sin(t * 0.9);
+  for (let i = 0; i < RAYS; i++){
+    const abs = i * STEREO_SPAN * Math.PI / 180;
+    const n   = (striation(abs, t * 0.4) + 1) / 2;           // 0..1, drifting slowly
+    const len = HALO_LEN * (0.74 + 0.26 * n);
+    const a1  = abs - (w * Math.PI / 180) / 2;
+    const a2  = abs + (w * Math.PI / 180) / 2;
+    const el  = rayEls[i];
+    el.setAttribute('d',
+      `M${CX} ${CY}L${(CX + len * Math.sin(a1)).toFixed(1)} ${(CY - len * Math.cos(a1)).toFixed(1)}` +
+      `L${(CX + len * Math.sin(a2)).toFixed(1)} ${(CY - len * Math.cos(a2)).toFixed(1)}Z`);
+    el.setAttribute('opacity', (breathe * (0.055 + 0.085 * n)).toFixed(3));
   }
 }
 const srcDot = $('#src'), arcEl = $('#arc');
@@ -221,7 +288,7 @@ function start(){
     ctx.resume();
     playing = true;
     playIcon(true);
-    setAura(is8D);
+    setAura(is8D ? 'orbit' : 'stereo');
     requestAnimationFrame(frame);
     return;
   }
@@ -245,7 +312,7 @@ function start(){
   startedAt = t0; playing = true; started = true;
 
   playIcon(true);
-  setAura(is8D);          // first play straight into 8D must light up too
+  setAura(is8D ? 'orbit' : 'stereo');   // first play straight into 8D must light up too
   requestAnimationFrame(frame);
 }
 
@@ -254,7 +321,7 @@ function pause(){
   ctx.suspend();
   playing = false;
   playIcon(false);
-  setAura(false);
+  setAura('off');
   readout.textContent = 'PAUSED';
 }
 
@@ -283,22 +350,91 @@ function setMode(to8D){
       g.gain.linearRampToValueAtTime(v, t + X);
     }
   }
-  setAura(playing && to8D);
+  if (playing) setAura(to8D ? 'orbit' : 'stereo');
   if (!playing) start();
 }
 
-/* ── The aurora ────────────────────────────────────────────── */
+/* ── The aurora ──────────────────────────────────────────────
+   Three states, not two. 'off' is paused; 'stereo' is the even halo;
+   'orbit' is the sweeping beam plus the club lighting behind the page. */
 const beamSvg = $('#beamSvg'), raysEl = $('#rays');
 const beamStops = [...document.querySelectorAll('#beamGrad .bg')];
-function setAura(on){
-  beamSvg.classList.toggle('on', on);
-  if (!on){
+const clubEl = $('#club'), clubLobes = [...document.querySelectorAll('#club i')];
+let aura = 'off';
+
+function setAura(mode){
+  aura = mode;
+  beamSvg.classList.toggle('on', mode !== 'off');
+  clubEl.classList.toggle('on', mode === 'orbit');
+  setRayFills(mode === 'stereo');
+
+  if (mode !== 'orbit'){
     ticks.forEach(t => t.style.stroke = '');
     srcDot.style.fill = '';
+    for (const l of clubLobes) l.style.opacity = '0';
+  }
+  if (mode === 'off'){
     srcDot.style.opacity = '';
     for (const el of rayEls){ el.removeAttribute('d'); el.removeAttribute('opacity'); }
     clearSparks();
   }
+  // Reduced motion gets the club as a steady wash: lit, but not throbbing.
+  if (mode === 'orbit' && reduced) clubStill();
+}
+
+/* ── The club ────────────────────────────────────────────────
+   Three lobes of light behind the whole page, pulsed off the clip's
+   own beat grid. The kick envelope is a sharp attack decaying across
+   each beat; the bar envelope swells every four. Driving them from the
+   audio clock rather than a CSS animation is what keeps them locked to
+   the music through pauses and the loop wrap.
+
+   Colour is the bearing's colour, rewritten only when the bearing has
+   moved past a few degrees — a custom-property change repaints a
+   viewport-sized gradient, so it must not happen every frame. Opacity
+   and transform are the per-frame channels. */
+const CLUB_STEP = 6;                 // degrees of bearing per colour rewrite
+const clubHue = [-1, -1, -1];
+function clubColour(i, deg){
+  const q = Math.round(deg / CLUB_STEP);
+  if (clubHue[i] === q) return;
+  clubHue[i] = q;
+  const [r, g, b] = auroraAt(deg);
+  clubLobes[i].style.setProperty('--c', `${r},${g},${b}`);
+}
+function clubPlace(i, deg, reach, scale){
+  const rad = deg * Math.PI / 180;
+  clubLobes[i].style.transform =
+    `translate(${(reach * Math.sin(rad)).toFixed(2)}vmax,${(-reach * Math.cos(rad)).toFixed(2)}vmax)` +
+    ` scale(${scale.toFixed(3)})`;
+}
+function clubStill(){
+  for (let i = 0; i < 3; i++){
+    clubColour(i, i * 120);
+    clubPlace(i, i * 120, i === 2 ? 0 : 16, 1);
+    clubLobes[i].style.opacity = i === 2 ? '0.22' : '0.3';
+  }
+}
+function drawClub(deg, pos){
+  const beat = pos * BPM / 60;
+  const kick = Math.exp(-4.4 * (beat % 1));            // every beat, hard attack
+  const off  = Math.exp(-4.4 * ((beat + 0.5) % 1));    // the offbeat, for the far lobe
+  const bar  = Math.exp(-1.9 * ((beat / 4) % 1));      // every four beats, a swell
+
+  // Lobe 0 rides the source: the page lights from wherever you hear it.
+  clubColour(0, deg);
+  clubPlace(0, deg, 30, 0.92 + 0.15 * kick);
+  clubLobes[0].style.opacity = (0.30 + 0.50 * kick).toFixed(3);
+
+  // Lobe 1 answers from the far side, on the offbeat and a touch cooler.
+  clubColour(1, deg + 180);
+  clubPlace(1, deg + 180, 26, 0.88 + 0.12 * off);
+  clubLobes[1].style.opacity = (0.16 + 0.30 * off).toFixed(3);
+
+  // Lobe 2 is the floor wash — centred, wide, breathing on the bar.
+  clubColour(2, deg + 90);
+  clubPlace(2, 0, 0, 1.05 + 0.18 * bar);
+  clubLobes[2].style.opacity = (0.10 + 0.22 * bar).toFixed(3);
 }
 
 function frame(){
@@ -317,6 +453,12 @@ function frame(){
   // because in the original nothing is moving and the ring must not imply it does.
   arcEl.setAttribute('stroke-dashoffset', ARC_LEN * (1 - pos / dur));
 
+  // Sparks advance on the audio clock in both modes, so pausing freezes them
+  // and the loop wrap does not fling every particle to the rim.
+  let dt = 0;
+  if (lastPos !== null){ const d = pos - lastPos; if (d > 0 && d < 0.25) dt = d; }
+  lastPos = pos;
+
   if (is8D){
     srcDot.setAttribute('cx', CX + R_OUT * Math.sin(rad));
     srcDot.setAttribute('cy', CY - R_OUT * Math.cos(rad));
@@ -328,13 +470,7 @@ function frame(){
     const [r, g, b] = auroraAt(deg);
 
     drawBeam(deg, reduced ? 0 : pos);
-
-    // Advance sparks on the audio clock, so pausing freezes them and the
-    // loop wrap does not fling every particle to the rim.
-    let dt = 0;
-    if (lastPos !== null){ const d = pos - lastPos; if (d > 0 && d < 0.25) dt = d; }
-    lastPos = pos;
-    if (!reduced) drawSparks(deg, pos, dt);
+    if (!reduced){ drawSparks(deg, pos, dt, false); drawClub(deg, pos); }
     const col = `rgb(${r},${g},${b})`;
     for (const st of beamStops) st.setAttribute('stop-color', col);
     beamSvg.style.opacity = '';
@@ -354,6 +490,10 @@ function frame(){
     srcDot.setAttribute('cx', CX);          // parked at front, still
     srcDot.setAttribute('cy', CY - R_OUT);
     srcDot.style.opacity = '0.28';
+
+    drawHalo(reduced ? 0 : pos);
+    if (!reduced) drawSparks(0, pos, dt, true);
+    raysEl.setAttribute('opacity', '1');
     readout.textContent = 'STEREO — NOT MOVING';
   }
   requestAnimationFrame(frame);

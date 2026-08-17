@@ -74,6 +74,29 @@ img{max-width:100%;display:block}
   mix-blend-mode:screen;overflow:visible}
 .beam.on{opacity:1}
 
+/* ── The club ─────────────────────────────────────────────────
+   8D only. Three soft lobes of light behind the whole page: one
+   riding the source's bearing, one opposite it, one washing the
+   centre. They pulse on the demo's own beat grid (127.8 BPM,
+   eight beats to a revolution), driven from the audio clock in
+   demo.js, so the room breathes with the track rather than to a
+   CSS animation that would drift out of phase with it.
+
+   Colour arrives as an "r,g,b" triple in --c and is only rewritten
+   when the bearing has moved a few degrees; opacity and transform
+   carry every frame, because those are the cheap ones. */
+.club{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+  mix-blend-mode:screen;opacity:0;transition:opacity 1.1s ease}
+.club.on{opacity:1}
+.club i{position:absolute;left:50%;top:50%;width:74vmax;height:74vmax;
+  margin:-37vmax 0 0 -37vmax;border-radius:50%;opacity:0;
+  background:radial-gradient(circle closest-side,
+    rgba(var(--c,239,233,226),.44) 0%,
+    rgba(var(--c,239,233,226),.21) 38%,
+    rgba(var(--c,239,233,226),.06) 62%,
+    rgba(var(--c,239,233,226),0)   78%);
+  will-change:transform,opacity}
+
 main,header,footer{position:relative;z-index:1}
 
 .rail{position:absolute;top:0;left:0;right:0;z-index:40}
@@ -203,10 +226,14 @@ footer a:hover{color:var(--bone)}
   *{animation-duration:.01ms!important;transition-duration:.01ms!important}
   .rise{opacity:1;transform:none}
   .beam{opacity:.85}
+  /* The club still tints, it just stops pulsing — demo.js parks the
+     lobes at a steady level instead of driving them off the beat. */
 }
 </style>
 </head>
 <body>
+
+<div class="club" id="club" aria-hidden="true"><i></i><i></i><i></i></div>
 
 <header class="rail">
   <div class="rail-in">
