@@ -1612,3 +1612,155 @@ html.cy-clean .cy-visit__host {
   letter-spacing: 0.06em;
   color: var(--cy-fg-dim);
 }
+
+/* ── Retro-reflection explainer ────────────────────────────────────
+   Only on projects/active-green-screen/. Driven by retro_reflect.js,
+   which sets --rr-key (the current key colour) and --rr-b (0..1, how
+   much light is finding its way back into the lens) on the root node
+   and lets CSS do the rest.
+
+   Controls are hidden until the script adds .cy-retro--live, so a
+   reader with no JS gets the static diagram instead of dead inputs. */
+html.cy-clean .cy-retro {
+  --rr-key: #19e05f;
+  --rr-b: 1;
+  margin: var(--cy-sp-5) 0;
+  white-space: normal;
+}
+html.cy-clean .cy-retro__panels {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--cy-sp-2);
+}
+@media (min-width: 60rem) {
+  html.cy-clean .cy-retro__panels { grid-template-columns: 1.55fr 1fr; }
+}
+html.cy-clean .cy-retro__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cy-sp-2);
+  min-width: 0;
+}
+html.cy-clean .cy-retro svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #070b0f;
+  border: 1px solid var(--cy-rule);
+}
+
+/* Scene furniture */
+html.cy-clean .cy-retro .rr-fabric   { fill: #454e56; }
+html.cy-clean .cy-retro .rr-cam-body { fill: #161d24; stroke: var(--cy-rule-lit); stroke-width: 1.5; }
+html.cy-clean .cy-retro .rr-cam-lens { fill: #0c1116; stroke: var(--cy-rule-lit); stroke-width: 1.5; }
+html.cy-clean .cy-retro .rr-lens-dot { fill: var(--cy-link); }
+html.cy-clean .cy-retro .rr-subject  { fill: #10171d; stroke: var(--cy-rule-lit); stroke-width: 1.5; }
+html.cy-clean .cy-retro .rr-mount    { stroke: var(--cy-rule-lit); stroke-width: 2; stroke-dasharray: 3 3; }
+html.cy-clean .cy-retro .rr-ring     { stroke: var(--rr-key); stroke-width: 2.5; opacity: 0.5; }
+html.cy-clean .cy-retro .rr-led      { fill: var(--rr-key); }
+
+/* Light. The outgoing beam is always at full strength — the light
+   leaves the ring no matter where the ring is. Only the return fades,
+   and that asymmetry is the entire point of the diagram. */
+html.cy-clean .cy-retro .rr-out  { stroke: var(--rr-key); stroke-width: 1.1; }
+html.cy-clean .cy-retro .rr-cone { fill: var(--rr-key); opacity: 0.07; }
+html.cy-clean .cy-retro .rr-back { stroke: var(--rr-key); stroke-width: 2; }
+html.cy-clean .cy-retro .rr-dot  { fill: #ffffff; }
+
+html.cy-clean .cy-retro .rr-label {
+  font-family: var(--cy-font-mono);
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  fill: var(--cy-fg-dim);
+}
+html.cy-clean .cy-retro .rr-label--ring { fill: var(--rr-key); opacity: 0.85; }
+
+/* Bead inset */
+html.cy-clean .cy-retro .rr-bead-glass  { fill: rgba(79,214,214,0.07); stroke: var(--cy-link); stroke-width: 1.2; }
+html.cy-clean .cy-retro .rr-bead-mirror { fill: none; stroke: var(--cy-accent); stroke-width: 3; }
+html.cy-clean .cy-retro .rr-bead-path   { fill: none; stroke: var(--rr-key); stroke-width: 2; }
+html.cy-clean .cy-retro .rr-bead-in     { fill: none; stroke: var(--cy-fg-dim); stroke-width: 1.6; }
+html.cy-clean .cy-retro .rr-bead-out    { fill: none; stroke: #ffffff; stroke-width: 2.4; }
+html.cy-clean .cy-retro .rr-label--in   { fill: var(--rr-key); }
+html.cy-clean .cy-retro .rr-label--out  { fill: #ffffff; }
+html.cy-clean .cy-retro .rr-bead-dot    { fill: #ffffff; }
+html.cy-clean .cy-retro .rr-scatter     { stroke: var(--cy-fg-dim); stroke-width: 1.2; opacity: 0.55; }
+html.cy-clean .cy-retro .rr-surface     { fill: #2b333a; }
+html.cy-clean .cy-retro .rr-divider     { stroke: var(--cy-rule); stroke-width: 1; }
+
+/* Camera view */
+/* A faint rim keeps the subject readable against BOTH the blazing
+   fabric and the near-black replacement it gets composited onto. */
+html.cy-clean .cy-retro .rr-cam-subject {
+  fill: #0b1218;
+  stroke: rgba(214,228,236,0.30);
+  stroke-width: 1.5;
+}
+/* The shadow is filled black — which reads on the bright fabric — and
+   outlined in the key colour, which is what survives on the composite.
+   Fringe the keyer could not resolve is exactly what it represents. */
+html.cy-clean .cy-retro .rr-cam-shadow  {
+  fill: #000000;
+  stroke: var(--rr-key);
+  stroke-width: 2;
+}
+html.cy-clean .cy-retro .rr-speck       { fill: var(--rr-key); }
+html.cy-clean .cy-retro .rr-note {
+  font-family: var(--cy-font-mono);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  fill: var(--cy-accent);
+}
+
+/* Controls */
+html.cy-clean .cy-retro__controls { display: none; }
+html.cy-clean .cy-retro--live .cy-retro__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cy-sp-2) var(--cy-sp-3);
+  margin-top: var(--cy-sp-2);
+  padding: var(--cy-sp-2);
+  border: 1px solid var(--cy-rule);
+  background: var(--cy-panel);
+}
+html.cy-clean .cy-retro__ctl {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  color: var(--cy-fg-dim);
+}
+html.cy-clean .cy-retro__ctl input[type="range"] {
+  width: 11rem;
+  accent-color: var(--rr-key);
+}
+html.cy-clean .cy-retro__ctl input[type="checkbox"] { accent-color: var(--rr-key); }
+html.cy-clean .cy-retro .rr-key-btn {
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  color: var(--cy-fg-dim);
+  background: transparent;
+  border: 1px solid var(--cy-rule);
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  transition: color .18s, border-color .18s;
+}
+html.cy-clean .cy-retro .rr-key-btn:hover { color: var(--cy-fg); border-color: var(--cy-rule-lit); }
+html.cy-clean .cy-retro .rr-key-btn[aria-pressed="true"] {
+  color: var(--cy-bg);
+  background: var(--cy-fg);
+  border-color: var(--cy-fg);
+}
+html.cy-clean .cy-retro__readout {
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  letter-spacing: 0.08em;
+  color: var(--cy-link);
+  margin-top: var(--cy-sp-1);
+}

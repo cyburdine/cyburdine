@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
+SPDX-FileCopyrightText: © 2026 Justin Burdine <justin@cyburdine.com>
 SPDX-License-Identifier: BSD-3-Clause
 -->
 <!DOCTYPE html><html lang="en" data-cy-render="off">
@@ -27,43 +27,216 @@ SPDX-License-Identifier: BSD-3-Clause
 
         <main>
           <article>
-  <!--
-SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
-SPDX-License-Identifier: BSD-3-Clause
-
-  Framed page header. Params:
-    title   — heading text (required)
-    kicker  — small system label above the title (optional)
-    type    — meta chip, e.g. "LOG" / "PROJECT" (optional)
-    status  — status pill text (optional)
-    live    — truthy → cyan "live" pill instead of pink (optional)
-    date    — pre-formatted date string (optional)
-    tags    — array of tag strings (optional)
--->
 <div class="cy-page-header">
-  
+
   <h1>Active Greenscreen</h1>
-  
+
   <div class="cy-statusbar">
     <span class="cy-meta">PROJECT</span>
-    
+
   </div>
-  
-  
+
+
   <div class="cy-tags">
-    <span class="cy-tag">vfx</span><span class="cy-tag">diy</span>
+    <span class="cy-tag">vfx</span><span class="cy-tag">diy</span><span class="cy-tag">electronics</span><span class="cy-tag">optics</span>
   </div>
-  
+
 </div>
 
-  <div class="console cy-frame cy-frame--wip"><!--
-SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
-SPDX-License-Identifier: BSD-3-Clause
--->
-<p>:: INIT // subject: Building an Active Greenscreen<br />
-:: DESC // creating a retroreflective screen to pull mattes dynamically using  various colors
-:: STATUS // in progress // TBD</p>
-<p>// full doc coming soon</p>
+  <div class="console cy-frame">
+<div class="project">When the world went remote in 2020, I'd already been working from home for years. Video calls weren't new to me. What was new was that suddenly everybody was on one.
+
+Overnight, every person I knew bought a webcam and started showing up as a small rectangle in a grid of small rectangles. Same laptop lens, same overhead lighting, same bookshelf. I looked at that and thought: I don't want to look like everybody else.
+
+I have a background in visual effects, so my instinct wasn't to go buy a better webcam. It was to go dig up a memory.</div>
+<div class="cy-meta cy-section-label">:: a booth at NAB, twenty years earlier</div>
+<div class="project">In the early 2000s I went to NAB most years — the big broadcast and media technology show. Somewhere on that floor, in a year I can't pin down, I walked past a demo booth I've never been able to name since.
+
+It was a camera pointed at a sheet of grey fabric. Unremarkable fabric. The kind of thing you'd walk past without a second look, which I suspect was the point of putting it on a trade show floor at all.
+
+Then they switched on a ring of LEDs mounted around the lens, and the fabric lit up like a screen.
+
+I didn't know the product, the company, or the price. I just knew the shape of the trick, and it stuck with me for close to two decades before I had a reason to go back and figure out how it worked.</div>
+<div class="cy-meta cy-section-label">:: the fabric is not the trick</div>
+<div class="project">The material isn't painted or dyed green. It's grey, and it stays grey. What makes it work is geometry.
+
+It's retro-reflective fabric — the 3M-made textile that's in road signs, safety vests and bike reflectors. Embedded in the surface are millions of microscopic glass beads. Light that hits one of those beads doesn't scatter back out across the whole room the way it would off a matte wall. It goes back the way it came, toward whatever sent it.
+
+You already know what this looks like. It's why a road sign detonates in your headlights at night and looks like a dull grey rectangle to the person standing on the sidewalk ten feet to your left. The sign isn't glowing. It's aiming — and it's aiming at the driver, because the driver is sitting almost exactly where the headlights are.</div>
+<figure class="cy-figure">
+  <img src="/assets/images/articles/agreen-retroreflection.webp" alt="A night-time long exposure at a road intersection: two red-and-white stop signs stand lit against a black sky while red and white light trails streak horizontally across the frame behind them."
+       width="1600" height="1067" loading="lazy" decoding="async">
+  <figcaption>The whole principle, demonstrated nightly and for free. Those signs are not lit &mdash; they are returning headlights to the only person positioned to see the return. Step off the driver&rsquo;s sightline and they go grey.
+  </figcaption>
+</figure>
+<div class="project">Put a ring of LEDs as close to parallel with the lens as you can physically get it, aim it at that fabric, and the fabric lights up brilliantly and evenly — but only for the camera. To everyone else in the room it's still a grey sheet. The light is being handed back along the exact axis it arrived on, and the lens is the only thing sitting on that axis.
+
+And because it's light rather than pigment, the colour is a variable. Green, blue, or whatever else happens to key cleanest against what someone's wearing that day.</div>
+<figure class="cy-figure">
+  <img src="/assets/images/articles/agreen-glass-beads.webp" alt="Extreme macro photograph of a dense heap of clear glass spheres packed edge to edge, each catching a bright specular highlight."
+       width="1600" height="1067" loading="lazy" decoding="async">
+  <figcaption>Scaled up by a few orders of magnitude: the beads. A sphere with a mirrored back and a high enough refractive index focuses incoming light onto its own rear surface and sends it back out nearly antiparallel to how it arrived. Do that a few million times per square foot and you have a screen that only exists from one direction.
+  </figcaption>
+</figure>
+<div class="cy-meta cy-section-label">:: the effect, and how fast it dies</div>
+<div class="project">This is the part that's hard to describe and easy to show, so here it is. Slide the LED ring off the lens axis and watch what happens to the light coming back.</div>
+
+<!-- Interactive explainer. Structure only — retro_reflect.js draws the
+     rays, the cones and the bead optics into these three canvases. -->
+<figure class="cy-figure cy-retro" id="retro">
+  <div class="cy-retro__panels">
+
+    <svg id="rrScene" viewBox="0 0 640 380" role="img"
+         aria-label="Top-down diagram of a camera with an LED ring aimed at retro-reflective fabric. Light travels from the ring to the fabric and returns along a narrow cone toward the ring; the lens only receives light while it sits inside that cone."></svg>
+
+    <div class="cy-retro__side">
+
+      <svg id="rrCam" viewBox="0 0 320 180" role="img"
+           aria-label="What the camera records: a subject silhouetted against the lit fabric, with the key becoming dirty as the returning light weakens.">
+        <rect id="rrCamBg" x="0" y="0" width="320" height="180" fill="#19e05f"></rect>
+
+        <!-- The replacement background, revealed when the key is pulled. -->
+        <g id="rrCamKeyed" opacity="0">
+          <rect x="0" y="0" width="320" height="180" fill="#070b0f"></rect>
+          <rect x="0" y="122" width="320" height="58" fill="#0b171c"></rect>
+          <g fill="#132a33">
+            <rect x="14" y="84" width="24" height="38"></rect>
+            <rect x="44" y="64" width="18" height="58"></rect>
+            <rect x="68" y="96" width="30" height="26"></rect>
+            <rect x="212" y="72" width="22" height="50"></rect>
+            <rect x="240" y="90" width="28" height="32"></rect>
+            <rect x="274" y="60" width="16" height="62"></rect>
+          </g>
+          <line x1="0" y1="122" x2="320" y2="122" stroke="#4fd6d6" stroke-width="1" opacity="0.35"></line>
+        </g>
+
+        <g id="rrCamNoise"></g>
+
+        <!-- Drawn ABOVE the replacement on purpose: a shadow on the screen
+             is exactly what refuses to key out. -->
+        <g id="rrCamShadow" opacity="0">
+          <circle class="rr-cam-shadow" cx="160" cy="60" r="27"></circle>
+          <path class="rr-cam-shadow" d="M160 92c-42 0-70 26-76 88h152c-6-62-34-88-76-88z"></path>
+        </g>
+
+        <g>
+          <circle class="rr-cam-subject" cx="160" cy="60" r="27"></circle>
+          <path class="rr-cam-subject" d="M160 92c-42 0-70 26-76 88h152c-6-62-34-88-76-88z"></path>
+        </g>
+
+        <!-- Backing bar, so the readout stays legible over both the bright
+             fabric and the black silhouette it inevitably crosses. -->
+        <rect x="0" y="156" width="320" height="24" fill="#05080b" opacity="0.82"></rect>
+        <text id="rrCamNote" class="rr-note" x="10" y="172">RETURN 100%</text>
+      </svg>
+
+      <svg id="rrBead" viewBox="0 0 320 180" role="img"
+           aria-label="Left: a light ray entering a glass bead, refracting, reflecting off its mirrored back and leaving nearly antiparallel to how it arrived. Right: the same ray hitting a matte surface and scattering in every direction.">
+        <rect class="rr-surface" x="0" y="130" width="162" height="22"></rect>
+        <circle class="rr-bead-glass" cx="84" cy="86" r="44"></circle>
+        <!-- The metallised rear face: the mirror the focused ray bounces off. -->
+        <path class="rr-bead-mirror" d="M40 86A44 44 0 0 0 128 86"></path>
+        <path id="rrBeadPath" class="rr-bead-path" d=""></path>
+        <path id="rrBeadOut" class="rr-bead-out" d=""></path>
+        <circle id="rrBeadDot" class="rr-bead-dot" r="3.5" opacity="0"></circle>
+        <text id="rrBeadInLbl" class="rr-label rr-label--in" x="0" y="0">IN</text>
+        <text id="rrBeadOutLbl" class="rr-label rr-label--out" x="0" y="0">OUT</text>
+
+        <line class="rr-divider" x1="168" y1="10" x2="168" y2="170"></line>
+
+        <rect class="rr-surface" x="176" y="130" width="144" height="22"></rect>
+        <g id="rrDiffuse"></g>
+
+        <text class="rr-label" x="84" y="172" text-anchor="middle">GLASS BEAD</text>
+        <text class="rr-label" x="248" y="172" text-anchor="middle">MATTE SURFACE</text>
+      </svg>
+
+    </div>
+  </div>
+
+  <div class="cy-retro__controls">
+    <label class="cy-retro__ctl" for="rrOffset">ring offset
+      <input type="range" id="rrOffset" min="0" max="100" value="0" step="1">
+    </label>
+    <div class="cy-retro__ctl" role="group" aria-label="Key colour">
+      <button type="button" class="rr-key-btn" data-key="green" aria-pressed="true">green</button>
+      <button type="button" class="rr-key-btn" data-key="blue" aria-pressed="false">blue</button>
+      <button type="button" class="rr-key-btn" data-key="off" aria-pressed="false">off</button>
+    </div>
+    <label class="cy-retro__ctl" for="rrKeyed">
+      <input type="checkbox" id="rrKeyed"> pull the key
+    </label>
+  </div>
+  <div class="cy-retro__readout" id="rrReadout" role="status" aria-live="polite"></div>
+
+  <figcaption>Drag <b>ring offset</b> and watch the asymmetry: the outgoing beam never changes, because the light leaves the ring regardless of where the ring is. It&rsquo;s the <em>return</em> that collapses. Switch <b>off</b> to see the fabric&rsquo;s real colour &mdash; the grey everyone in the room is actually looking at &mdash; and tick <b>pull the key</b> to watch a clean matte fall apart as the returning light drops away.
+    <br><br>
+    One honest exaggeration: real 3M sheeting accepts an observation angle of roughly a degree. Drawn to scale that cone would be a hairline, so it&rsquo;s opened up to about seven degrees here. The falloff maths uses the same widened angle the picture shows, so the diagram never contradicts itself &mdash; it&rsquo;s just gentler than the real material, which dies faster than this.
+  </figcaption>
+</figure>
+
+<div class="cy-meta cy-section-label">:: i wonder if i can pull this off</div>
+<div class="project">Locked down at home, with a studio I'd just finished building and — for once — the time to spend on it, I decided to find out whether I could make one.
+
+The fabric took the longest to run down. Retro-reflective textile isn't something you add to a cart; I ended up sourcing the material and having a nine-by-ten-foot panel sewn together.
+
+The lighting side I was already most of the way to. I'd been deep in WLED projects elsewhere in the studio, so the vocabulary was familiar: a ring of addressable LEDs, a Wemos D1 Mini to drive them, and a 3D-modelled mount I could print and clamp onto the camera rails so the ring sat around the lens rather than near it. That distinction turns out to matter more than anything else in the build.
+
+Then a small amount of code, and a control box with about as many features as it needs: on, off, blue, green, and a dial for brightness.</div>
+<figure class="cy-figure">
+  <img src="/assets/images/articles/agreen-microcontroller.webp" alt="Close-up of an Arduino board on a desk with orange, white and green jumper wires arcing from its header pins to a white breadboard where a single red LED is lit."
+       width="1600" height="1067" loading="lazy" decoding="async">
+  <figcaption>The unglamorous half. A Wemos D1 Mini &mdash; an ESP8266 board roughly the size of a stick of gum &mdash; is doing all the work here: driving the addressable ring, holding the colour, and taking orders from the control box.
+  </figcaption>
+</figure>
+<div class="cy-meta cy-section-label">:: the moment i knew</div>
+<div class="project">The build wasn't even finished when I found out it was going to work.
+
+I had the bare LED ring in my hand, not yet mounted to anything. I held it up to my eye, looked through the middle of it, and switched it on with the light facing away from me toward the fabric.
+
+The entire wall lit up.
+
+Then I moved the ring about a foot to the side, kept my eye where it was, and the effect was simply gone. Not dimmer. Gone.
+
+That's the whole physics lesson in one gesture, performed with two hands in a dark room before a single part was bolted down. Everything after that was assembly.</div>
+<div class="cy-meta cy-section-label">:: it breaks the rules of a green screen</div>
+<div class="project">I've spent enough time on traditional green screen stages to walk in expecting a specific problem: distance.
+
+On a normal stage you need room. The screen has to be lit separately and evenly, and the talent has to stand well clear of it, because standing close throws a shadow onto the screen and a shadow is the one thing a keyer can't forgive. That's why proper stages are enormous, and it's why green screen mostly doesn't work in a spare bedroom.
+
+This setup inverts that, and it took me a while to stop being suspicious of it. The closer I stood to the fabric, the cleaner the key got.
+
+Two things are going on. The obvious one is brightness — halve the distance and the fabric is getting dramatically more light, so the return is stronger and the keyer has more to work with.
+
+The better one is the shadow. My light source is sitting on the lens axis. So is my shadow. Whatever shadow I cast onto that fabric falls exactly and entirely behind me, hidden from the camera by my own body — because the camera and the light are looking down the same line. There is no angle for it to peek out from. The single constraint that makes traditional green screens need a warehouse just doesn't apply, which is convenient, because a warehouse is precisely what nobody has behind their desk.
+
+The other pleasant surprise: modern cameras auto-white-balance the cast away. On screen the picture looks completely normal — no green wash, no colour spill on my face. Pull a key on the same footage and it's remarkably clean.</div>
+<figure class="cy-figure">
+  <img src="/assets/images/articles/active-greenscreen-hero.webp" alt="A television studio with two broadcast cameras aimed at an empty, brightly lit green screen set."
+       width="1600" height="900" loading="lazy" decoding="async">
+  <figcaption>The version that needs the building. Separate screen lighting, several metres of standoff so nobody casts a shadow, and a room built around the process. The active version needs a lens, a ring, and about as much floor as a desk chair.
+  </figcaption>
+</figure>
+<div class="cy-meta cy-section-label">:: nobody noticed the green screen</div>
+<div class="project">In practice the active green screen turned out to be more conversation piece than career milestone.
+
+And the conversation was rarely about the background. What people actually reacted to on calls was that I was shooting through a real DSLR instead of a webcam — the sharper image, the actual optical depth of field, the fact that I looked like a shot instead of a video call. That's what got the questions. The invisible screen behind me was a footnote.
+
+It made a reliable party trick, though. Switch the key off mid-call and reveal the cluttered home office that had been sitting there the entire time behind what everyone had assumed was a tidy backdrop.</div>
+<figure class="cy-figure">
+  <img src="/assets/images/articles/agreen-dslr-rig.webp" alt="A DSLR on a tripod with a fast prime lens and hood, standing on pale wood flooring in a studio with light stands blurred behind it."
+       width="1600" height="1067" loading="lazy" decoding="async">
+  <figcaption>The part people actually asked about. The ring clamps to the rails so it sits concentric with the front element &mdash; near the lens is not the same as around it, and the difference between the two is the whole effect.
+  </figcaption>
+</figure>
+<div class="cy-meta cy-section-label">:: built, not bought</div>
+<div class="project">I'm under no illusion that I invented any of this. It was a commercial product on a trade show floor before I had any business trying to replicate it, and it's still sold today by people who do it better than my sewn panel and printed bracket do.
+
+That was never the point. The point was sourcing an obscure material with no obvious supplier, learning enough electronics to drive and program the lighting, and building a working rig out of a memory that was nearly twenty years old and missing every useful detail — including the name of the thing I was trying to rebuild.
+
+That's the pattern behind most of what's on this site. The recurring question is whether I can actually pull something off, and the payoff is finding out that I can.
+
+The rig still lives in the studio, alongside the animation, motion capture and 3D work that happens in there. One more tool built rather than bought, and one more thing I no longer have to go shopping for.</div>
 </div>
 </article>
 
@@ -71,7 +244,7 @@ SPDX-License-Identifier: BSD-3-Clause
 	  <footer>
   <p>&copy; <a href="#" class="cy-reboot" aria-label="Reload and replay the intro">1999-2026 cyburdine</a></p>
 </footer>
-      
+
     </div>
       <!-- FRAME OVERLAY sits on top -->
     <img src="/assets/images/terminal-full.webp" alt="Terminal Frame" class="terminal-frame" width="3000" height="1688" />
@@ -86,5 +259,8 @@ SPDX-License-Identifier: BSD-3-Clause
   <script src="/assets/js/render.js"></script>
   <script src="/assets/js/video_glitch.js"></script>
   <script src="/assets/js/responsive.js"></script>
+  <!-- Page-specific, like project_rotate.js on projects.html: it no-ops
+       when #retro is absent, so it is harmless anywhere else. -->
+  <script src="/assets/js/retro_reflect.js"></script>
 </body>
 </html>
