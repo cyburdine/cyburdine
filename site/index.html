@@ -10,9 +10,32 @@ SPDX-License-Identifier: BSD-3-Clause
   <title>CYBURDINE.com - [home]</title>
   <link rel="preload" href="/assets/fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/VT323.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/IBMPlexSansCondensed-600.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
+<!--
+  THE BOOTH — z0 world / z1 glass. Purely decorative, so aria-hidden and
+  pointer-events:none throughout; CSS shows them in clean mode only, which
+  keeps the boot cinematic's own CRT chrome untouched.
+-->
+<div class="cy-world" aria-hidden="true">
+  <div class="cy-world__glow"></div>
+  <div class="cy-world__far"></div>
+  <div class="cy-world__mid"></div>
+  <div class="cy-world__haze"></div>
+  <canvas class="cy-world__motes"></canvas>
+</div>
+<div class="cy-glass" aria-hidden="true"></div>
+
+<div class="cy-rail cy-rail--top">
+  <span class="cy-rail__id">CYB//NODE</span>
+  <span class="cy-rail__cell cy-live">LIVE</span>
+  <span class="cy-rail__spacer"></span>
+  <span class="cy-rail__cell cy-rail__cell--opt">34.05N 118.24W</span>
+  <span class="cy-rail__cell"><span class="cy-clock">--:--:--Z</span></span>
+</div>
+
   <div class="terminal-wrapper">
   <div class="terminal-container">
     <div class="terminal-screen">
@@ -30,13 +53,20 @@ SPDX-FileCopyrightText: © 2025 Justin Burdine <justin@cyburdine.com>
 SPDX-License-Identifier: BSD-3-Clause
 -->
 <div class="glow">
-<div class="cy-hero">
-  <div class="cy-hero__roles cy-meta">Technologist // Artist // Versatilist</div>
-  <p class="cy-hero__tagline">I build systems and the worlds they run in: infrastructure automation, AI creative tooling, and Audio and Visual ventures.</p>
-</div>
+<!-- IDENT — the roles carry the page's <h1> now. The old h1 was the word
+     "Projects", which spent the most important heading on a category label
+     rather than on who this is. -->
+<section class="cy-ident">
+  <h1 class="cy-ident__roles">
+    <span>Technologist</span>
+    <span>Artist</span>
+    <span>Versatilist</span>
+  </h1>
+  <p class="cy-ident__tagline">I build <strong>systems</strong> and the <strong>worlds they run in</strong>: infrastructure automation, AI creative tooling, and Audio and Visual ventures.</p>
+</section>
 
 <div class="cy-gallery-head">
-  <h1 class="cy-gallery-head__label"><span class="cy-gallery-head__name">Projects</span> <span class="cy-gallery-head__kicker">// build log</span></h1>
+  <h2 class="cy-gallery-head__label"><span class="cy-gallery-head__name">Build log</span> <span class="cy-gallery-head__kicker">// 07 records</span></h2>
 </div>
 
 <div class="cy-cards" id="projectList">
@@ -52,6 +82,7 @@ SPDX-License-Identifier: BSD-3-Clause
   grid below. Remove the attribute to pin a project to the grid.
   -->
   <article class="cy-project cy-feature" data-slug="replay" data-cy-rotate>
+      <span class="cy-project__num" aria-hidden="true">01</span>
     <div class="cy-project__media">
       <a href="/projects/replay/" tabindex="-1" aria-hidden="true">
         <img class="cy-project__img" src="/assets/images/articles/replay-site.webp" alt="The RE:play marketing site: a large gradient play triangle beside the headline Less player. More play." width="1280" height="728" loading="eager">
@@ -69,6 +100,7 @@ SPDX-License-Identifier: BSD-3-Clause
 
 
     <article class="cy-project cy-tile" data-slug="periphony" data-cy-rotate>
+      <span class="cy-project__num" aria-hidden="true">02</span>
       <div class="cy-project__media">
         <a href="/projects/periphony/" tabindex="-1" aria-hidden="true">
           <img class="cy-project__img" src="/assets/images/articles/periphony-console.webp" alt="A darkened mixing console, its channel buttons lit in amber and cyan, faders running out of focus." width="1280" height="853" loading="lazy">
@@ -82,6 +114,7 @@ SPDX-License-Identifier: BSD-3-Clause
       </div>
     </article>
     <article class="cy-project cy-tile" data-slug="pagepress">
+      <span class="cy-project__num" aria-hidden="true">03</span>
       <div class="cy-project__media">
         <a href="/projects/pagepress/" tabindex="-1" aria-hidden="true">
           <img class="cy-project__img" src="/assets/images/articles/pagepress-portal.webp" alt="The PagePress website: the headline The whole page. Not the visible part." width="1280" height="720" loading="lazy">
@@ -96,6 +129,7 @@ SPDX-License-Identifier: BSD-3-Clause
     </article>
 
     <article class="cy-project cy-tile" data-slug="firepype">
+      <span class="cy-project__num" aria-hidden="true">04</span>
       <div class="cy-project__media">
         <a href="/projects/firepype/" tabindex="-1" aria-hidden="true">
           <img class="cy-project__img" src="/assets/images/articles/firepype-hero.webp" alt="A drive sliding out of a server rack in a data center, mid-swap." width="1600" height="900" loading="lazy">
@@ -109,6 +143,7 @@ SPDX-License-Identifier: BSD-3-Clause
       </div>
     </article>
     <article class="cy-project cy-tile" data-slug="spirefall-ghost-code">
+      <span class="cy-project__num" aria-hidden="true">05</span>
       <div class="cy-project__media">
         <a href="/projects/spirefall-ghost-code/" tabindex="-1" aria-hidden="true">
           <img class="cy-project__img" src="/assets/images/articles/spirefall-hero.webp" alt="A neon-lit cyberpunk alleyway crowded with glowing signage." width="1600" height="900" loading="lazy">
@@ -122,6 +157,7 @@ SPDX-License-Identifier: BSD-3-Clause
       </div>
     </article>
     <article class="cy-project cy-tile" data-slug="active-green-screen">
+      <span class="cy-project__num" aria-hidden="true">06</span>
       <div class="cy-project__media">
         <a href="/projects/active-green-screen/" tabindex="-1" aria-hidden="true">
           <img class="cy-project__img" src="/assets/images/articles/active-greenscreen-hero.webp" alt="A television studio with two broadcast cameras aimed at an empty green screen set." width="1600" height="900" loading="lazy">
@@ -135,6 +171,7 @@ SPDX-License-Identifier: BSD-3-Clause
       </div>
     </article>
     <article class="cy-project cy-tile" data-slug="motion-capture">
+      <span class="cy-project__num" aria-hidden="true">07</span>
       <div class="cy-project__media">
         <a href="/projects/motion-capture/" tabindex="-1" aria-hidden="true">
           <img class="cy-project__img" src="/assets/images/articles/motion-capture-hero.webp" alt="A figure in a motion-capture suit marked with tracking dots, walking against a green screen." width="1600" height="900" loading="lazy">
@@ -175,5 +212,14 @@ SPDX-License-Identifier: BSD-3-Clause
   <script src="/assets/js/render.js"></script>
   <script src="/assets/js/video_glitch.js"></script>
   <script src="/assets/js/responsive.js"></script>
+  <script src="/assets/js/world.js"></script>
+
+<div class="cy-rail cy-rail--bottom">
+  <nav aria-label="Primary">
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+  </nav>
+  <span class="cy-ticker" aria-hidden="true"></span>
+</div>
 </body>
 </html>

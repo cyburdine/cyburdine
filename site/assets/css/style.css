@@ -1764,3 +1764,529 @@ html.cy-clean .cy-retro__readout {
   color: var(--cy-link);
   margin-top: var(--cy-sp-1);
 }
+
+/* ════════════════════════════════════════════════════════════════
+   THE BOOTH — 2026-08-21
+   See docs/superpowers/specs/2026-08-21-the-booth-redesign-design.md
+
+   The fiction: this site is a public terminal standing at dusk in an
+   empty landscape. The boot cinematic is you walking up and powering
+   it on; when it ends the camera settles and you are AT THE GLASS,
+   operating it. The world stays visible behind the interface.
+
+   Everything below belongs to one of three layers, and the layer is
+   the REASON the effect exists:
+
+     z2  INTERFACE   crisp HUD — rails, brackets, records, type
+     z1  GLASS       the booth window — sheen, vignette, faint scan
+     z0  WORLD       sky, horizon, silhouettes, dust, parallax
+
+   THE RULE: the CRT signature lives on the GLASS, never on the
+   INTERFACE. Text stays sharp; atmosphere sits behind it. A blur,
+   scanline or glow applied to interface content is a bug, not a
+   flourish — that is exactly what made the old clean mode delete the
+   entire CRT world rather than live with it.
+   ════════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'IBM Plex Sans Condensed';
+  src: url('/assets/fonts/IBMPlexSansCondensed-400.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Sans Condensed';
+  src: url('/assets/fonts/IBMPlexSansCondensed-600.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+
+:root {
+  /* world — a cold sky over warm dust. Stalenhag's whole trick is that
+     the horizon is WARMER than the zenith; drop that and it reads as
+     generic dark-mode blue. */
+  --w-sky-high: #0c1119;
+  --w-sky-mid:  #1b2732;
+  --w-sky-low:  #34424c;
+  --w-haze:     #6b6152;
+  --w-far:      #161d26;
+  --w-near:     #0d131a;
+
+  /* interface */
+  --i-ink:    #e8f1f5;
+  --i-dim:    #7d95a3;
+  --i-line:   #22323f;
+  --i-signal: #4fd6d6;
+  --i-alarm:  #ffb020;
+  --i-live:   #15ff00;   /* phosphor — LIVE elements ONLY, never body text */
+
+  --cy-font-cond: 'IBM Plex Sans Condensed', 'IBM Plex Sans', system-ui, sans-serif;
+
+  --rail-h: 2.25rem;
+}
+
+/* ── z0 WORLD ─────────────────────────────────────────────────────
+   Fixed behind everything. Built entirely from gradients and
+   clip-path — no data: URIs, because the CSP ships img-src 'self'
+   and a data: background would be silently blocked. ── */
+.cy-world, .cy-glass { display: none; }
+
+html.cy-clean .cy-world {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: linear-gradient(
+    to bottom,
+    var(--w-sky-high) 0%,
+    var(--w-sky-mid)  38%,
+    var(--w-sky-low)  58%,
+    var(--w-haze)     66%,
+    var(--w-near)     78%,
+    var(--w-near)     100%);
+}
+
+/* Warm bloom sitting on the horizon line — the light source. */
+html.cy-clean .cy-world__glow {
+  position: absolute;
+  left: 50%; top: 66%;
+  width: 140vw; height: 60vh;
+  transform: translate3d(calc(-50% + var(--wx, 0px) * 0.25), -50%, 0);
+  background: radial-gradient(ellipse 50% 50% at 50% 50%,
+    rgba(255, 196, 120, 0.30) 0%,
+    rgba(190, 140, 90, 0.14) 35%,
+    rgba(0, 0, 0, 0) 70%);
+  filter: blur(28px);
+}
+
+/* Far silhouette band — a Mead-scale megastructure on the horizon.
+   clip-path polygon so it stays crisp at any width. */
+html.cy-clean .cy-world__far {
+  position: absolute;
+  left: -10%; right: -10%;
+  top: 52%; height: 16%;
+  transform: translate3d(calc(var(--wx, 0px) * 0.4), 0, 0);
+  background: var(--w-far);
+  opacity: 0.85;
+  clip-path: polygon(
+    0% 100%, 0% 78%, 4% 78%, 4% 62%, 7% 62%, 7% 80%, 12% 80%,
+    12% 48%, 14% 48%, 14% 30%, 16% 30%, 16% 48%, 19% 48%, 19% 82%,
+    26% 82%, 26% 66%, 31% 66%, 31% 74%, 38% 74%, 38% 40%, 40% 40%,
+    40% 22%, 42% 22%, 42% 40%, 46% 40%, 46% 78%, 54% 78%, 54% 58%,
+    60% 58%, 60% 84%, 68% 84%, 68% 52%, 70% 52%, 70% 34%, 72% 34%,
+    72% 52%, 76% 52%, 76% 80%, 84% 80%, 84% 70%, 90% 70%, 90% 86%,
+    100% 86%, 100% 100%);
+}
+
+/* Mid ground — pylons marching to the horizon. Stalenhag's pylons are
+   the whole reason the landscape reads as inhabited-but-empty. */
+html.cy-clean .cy-world__mid {
+  position: absolute;
+  left: -5%; right: -5%;
+  top: 60%; height: 22%;
+  transform: translate3d(calc(var(--wx, 0px) * 0.9), 0, 0);
+  opacity: 0.9;
+  background:
+    /* pylon uprights, thinning with distance */
+    linear-gradient(var(--w-near), var(--w-near)) 8%  100%/3px 62% no-repeat,
+    linear-gradient(var(--w-near), var(--w-near)) 8%  46%/22px 3px no-repeat,
+    linear-gradient(var(--w-near), var(--w-near)) 31% 100%/2px 46% no-repeat,
+    linear-gradient(var(--w-near), var(--w-near)) 31% 60%/16px 2px no-repeat,
+    linear-gradient(var(--w-near), var(--w-near)) 53% 100%/2px 34% no-repeat,
+    linear-gradient(var(--w-near), var(--w-near)) 53% 70%/12px 2px no-repeat,
+    linear-gradient(var(--w-near), var(--w-near)) 74% 100%/1px 26% no-repeat,
+    linear-gradient(var(--w-near), var(--w-near)) 74% 78%/9px 1px no-repeat,
+    linear-gradient(var(--w-near), var(--w-near)) 92% 100%/1px 20% no-repeat;
+}
+
+/* Ground haze — the layer that sells depth. Sits OVER the pylons and
+   fades their bases out, the way real dust does. */
+html.cy-clean .cy-world__haze {
+  position: absolute;
+  inset: 52% 0 0 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(107, 97, 82, 0.00) 0%,
+    rgba(107, 97, 82, 0.22) 26%,
+    rgba(13, 19, 26, 0.55) 58%,
+    rgba(13, 19, 26, 0.92) 100%);
+}
+
+html.cy-clean .cy-world__motes {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0.5;
+}
+
+/* ── z1 GLASS ─────────────────────────────────────────────────────
+   The booth window. This is where the CRT survives — as a property of
+   the glass you are looking THROUGH, not of the text. ── */
+html.cy-clean .cy-glass {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* vignette + a diagonal sheen across the pane */
+  background:
+    linear-gradient(115deg,
+      rgba(255, 255, 255, 0.045) 0%,
+      rgba(255, 255, 255, 0.012) 18%,
+      rgba(255, 255, 255, 0) 38%),
+    radial-gradient(ellipse 78% 68% at 50% 44%,
+      rgba(0, 0, 0, 0) 55%,
+      rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* Scanlines, but whisper-quiet and on the GLASS. 0.03 alpha: present
+   when you look for it, invisible while reading. */
+html.cy-clean .cy-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.05) 0px,
+    rgba(0, 0, 0, 0.05) 1px,
+    rgba(0, 0, 0, 0) 1px,
+    rgba(0, 0, 0, 0) 3px);
+  opacity: 0.55;
+}
+
+/* ── z2 INTERFACE ────────────────────────────────────────────────
+   The content column rides above both. ── */
+html.cy-clean .terminal-wrapper {
+  position: relative;
+  z-index: 2;
+  background: transparent;   /* was --cy-bg; the world shows through now */
+}
+html.cy-clean body { background: var(--w-sky-high); }
+
+/* Rails claim the top and bottom edges on every page. */
+html.cy-clean .terminal-screen {
+  padding-top: calc(var(--rail-h) + 2.5rem);
+  padding-bottom: calc(var(--rail-h) + 3rem);
+}
+
+/* ── Rails ──────────────────────────────────────────────────────── */
+.cy-rail { display: none; }
+html.cy-clean .cy-rail {
+  display: flex;
+  position: fixed;
+  left: 0; right: 0;
+  z-index: 5;
+  align-items: center;
+  gap: 1rem;
+  height: var(--rail-h);
+  padding: 0 clamp(0.75rem, 2vw, 1.5rem);
+  font-family: var(--cy-font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--i-dim);
+  background: rgba(8, 12, 18, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+html.cy-clean .cy-rail--top    { top: 0;    border-bottom: 1px solid var(--i-line); }
+html.cy-clean .cy-rail--bottom { bottom: 0; border-top:    1px solid var(--i-line); }
+
+html.cy-clean .cy-rail__id { color: var(--i-ink); letter-spacing: 0.22em; }
+html.cy-clean .cy-rail__spacer { flex: 1 1 auto; }
+html.cy-clean .cy-rail__cell { white-space: nowrap; }
+@media (max-width: 46rem) {
+  html.cy-clean .cy-rail__cell--opt { display: none; }
+}
+
+/* The LIVE dot: the machine's own voice, in phosphor. This and the
+   clock and the ticker are the ONLY places green is allowed. */
+html.cy-clean .cy-live {
+  color: var(--i-live);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+html.cy-clean .cy-live::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--i-live);
+  box-shadow: 0 0 6px var(--i-live);
+  animation: cy-pulse 2.4s ease-in-out infinite;
+}
+@keyframes cy-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+html.cy-clean .cy-clock { color: var(--i-live); font-variant-numeric: tabular-nums; }
+
+/* Ticker — the boot log doesn't die, it moves in here and keeps
+   running for the life of the page. This is the strongest single tie
+   between the cinematic and the site. */
+html.cy-clean .cy-ticker {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--i-live);
+  opacity: 0.75;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+          mask-image: linear-gradient(to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+}
+html.cy-clean .cy-ticker__line { display: inline-block; padding-right: 3rem; }
+
+html.cy-clean .cy-rail nav,
+html.cy-clean .cy-rail a {
+  display: inline-flex;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  gap: 1.25rem;
+  color: var(--i-dim);
+  text-decoration: none;
+}
+html.cy-clean .cy-rail a:hover { color: var(--i-signal); text-decoration: none; }
+
+/* The in-page header nav is now redundant with the bottom rail. */
+html.cy-clean header { display: none; }
+
+/* ── IDENT ──────────────────────────────────────────────────────── */
+html.cy-clean .cy-ident {
+  position: relative;
+  padding: clamp(1.5rem, 4vw, 3rem) 0 clamp(2rem, 5vw, 4rem);
+  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+  border-bottom: 1px solid var(--i-line);
+}
+html.cy-clean .cy-ident__roles {
+  font-family: var(--cy-font-cond);
+  font-weight: 600;
+  font-size: clamp(2.6rem, 9vw, 6.5rem);
+  line-height: 0.94;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--i-ink);
+  margin: 0 0 clamp(1rem, 2.5vw, 1.75rem);
+  text-wrap: balance;
+}
+html.cy-clean .cy-ident__roles span { display: block; }
+/* Each role steps further into the haze — a depth cue borrowed from
+   the world layer, applied to type. */
+html.cy-clean .cy-ident__roles span:nth-child(2) { color: #b9ccd6; }
+html.cy-clean .cy-ident__roles span:nth-child(3) { color: #8ba4b1; }
+
+html.cy-clean .cy-ident__tagline {
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  line-height: 1.55;
+  color: var(--i-dim);
+  max-width: 46ch;
+  margin: 0;
+}
+html.cy-clean .cy-ident__tagline strong { color: var(--i-ink); font-weight: 500; }
+
+/* Crosshair marks at the panel corners — surveillance framing. */
+html.cy-clean .cy-ident::before,
+html.cy-clean .cy-ident::after {
+  content: '';
+  position: absolute;
+  width: 10px; height: 10px;
+  border: 1px solid var(--i-signal);
+  opacity: 0.55;
+}
+html.cy-clean .cy-ident::before { top: 0; left: -0.75rem; border-right: 0; border-bottom: 0; }
+html.cy-clean .cy-ident::after  { bottom: -1px; right: 0;  border-left: 0;  border-top: 0; }
+
+/* ── BUILD LOG ──────────────────────────────────────────────────── */
+html.cy-clean .cy-gallery-head__label {
+  font-family: var(--cy-font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+html.cy-clean .cy-gallery-head__label::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--i-line);
+}
+
+/* Records. The recognition box is drawn with eight corner gradients on
+   ::after so it needs no extra markup and can't be clipped by overflow. */
+html.cy-clean .cy-project {
+  position: relative;
+  background: rgba(12, 18, 25, 0.55);
+  border: 1px solid var(--i-line);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 160ms ease, background-color 160ms ease, transform 220ms cubic-bezier(.2,.7,.3,1);
+}
+html.cy-clean .cy-project:hover,
+html.cy-clean .cy-project:focus-within {
+  border-color: transparent;
+  background: rgba(16, 26, 34, 0.72);
+}
+html.cy-clean .cy-project::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(1.012);
+  transition: opacity 140ms ease, transform 140ms cubic-bezier(.2,.7,.3,1);
+  --c: var(--i-signal);
+  --b: 1px;      /* bracket stroke */
+  --l: 14px;     /* bracket leg */
+  background:
+    linear-gradient(var(--c), var(--c)) 0 0    / var(--l) var(--b) no-repeat,
+    linear-gradient(var(--c), var(--c)) 0 0    / var(--b) var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) 100% 0 / var(--l) var(--b) no-repeat,
+    linear-gradient(var(--c), var(--c)) 100% 0 / var(--b) var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) 0 100% / var(--l) var(--b) no-repeat,
+    linear-gradient(var(--c), var(--c)) 0 100% / var(--b) var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) 100% 100% / var(--l) var(--b) no-repeat,
+    linear-gradient(var(--c), var(--c)) 100% 100% / var(--b) var(--l) no-repeat;
+}
+html.cy-clean .cy-project:hover::after,
+html.cy-clean .cy-project:focus-within::after { opacity: 1; transform: scale(1); }
+
+/* Oversized record number, cropped by the card edge. */
+html.cy-clean .cy-project__num {
+  position: absolute;
+  top: -0.14em; right: 0.4rem;
+  font-family: var(--cy-font-cond);
+  font-weight: 600;
+  font-size: clamp(3.5rem, 7vw, 6rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--i-line);
+  pointer-events: none;
+  user-select: none;
+  transition: -webkit-text-stroke-color 200ms ease;
+}
+html.cy-clean .cy-project:hover .cy-project__num { -webkit-text-stroke-color: rgba(79, 214, 214, 0.35); }
+
+/* Thumbnails resolve from dithered-and-cold to sharp on hover. */
+html.cy-clean .cy-project__media { position: relative; overflow: hidden; }
+html.cy-clean .cy-project__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom,
+      rgba(0,0,0,0.30) 0px, rgba(0,0,0,0.30) 1px,
+      rgba(0,0,0,0) 1px, rgba(0,0,0,0) 2px),
+    linear-gradient(to top, rgba(12,17,25,0.55), rgba(12,17,25,0.10));
+  transition: opacity 260ms ease;
+}
+html.cy-clean .cy-project:hover .cy-project__media::after { opacity: 0.25; }
+html.cy-clean .cy-project__img {
+  filter: grayscale(0.55) contrast(1.12) brightness(0.82);
+  transition: filter 320ms ease, transform 420ms cubic-bezier(.2,.7,.3,1);
+}
+html.cy-clean .cy-project:hover .cy-project__img { filter: none; }
+
+html.cy-clean .cy-project__title {
+  font-family: var(--cy-font-cond);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+html.cy-clean .cy-project__meta {
+  font-family: var(--cy-font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  color: var(--i-dim);
+}
+
+/* Scroll-driven reveal. The finished state is the DEFAULT — the
+   animation is layered on top only where supported, so a browser
+   without scroll timelines simply shows the records. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    html.cy-clean .cy-project {
+      animation: cy-rec-in linear both;
+      animation-timeline: view();
+      animation-range: entry 2% cover 22%;
+    }
+    @keyframes cy-rec-in {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: none; }
+    }
+  }
+}
+
+/* ── Articles: the world calms down so long-form stays readable ──
+   Same booth, but the pane is dimmed and the dust stops. Over-designing
+   a 12,000-character article is where this aesthetic dies. */
+html.cy-clean:not([data-cy-layout="wide"]) .cy-world { opacity: 0.5; }
+html.cy-clean:not([data-cy-layout="wide"]) .cy-world__motes { display: none; }
+html.cy-clean:not([data-cy-layout="wide"]) .cy-glass::after { opacity: 0.3; }
+html.cy-clean:not([data-cy-layout="wide"]) main {
+  background: rgba(10, 15, 21, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+  border: 1px solid var(--i-line);
+}
+
+/* ── Home runs full-bleed; no centred measure. ── */
+html.cy-clean[data-cy-layout="wide"] .terminal-screen {
+  max-width: 82rem;
+  padding-left: clamp(1rem, 4vw, 3rem);
+  padding-right: clamp(1rem, 4vw, 3rem);
+}
+
+/* ── Reduced motion: no parallax, no dust, no pulse. The world stays,
+   because a still landscape is not a motion problem. ── */
+@media (prefers-reduced-motion: reduce) {
+  html.cy-clean .cy-world__motes { display: none; }
+  html.cy-clean .cy-live::before { animation: none; }
+  html.cy-clean .cy-world__glow,
+  html.cy-clean .cy-world__far,
+  html.cy-clean .cy-world__mid { transform: none !important; }
+  html.cy-clean .cy-project,
+  html.cy-clean .cy-project__img,
+  html.cy-clean .cy-project::after { transition: none; }
+}
+
+/* ── Corrections found in review ─────────────────────────────────── */
+
+/* Project names keep their authored casing everywhere. The tile variant used
+   to uppercase them, which turned "RE:play" into "RE:PLAY" and destroyed the
+   wordmark; the feature variant already opted out for that reason. The
+   condensed face carries the impact without shouting. */
+html.cy-clean .cy-project__title { text-transform: none; letter-spacing: -0.01em; }
+
+/* Titles are ink, not cyan. Cyan is the signal colour — spending it on every
+   title at rest leaves nothing to say "you are pointing at this", which is
+   the job the recognition box and the hover state now do. */
+html.cy-clean .cy-project__title { color: var(--i-ink); }
+html.cy-clean .cy-project:hover .cy-project__title,
+html.cy-clean .cy-project__title:focus-visible { color: var(--i-signal); }
+
+/* The ident sits over the brightest part of the horizon, where dim body copy
+   loses contrast. A soft scrim anchored to the text side fixes it without
+   drawing a visible panel edge. */
+html.cy-clean .cy-ident {
+  background: radial-gradient(125% 100% at 0% 34%,
+    rgba(8, 12, 18, 0.86) 0%,
+    rgba(8, 12, 18, 0.58) 44%,
+    rgba(8, 12, 18, 0) 78%);
+}
+
+/* The scrim has to bleed past the content column or its own left edge reads as
+   a panel border sitting in the middle of the landscape. Pull it out to the
+   viewport edges and re-add the padding inside. */
+html.cy-clean .cy-ident {
+  margin-inline: calc(-1 * clamp(1rem, 4vw, 3rem));
+  padding-inline: clamp(1rem, 4vw, 3rem);
+}
+
+/* Run the scrim up under the top rail too, so its upper edge doesn't read as
+   a seam across the sky. */
+html.cy-clean[data-cy-layout="wide"] .cy-ident {
+  margin-top: calc(-1 * (var(--rail-h) + 2.5rem));
+  padding-top: calc(var(--rail-h) + 2.5rem + clamp(1.5rem, 4vw, 3rem));
+}

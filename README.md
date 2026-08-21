@@ -95,8 +95,9 @@ Then `./deploy.sh`.
 
 ## Editing shared page furniture
 
-There are no layouts or includes — the `<head>`, nav, footer and script tags are
-duplicated across all 10 pages. **Any change to those must be made in every file
+There are no layouts or includes — the `<head>`, nav, footer, script tags and
+THE BOOTH's chrome (world/glass layers, top and bottom rails) are duplicated
+across all 10 pages. **Any change to those must be made in every file
 in `site/`.** The `:: open channel` contact block is the exception: it lives on
 `about.html` and `404.html` only — not on the home gallery and not on the
 project posts. See the duplication rule in `CLAUDE.md`.

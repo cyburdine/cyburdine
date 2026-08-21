@@ -11,7 +11,9 @@ cyburdine.com is a personal portfolio site for Justin Burdine, built with a cybe
 **Plain static HTML. There is no build step — no Ruby, no Jekyll, no template language, no bundler.** Opening `site/index.html` in a browser shows the page.
 
 - Vanilla CSS + JavaScript
-- Self-hosted fonts: VT323 (primary monospace), IBM Plex Mono, Noto Sans JP subset (render effect only)
+- Self-hosted fonts: IBM Plex Sans (body), IBM Plex Sans Condensed (display),
+  IBM Plex Mono (labels/telemetry), VT323 (CRT boot stage only), Noto Sans JP
+  subset (render effect only)
 - Served by nginx on `cyb-proto4`; deployed with `./deploy.sh`
 - BSD-3-Clause license
 
@@ -56,9 +58,22 @@ There are no layouts and no includes. **The `<head>`, the nav header, the footer
 and the script tags are copied literally into all 10 HTML files.** This is the
 deliberate trade for having no build step.
 
-That means: **a change to the nav, the footer, the CSP meta tag or the script
-tags must be applied to every page in `site/`.** Changing one page only will
-silently desynchronise the site.
+That means: **a change to the nav, the footer, the CSP meta tag, the script
+tags, or THE BOOTH's chrome (the `.cy-world` / `.cy-glass` layers and the two
+`.cy-rail` bars) must be applied to every page in `site/`.** Changing one page
+only will silently desynchronise the site.
+
+That chrome was applied mechanically rather than by hand, and re-running the
+same shape of script is the safe way to add the next piece:
+
+```bash
+# every page carries all four pieces, or the check fails
+for f in site/index.html site/about.html site/404.html site/projects/*/index.html; do
+  for t in cy-world__glow cy-rail--bottom IBMPlexSansCondensed-600 js/world.js; do
+    grep -q "$t" "$f" || echo "MISSING $t in $f"
+  done
+done
+```
 
 The `:: open channel` contact block is the exception — it is **not** universal.
 It lives on `about.html` and `404.html` only. The home gallery ends on the last
@@ -87,6 +102,14 @@ can set `window.__CY_BOOT_PENDING__` to defer the others):
 - `assets/js/render.js` — The katakana render sequence that supersedes the old `decode.js`. Types each page in as Japanese glyphs, then resolves them to the real text, driving the site into "clean mode" (`html.cy-clean`). Sets `html.cy-rendering` while in progress and removes it on completion. Honours `prefers-reduced-motion: reduce` with an instant reveal. Exposes `window.CyRender.play()`. **A page can opt out with `<html data-cy-render="off">`**, which takes the same instant-reveal path — the effect types every visible character, so on a 12,000-character article it is a wait rather than a flourish. All seven project detail pages are opted out. This skips the *effect only*: `cy-clean` is added by `boot.js`, not here, so an opted-out page still lands in the real site normally.
 - `assets/js/video_glitch.js` — Canvas-based random horizontal glitch lines at ~30fps. Deferred when a boot is pending. Exposes `CyGlitch.start()`.
 - `assets/js/project_rotate.js` — **Not global.** Loaded inline by `index.html` only, immediately after the card markup so the DOM is settled before `render.js` walks `<main>`. See the contract section below.
+- `assets/js/world.js` — THE BOOTH's living layer, on every page: the UTC clock,
+  the status ticker, world parallax (written as CSS variables so the compositing
+  stays in CSS) and the dust-mote canvas. It is a pure enhancement — the page is
+  complete and readable if it never loads. It starts itself by watching for
+  `html.cy-clean` with a MutationObserver rather than being called from `boot.js`,
+  because boot.js reaches clean mode by four different routes (cinematic, reduced
+  motion, plain load, "D" replay) and watching the class covers all four while
+  keeping the two files uncoupled.
 - `assets/js/responsive.js` — Computes the `transform: scale()` that contains the monitor in the viewport and publishes it as `--cy-scale`. Exposes `CyResponsive.finalTransform()/wideTransform()/lock()/unlock()`, which `boot.js` drives during the zoom.
 
 **Verifying animations in a browser-automation tab does not work reliably** —
@@ -120,13 +143,47 @@ different each load. The contract:
 
 ## CSS Design
 
-`assets/css/style.css` — single stylesheet. Key decisions:
-- Terminal container is fixed at 3000x1688px (matches the CRT frame image)
-- `.terminal-screen` is absolutely positioned within the frame; it is wider than the visible (transparent) CRT glass, so boot overlays use the `--glass-*` inset variables to line up with the actual screen
-- Screen background is the phosphor-green `--crt-bg` gradient
-- Scanlines via `::before` pseudo-elements with repeating gradients
-- Neon glow via `text-shadow` on `.glow` and `.console` classes
-- Palette: `#15ff00` (green text), `#33ffcc` (cyan links), `#ff33cc` (pink accents), `#008080` (teal nav bar)
+`assets/css/style.css` — single stylesheet, and it holds **two different
+designs** stacked in one file. Know which one you are editing:
+
+**The CRT stage** (no `html.cy-clean`) — the boot cinematic only.
+- Terminal container fixed at 3000x1688px (matches the CRT frame image)
+- `.terminal-screen` is absolutely positioned within the frame; it is wider than
+  the visible (transparent) CRT glass, so boot overlays use the `--glass-*`
+  inset variables to line up with the actual screen
+- Phosphor green `#15ff00`, VT323, scanlines via `::before` repeating gradients,
+  neon glow via `text-shadow` on `.glow` / `.console`
+
+**THE BOOTH** (`html.cy-clean`) — the real site, from 2026-08-21. Spec in
+`docs/superpowers/specs/2026-08-21-the-booth-redesign-design.md`.
+
+The fiction: the site is a public terminal standing at dusk in a landscape. The
+boot is you powering it on; when it ends you are AT THE GLASS, operating it.
+Everything belongs to one of three layers, and the layer is the *reason* the
+effect exists:
+
+```
+z2  INTERFACE   crisp HUD — rails, brackets, records, type
+z1  GLASS       the booth window — sheen, vignette, faint scanlines
+z0  WORLD       sky, horizon, silhouettes, dust, parallax
+```
+
+**THE RULE: the CRT signature lives on the GLASS, never on the INTERFACE.** Text
+stays sharp; atmosphere sits behind it. A blur, scanline or glow applied to
+interface content is a bug. This rule is why the redesign could keep the CRT
+world at all — the previous clean mode had to delete the frame, scanlines, glow
+and glitch outright because they were landing on the content.
+
+- Palette: cold sky over **warm** dust (`--w-*`). The horizon being warmer than
+  the zenith is the whole Stålenhag effect; drop it and it reads as generic
+  dark mode.
+- `--i-live` (`#15ff00`) is the machine's voice and is allowed **only** on live
+  elements — the LIVE dot, the clock, the ticker, the cursor. Not body text.
+- The world is built from gradients and `clip-path`, never `data:` URIs — the
+  CSP ships `img-src 'self'`, which silently blocks a `data:` background.
+- Scroll reveals are authored finished-state-first, with the animation added
+  under `@supports (animation-timeline: view())`, so unsupported browsers just
+  see the records.
 
 ## Content Style
 

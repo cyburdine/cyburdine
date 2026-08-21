@@ -10,9 +10,32 @@ SPDX-License-Identifier: BSD-3-Clause
   <title>CYBURDINE.com - [about]</title>
   <link rel="preload" href="/assets/fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/VT323.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/IBMPlexSansCondensed-600.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
+<!--
+  THE BOOTH — z0 world / z1 glass. Purely decorative, so aria-hidden and
+  pointer-events:none throughout; CSS shows them in clean mode only, which
+  keeps the boot cinematic's own CRT chrome untouched.
+-->
+<div class="cy-world" aria-hidden="true">
+  <div class="cy-world__glow"></div>
+  <div class="cy-world__far"></div>
+  <div class="cy-world__mid"></div>
+  <div class="cy-world__haze"></div>
+  <canvas class="cy-world__motes"></canvas>
+</div>
+<div class="cy-glass" aria-hidden="true"></div>
+
+<div class="cy-rail cy-rail--top">
+  <span class="cy-rail__id">CYB//NODE</span>
+  <span class="cy-rail__cell cy-live">LIVE</span>
+  <span class="cy-rail__spacer"></span>
+  <span class="cy-rail__cell cy-rail__cell--opt">34.05N 118.24W</span>
+  <span class="cy-rail__cell"><span class="cy-clock">--:--:--Z</span></span>
+</div>
+
   <div class="terminal-wrapper">
   <div class="terminal-container">
     <div class="terminal-screen">
@@ -106,5 +129,14 @@ SPDX-License-Identifier: BSD-3-Clause
   <script src="/assets/js/render.js"></script>
   <script src="/assets/js/video_glitch.js"></script>
   <script src="/assets/js/responsive.js"></script>
+  <script src="/assets/js/world.js"></script>
+
+<div class="cy-rail cy-rail--bottom">
+  <nav aria-label="Primary">
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+  </nav>
+  <span class="cy-ticker" aria-hidden="true"></span>
+</div>
 </body>
 </html>
