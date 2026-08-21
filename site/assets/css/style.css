@@ -1824,9 +1824,17 @@ html.cy-clean .cy-retro__readout {
 }
 
 /* ── z0 WORLD ─────────────────────────────────────────────────────
-   Fixed behind everything. Built entirely from gradients and
-   clip-path — no data: URIs, because the CSP ships img-src 'self'
-   and a data: background would be silently blocked. ── */
+   A photograph, not a drawing. The first pass built the landscape out of
+   gradients and clip-path; it was cheap and it looked it. A real dusk
+   plate carries the atmospheric perspective — haze stacking up between
+   ridge lines — that is the entire reason this view reads as deep, and
+   that is the one thing hand-rolled gradients are worst at faking.
+
+   Photo: Wadi Rum at twilight, Pexels #18717314 (Pexels licence — free to
+   use and modify, no attribution required). Re-encoded to webp at two
+   widths; it sits behind a grade, so it takes heavy compression well.
+   Swapping it is a one-file change: drop a new plate in
+   assets/images/world/ and repoint the two url()s below.  ── */
 .cy-world, .cy-glass { display: none; }
 
 html.cy-clean .cy-world {
@@ -1836,87 +1844,49 @@ html.cy-clean .cy-world {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background: linear-gradient(
-    to bottom,
-    var(--w-sky-high) 0%,
-    var(--w-sky-mid)  38%,
-    var(--w-sky-low)  58%,
-    var(--w-haze)     66%,
-    var(--w-near)     78%,
-    var(--w-near)     100%);
+  background: #0a0e14;
 }
 
-/* Warm bloom sitting on the horizon line — the light source. */
-html.cy-clean .cy-world__glow {
+html.cy-clean .cy-world__photo {
   position: absolute;
-  left: 50%; top: 66%;
-  width: 140vw; height: 60vh;
-  transform: translate3d(calc(-50% + var(--wx, 0px) * 0.25), -50%, 0);
-  background: radial-gradient(ellipse 50% 50% at 50% 50%,
-    rgba(255, 196, 120, 0.30) 0%,
-    rgba(190, 140, 90, 0.14) 35%,
-    rgba(0, 0, 0, 0) 70%);
-  filter: blur(28px);
+  inset: 0;
+  background-image: url('/assets/images/world/world-dusk-2400.webp');
+  background-size: cover;
+  /* Parallax pans WITHIN the cover crop rather than moving the element, so
+     no matter how far it drifts an edge can never come into view. */
+  background-position: calc(50% + var(--wx, 0px) * 0.6) calc(52% + var(--wy, 0px) * 0.5);
+}
+@media (max-width: 820px) {
+  html.cy-clean .cy-world__photo {
+    background-image: url('/assets/images/world/world-dusk-1200.webp');
+  }
 }
 
-/* Far silhouette band — a Mead-scale megastructure on the horizon.
-   clip-path polygon so it stays crisp at any width. */
-html.cy-clean .cy-world__far {
+/* The grade does two jobs: it pulls the plate toward the site's cold-blue
+   palette so the photo and the interface look like one image, and it buys
+   back the contrast the interface needs. Without it, ink-on-sky fails
+   badly across the bright horizon band. */
+html.cy-clean .cy-world__grade {
   position: absolute;
-  left: -10%; right: -10%;
-  top: 52%; height: 16%;
-  transform: translate3d(calc(var(--wx, 0px) * 0.4), 0, 0);
-  background: var(--w-far);
-  opacity: 0.85;
-  clip-path: polygon(
-    0% 100%, 0% 78%, 4% 78%, 4% 62%, 7% 62%, 7% 80%, 12% 80%,
-    12% 48%, 14% 48%, 14% 30%, 16% 30%, 16% 48%, 19% 48%, 19% 82%,
-    26% 82%, 26% 66%, 31% 66%, 31% 74%, 38% 74%, 38% 40%, 40% 40%,
-    40% 22%, 42% 22%, 42% 40%, 46% 40%, 46% 78%, 54% 78%, 54% 58%,
-    60% 58%, 60% 84%, 68% 84%, 68% 52%, 70% 52%, 70% 34%, 72% 34%,
-    72% 52%, 76% 52%, 76% 80%, 84% 80%, 84% 70%, 90% 70%, 90% 86%,
-    100% 86%, 100% 100%);
-}
-
-/* Mid ground — pylons marching to the horizon. Stalenhag's pylons are
-   the whole reason the landscape reads as inhabited-but-empty. */
-html.cy-clean .cy-world__mid {
-  position: absolute;
-  left: -5%; right: -5%;
-  top: 60%; height: 22%;
-  transform: translate3d(calc(var(--wx, 0px) * 0.9), 0, 0);
-  opacity: 0.9;
+  inset: 0;
   background:
-    /* pylon uprights, thinning with distance */
-    linear-gradient(var(--w-near), var(--w-near)) 8%  100%/3px 62% no-repeat,
-    linear-gradient(var(--w-near), var(--w-near)) 8%  46%/22px 3px no-repeat,
-    linear-gradient(var(--w-near), var(--w-near)) 31% 100%/2px 46% no-repeat,
-    linear-gradient(var(--w-near), var(--w-near)) 31% 60%/16px 2px no-repeat,
-    linear-gradient(var(--w-near), var(--w-near)) 53% 100%/2px 34% no-repeat,
-    linear-gradient(var(--w-near), var(--w-near)) 53% 70%/12px 2px no-repeat,
-    linear-gradient(var(--w-near), var(--w-near)) 74% 100%/1px 26% no-repeat,
-    linear-gradient(var(--w-near), var(--w-near)) 74% 78%/9px 1px no-repeat,
-    linear-gradient(var(--w-near), var(--w-near)) 92% 100%/1px 20% no-repeat;
-}
-
-/* Ground haze — the layer that sells depth. Sits OVER the pylons and
-   fades their bases out, the way real dust does. */
-html.cy-clean .cy-world__haze {
-  position: absolute;
-  inset: 52% 0 0 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(107, 97, 82, 0.00) 0%,
-    rgba(107, 97, 82, 0.22) 26%,
-    rgba(13, 19, 26, 0.55) 58%,
-    rgba(13, 19, 26, 0.92) 100%);
+    linear-gradient(to bottom,
+      rgba(8, 12, 20, 0.58) 0%,
+      rgba(10, 16, 26, 0.30) 24%,
+      rgba(12, 18, 28, 0.10) 46%,
+      rgba(9, 13, 21, 0.62) 76%,
+      rgba(6, 9, 15, 0.90) 100%),
+    linear-gradient(to bottom,
+      rgba(30, 66, 100, 0.20) 0%,
+      rgba(20, 40, 64, 0.06) 45%,
+      rgba(0, 0, 0, 0) 70%);
 }
 
 html.cy-clean .cy-world__motes {
   position: absolute;
   inset: 0;
   width: 100%; height: 100%;
-  opacity: 0.5;
+  opacity: 0.42;
 }
 
 /* ── z1 GLASS ─────────────────────────────────────────────────────
@@ -2067,11 +2037,16 @@ html.cy-clean .cy-ident__roles {
   margin: 0 0 clamp(1rem, 2.5vw, 1.75rem);
   text-wrap: balance;
 }
-html.cy-clean .cy-ident__roles span { display: block; }
+/* NB: these MUST be class-scoped, never `.cy-ident__roles span`. render.js
+   wraps every character of <main> in its own <span class="char"> to type the
+   page in, so a descendant span selector here also matches each individual
+   LETTER — which set `display:block` on all of them and stacked the headline
+   one character per line. */
+html.cy-clean .cy-ident__role { display: block; }
 /* Each role steps further into the haze — a depth cue borrowed from
    the world layer, applied to type. */
-html.cy-clean .cy-ident__roles span:nth-child(2) { color: #b9ccd6; }
-html.cy-clean .cy-ident__roles span:nth-child(3) { color: #8ba4b1; }
+html.cy-clean .cy-ident__role:nth-child(2) { color: #b9ccd6; }
+html.cy-clean .cy-ident__role:nth-child(3) { color: #8ba4b1; }
 
 html.cy-clean .cy-ident__tagline {
   font-size: clamp(1rem, 1.6vw, 1.2rem);
@@ -2220,7 +2195,7 @@ html.cy-clean .cy-project__meta {
 /* ── Articles: the world calms down so long-form stays readable ──
    Same booth, but the pane is dimmed and the dust stops. Over-designing
    a 12,000-character article is where this aesthetic dies. */
-html.cy-clean:not([data-cy-layout="wide"]) .cy-world { opacity: 0.5; }
+html.cy-clean:not([data-cy-layout="wide"]) .cy-world { opacity: 0.55; }
 html.cy-clean:not([data-cy-layout="wide"]) .cy-world__motes { display: none; }
 html.cy-clean:not([data-cy-layout="wide"]) .cy-glass::after { opacity: 0.3; }
 html.cy-clean:not([data-cy-layout="wide"]) main {
@@ -2243,9 +2218,7 @@ html.cy-clean[data-cy-layout="wide"] .terminal-screen {
 @media (prefers-reduced-motion: reduce) {
   html.cy-clean .cy-world__motes { display: none; }
   html.cy-clean .cy-live::before { animation: none; }
-  html.cy-clean .cy-world__glow,
-  html.cy-clean .cy-world__far,
-  html.cy-clean .cy-world__mid { transform: none !important; }
+  html.cy-clean .cy-world__photo { background-position: 50% 52%; }
   html.cy-clean .cy-project,
   html.cy-clean .cy-project__img,
   html.cy-clean .cy-project::after { transition: none; }
@@ -2270,10 +2243,13 @@ html.cy-clean .cy-project__title:focus-visible { color: var(--i-signal); }
    loses contrast. A soft scrim anchored to the text side fixes it without
    drawing a visible panel edge. */
 html.cy-clean .cy-ident {
-  background: radial-gradient(125% 100% at 0% 34%,
-    rgba(8, 12, 18, 0.86) 0%,
-    rgba(8, 12, 18, 0.58) 44%,
-    rgba(8, 12, 18, 0) 78%);
+  /* The scrim must reach zero BEFORE the element's own edges, or the point
+     where it stops reads as a seam ruled across the landscape. Sizing the
+     ellipse to 76% of the box height keeps the fade inside the padding. */
+  background: radial-gradient(118% 76% at 0% 28%,
+    rgba(8, 12, 18, 0.88) 0%,
+    rgba(8, 12, 18, 0.52) 42%,
+    rgba(8, 12, 18, 0) 74%);
 }
 
 /* The scrim has to bleed past the content column or its own left edge reads as
@@ -2289,4 +2265,15 @@ html.cy-clean .cy-ident {
 html.cy-clean[data-cy-layout="wide"] .cy-ident {
   margin-top: calc(-1 * (var(--rail-h) + 2.5rem));
   padding-top: calc(var(--rail-h) + 2.5rem + clamp(1.5rem, 4vw, 3rem));
+}
+
+/* The ident opts out of the katakana pass (data-cy-render="skip"), so it needs
+   an entrance of its own rather than simply being there before everything
+   else. A short rise reads as the panel coming up with the interface. */
+@media (prefers-reduced-motion: no-preference) {
+  html.cy-clean .cy-ident { animation: cy-ident-in 620ms cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes cy-ident-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+  }
 }

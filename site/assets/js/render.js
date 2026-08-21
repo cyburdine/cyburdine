@@ -60,6 +60,17 @@ SPDX-License-Identifier: BSD-3-Clause
     }
     return root;
   }
+  /* True when the node sits inside an element marked data-cy-render="skip". */
+  function skipped(node, root) {
+    var e = node.parentNode;
+    while (e && e !== root.parentNode) {
+      if (e.nodeType === 1 && e.getAttribute &&
+          e.getAttribute('data-cy-render') === 'skip') return true;
+      e = e.parentNode;
+    }
+    return false;
+  }
+
   function insidePre(node, root) {
     var e = node.parentNode;
     while (e && e !== root.parentNode) {
@@ -79,6 +90,13 @@ SPDX-License-Identifier: BSD-3-Clause
     while ((n = walker.nextNode())) {
       var p = n.parentNode;
       if (!p || /^(SCRIPT|STYLE)$/.test(p.nodeName)) continue;
+      /* Per-subtree opt-out: [data-cy-render="skip"] leaves its text alone.
+         The kana pass substitutes FULL-WIDTH glyphs in a different face, so a
+         display-size headline reflows violently while it types — "Technologist"
+         becomes twelve full-width characters and wraps to five lines before
+         snapping back. At body size that is a flourish; at 6rem it just looks
+         broken. Marked subtrees are revealed by CSS instead. */
+      if (skipped(n, root)) continue;
       /* Skip collapsible structural whitespace (indentation between tags), but
          keep whitespace inside <pre> where it is significant. */
       if (!/\S/.test(n.nodeValue) && !insidePre(n, root)) continue;

@@ -99,7 +99,12 @@ All scripts are IIFEs loaded on every page, in this order (boot.js first, so it
 can set `window.__CY_BOOT_PENDING__` to defer the others):
 
 - `assets/js/boot.js` — The first-visit CRT boot sequence (landing page only, gated by a `cy_booted` localStorage flag). Orchestrates the timeline in `playBoot()`: cold start → wide shot → zoom into the monitor → power-on flash → centered logo warm-up → boot log → through-screen handoff. Exposes `window.CyBoot.replay()` (wired to the `.cy-egg` easter eggs and the `.cy-reboot` footer link). Timeline constants live in the `T` object; boot overlays are confined to the CRT glass via the `--glass-*` CSS variables.
-- `assets/js/render.js` — The katakana render sequence that supersedes the old `decode.js`. Types each page in as Japanese glyphs, then resolves them to the real text, driving the site into "clean mode" (`html.cy-clean`). Sets `html.cy-rendering` while in progress and removes it on completion. Honours `prefers-reduced-motion: reduce` with an instant reveal. Exposes `window.CyRender.play()`. **A page can opt out with `<html data-cy-render="off">`**, which takes the same instant-reveal path — the effect types every visible character, so on a 12,000-character article it is a wait rather than a flourish. All seven project detail pages are opted out. This skips the *effect only*: `cy-clean` is added by `boot.js`, not here, so an opted-out page still lands in the real site normally.
+- `assets/js/render.js` — The katakana render sequence that supersedes the old `decode.js`. Types each page in as Japanese glyphs, then resolves them to the real text, driving the site into "clean mode" (`html.cy-clean`). Sets `html.cy-rendering` while in progress and removes it on completion. Honours `prefers-reduced-motion: reduce` with an instant reveal. Exposes `window.CyRender.play()`. **A subtree can opt out with `data-cy-render="skip"`** — the kana pass
+  substitutes full-width glyphs in a different face, so display-size type
+  reflows violently while it types ("Technologist" becomes twelve full-width
+  characters and wraps to five lines before snapping back). The home page's
+  `.cy-ident` headline uses this and is revealed by CSS instead. **A whole page
+  can opt out with `<html data-cy-render="off">`**, which takes the same instant-reveal path — the effect types every visible character, so on a 12,000-character article it is a wait rather than a flourish. All seven project detail pages are opted out. This skips the *effect only*: `cy-clean` is added by `boot.js`, not here, so an opted-out page still lands in the real site normally.
 - `assets/js/video_glitch.js` — Canvas-based random horizontal glitch lines at ~30fps. Deferred when a boot is pending. Exposes `CyGlitch.start()`.
 - `assets/js/project_rotate.js` — **Not global.** Loaded inline by `index.html` only, immediately after the card markup so the DOM is settled before `render.js` walks `<main>`. See the contract section below.
 - `assets/js/world.js` — THE BOOTH's living layer, on every page: the UTC clock,
@@ -179,8 +184,19 @@ and glitch outright because they were landing on the content.
   dark mode.
 - `--i-live` (`#15ff00`) is the machine's voice and is allowed **only** on live
   elements — the LIVE dot, the clock, the ticker, the cursor. Not body text.
-- The world is built from gradients and `clip-path`, never `data:` URIs — the
-  CSP ships `img-src 'self'`, which silently blocks a `data:` background.
+- The world is a **photograph** (`assets/images/world/world-dusk-*.webp`,
+  Pexels #18717314, Pexels licence). The first pass built the landscape from
+  gradients and `clip-path` and it looked hand-drawn — atmospheric perspective,
+  haze stacking between ridge lines, is the whole reason the view reads as
+  deep, and it is what gradients fake worst. Swapping the plate is a one-file
+  change: drop a new webp in that directory and repoint the two `url()`s.
+- Reference images from CSS, never `data:` URIs — the CSP ships `img-src 'self'`,
+  which silently blocks a `data:` background.
+- **Never write `.cy-ident__roles span`-style descendant selectors on content
+  inside `<main>`.** render.js wraps every character in its own
+  `<span class="char">`, so a descendant span selector also matches each
+  individual LETTER. `display:block` on that stacked the headline one character
+  per line. Scope to a class.
 - Scroll reveals are authored finished-state-first, with the animation added
   under `@supports (animation-timeline: view())`, so unsupported browsers just
   see the records.

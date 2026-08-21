@@ -20,10 +20,8 @@ SPDX-License-Identifier: BSD-3-Clause
   keeps the boot cinematic's own CRT chrome untouched.
 -->
 <div class="cy-world" aria-hidden="true">
-  <div class="cy-world__glow"></div>
-  <div class="cy-world__far"></div>
-  <div class="cy-world__mid"></div>
-  <div class="cy-world__haze"></div>
+  <div class="cy-world__photo"></div>
+  <div class="cy-world__grade"></div>
   <canvas class="cy-world__motes"></canvas>
 </div>
 <div class="cy-glass" aria-hidden="true"></div>
@@ -56,11 +54,11 @@ SPDX-License-Identifier: BSD-3-Clause
 <!-- IDENT — the roles carry the page's <h1> now. The old h1 was the word
      "Projects", which spent the most important heading on a category label
      rather than on who this is. -->
-<section class="cy-ident">
+<section class="cy-ident" data-cy-render="skip">
   <h1 class="cy-ident__roles">
-    <span>Technologist</span>
-    <span>Artist</span>
-    <span>Versatilist</span>
+    <span class="cy-ident__role">Technologist</span>
+    <span class="cy-ident__role">Artist</span>
+    <span class="cy-ident__role">Versatilist</span>
   </h1>
   <p class="cy-ident__tagline">I build <strong>systems</strong> and the <strong>worlds they run in</strong>: infrastructure automation, AI creative tooling, and Audio and Visual ventures.</p>
 </section>
