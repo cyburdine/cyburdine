@@ -37,7 +37,8 @@ production (see below).
 
 ```
 site/                 ← the nginx document root, deployed verbatim
-  index.html  about.html  projects.html  404.html
+  index.html                      the landing page AND the project gallery
+  about.html  404.html
   projects/<slug>/index.html      one directory per project
   .well-known/security.txt
   assets/{css,js,fonts,images}
@@ -52,7 +53,7 @@ and no longer are.
 ## THE DUPLICATION RULE — read before editing any page
 
 There are no layouts and no includes. **The `<head>`, the nav header, the footer
-and the script tags are copied literally into all 11 HTML files.** This is the
+and the script tags are copied literally into all 10 HTML files.** This is the
 deliberate trade for having no build step.
 
 That means: **a change to the nav, the footer, the CSP meta tag or the script
@@ -60,12 +61,13 @@ tags must be applied to every page in `site/`.** Changing one page only will
 silently desynchronise the site.
 
 The `:: open channel` contact block is the exception — it is **not** universal.
-It lives on `index.html`, `about.html` and `404.html` only. The project posts
-deliberately omit it and close on their own `:: get it` links, so a change to
-those outbound links touches three files, not ten.
+It lives on `about.html` and `404.html` only. The home gallery ends on the last
+project tile, and the project posts deliberately omit it and close on their own
+`:: get it` links, so a change to those outbound links touches two files, not
+ten.
 
 ```bash
-# after any such change, confirm the count matches the page count (11)
+# after any such change, confirm the count matches the page count (10)
 grep -rl '<nav class="glow">' site --include='*.html' | wc -l
 ```
 
@@ -84,7 +86,7 @@ can set `window.__CY_BOOT_PENDING__` to defer the others):
 - `assets/js/boot.js` — The first-visit CRT boot sequence (landing page only, gated by a `cy_booted` localStorage flag). Orchestrates the timeline in `playBoot()`: cold start → wide shot → zoom into the monitor → power-on flash → centered logo warm-up → boot log → through-screen handoff. Exposes `window.CyBoot.replay()` (wired to the `.cy-egg` easter eggs and the `.cy-reboot` footer link). Timeline constants live in the `T` object; boot overlays are confined to the CRT glass via the `--glass-*` CSS variables.
 - `assets/js/render.js` — The katakana render sequence that supersedes the old `decode.js`. Types each page in as Japanese glyphs, then resolves them to the real text, driving the site into "clean mode" (`html.cy-clean`). Sets `html.cy-rendering` while in progress and removes it on completion. Honours `prefers-reduced-motion: reduce` with an instant reveal. Exposes `window.CyRender.play()`. **A page can opt out with `<html data-cy-render="off">`**, which takes the same instant-reveal path — the effect types every visible character, so on a 12,000-character article it is a wait rather than a flourish. All seven project detail pages are opted out. This skips the *effect only*: `cy-clean` is added by `boot.js`, not here, so an opted-out page still lands in the real site normally.
 - `assets/js/video_glitch.js` — Canvas-based random horizontal glitch lines at ~30fps. Deferred when a boot is pending. Exposes `CyGlitch.start()`.
-- `assets/js/project_rotate.js` — **Not global.** Loaded inline by `projects.html` only, immediately after the card markup so the DOM is settled before `render.js` walks `<main>`. See the contract section below.
+- `assets/js/project_rotate.js` — **Not global.** Loaded inline by `index.html` only, immediately after the card markup so the DOM is settled before `render.js` walks `<main>`. See the contract section below.
 - `assets/js/responsive.js` — Computes the `transform: scale()` that contains the monitor in the viewport and publishes it as `--cy-scale`. Exposes `CyResponsive.finalTransform()/wideTransform()/lock()/unlock()`, which `boot.js` drives during the zoom.
 
 **Verifying animations in a browser-automation tab does not work reliably** —
@@ -94,7 +96,7 @@ live site behaves identically under it. Check animations in a normal window.
 
 ## The `project_rotate.js` Contract
 
-`site/assets/js/project_rotate.js` runs only on `projects.html`. It replaced
+`site/assets/js/project_rotate.js` runs only on `index.html`. It replaced
 `project_filter.js`, which was removed in August 2026 along with the search box
 and tag dropdown it drove — there is **no filtering on the site any more**, so
 `project-item`, `data-tags` and the `<option>` list are all gone too.
@@ -164,9 +166,12 @@ Server details:
 - TLS via the Cloudflare Origin CA wildcard cert (`*.cyburdine.com`, valid to 2041); Cloudflare SSL/TLS mode must stay **Full (strict)**
 - SELinux is **enforcing**: releases must be labelled `httpd_sys_content_t` or every request 403s. `deploy.sh` runs `restorecon` for you; the fcontext rule is already registered.
 
-Two nginx details worth knowing before editing the vhost:
+Three nginx details worth knowing before editing the vhost:
 
-- `try_files $uri $uri.html $uri/ =404;` — **`$uri.html` must come before `$uri/`**. `/projects` is both `projects.html` and the `projects/` directory of detail pages; checking `$uri/` first makes `/projects` 301 to `/projects/`, which has no index and 404s.
+- `try_files $uri $uri.html $uri/ =404;` — **`$uri.html` must come before `$uri/`**. This mattered acutely while `/projects` was both `projects.html` and the `projects/` directory of detail pages. That page is gone (the gallery moved to `index.html` in August 2026), but the ordering still stands: keep it, or the next extensionless page that shares a name with a directory breaks the same way.
+- **`/projects` is a redirect now.** `projects/` still exists as the directory of
+  detail pages and has no index, so without an explicit rule the old URL 301s to
+  `/projects/` and 404s there. The vhost carries `location = /projects { return 301 /; }`.
 - No `Strict-Transport-Security` header. This vhost serves the apex, and HSTS there would apply to `cyburdine.com` itself with no easy client-side undo. HSTS is Cloudflare's to manage.
 
 When reading server state, use `sudo nginx -T` (the loaded config) rather than

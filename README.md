@@ -44,8 +44,9 @@ cp -r site/projects/spirefall-ghost-code site/projects/<new-slug>
 $EDITOR site/projects/<new-slug>/index.html
 ```
 
-**2. Add its card to `site/projects.html`.** Jekyll used to generate this from
-the `_projects` collection; now it is written by hand. Add an `<article>` inside
+**2. Add its card to `site/index.html`.** The project gallery *is* the home
+page. Jekyll used to generate this from the `_projects` collection; now it is
+written by hand. Add an `<article>` inside
 `.cy-tiles`, copying the shape of the ones already there — the markup is
 identical for every project, hero included:
 
@@ -97,7 +98,8 @@ Then `./deploy.sh`.
 There are no layouts or includes — the `<head>`, nav, footer and script tags are
 duplicated across all 10 pages. **Any change to those must be made in every file
 in `site/`.** The `:: open channel` contact block is the exception: it lives on
-`index.html`, `about.html` and `404.html` only, not on the project posts. See the duplication rule in `CLAUDE.md`.
+`about.html` and `404.html` only — not on the home gallery and not on the
+project posts. See the duplication rule in `CLAUDE.md`.
 
 ## License
 
