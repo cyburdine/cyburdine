@@ -169,9 +169,12 @@ Server details:
 Three nginx details worth knowing before editing the vhost:
 
 - `try_files $uri $uri.html $uri/ =404;` — **`$uri.html` must come before `$uri/`**. This mattered acutely while `/projects` was both `projects.html` and the `projects/` directory of detail pages. That page is gone (the gallery moved to `index.html` in August 2026), but the ordering still stands: keep it, or the next extensionless page that shares a name with a directory breaks the same way.
-- **`/projects` is a redirect now.** `projects/` still exists as the directory of
-  detail pages and has no index, so without an explicit rule the old URL 301s to
-  `/projects/` and 404s there. The vhost carries `location = /projects { return 301 /; }`.
+- **`/projects` is dead and stays dead.** The gallery moved to the home page in
+  August 2026 and there is deliberately no redirect: `projects/` still exists as
+  the directory of detail pages and has no index, so the old URL 301s to
+  `/projects/` and 403s there. That was a conscious call — the site was new
+  enough that nothing linked to it. Don't "fix" it by accident; if you ever do
+  want it back, it is `location = /projects { return 301 /; }`.
 - No `Strict-Transport-Security` header. This vhost serves the apex, and HSTS there would apply to `cyburdine.com` itself with no easy client-side undo. HSTS is Cloudflare's to manage.
 
 When reading server state, use `sudo nginx -T` (the loaded config) rather than
