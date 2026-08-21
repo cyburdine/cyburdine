@@ -2408,3 +2408,59 @@ html.cy-clean .cy-dial__play {
   cursor: pointer;
 }
 html.cy-clean .cy-dial__play:hover { border-color: var(--i-signal); color: var(--i-ink); }
+
+/* ── Article structure ──────────────────────────────────────────
+   Until now every article carried its sections as ":: SECTION" text
+   inside a prose div, which looks the part but gives the document no
+   structure at all — no outline, nothing for a screen reader to jump
+   between. The Таксофон piece uses real headings. Styled to sit at the
+   same volume the ":: " markers did, so the two conventions can coexist
+   while the older pieces are still using the old one. */
+html.cy-clean .cy-h {
+  font-family: var(--cy-font-cond);
+  font-weight: 600;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: var(--i-ink);
+  margin: var(--cy-sp-5) 0 var(--cy-sp-2);
+  padding-bottom: var(--cy-sp-1);
+  border-bottom: 1px solid var(--i-line);
+}
+html.cy-clean .cy-h:first-child { margin-top: 0; }
+/* The top rail is fixed, so anything scrolled to lands underneath it.
+   Applies to in-page anchors and to browser find-on-page jumps alike. */
+html.cy-clean .cy-h,
+html.cy-clean .cy-figure { scroll-margin-top: calc(var(--rail-h) + 1.5rem); }
+
+/* Lede — the status line that opens an in-progress build log. */
+html.cy-clean .cy-lede {
+  /* Deliberately NOT flex: the sentence after the pill is a bare text node,
+     which a flex container promotes to its own anonymous item and drops onto
+     the next line. Inline flow keeps the pill in the sentence where it reads
+     as a label rather than a heading. */
+  color: var(--i-dim);
+  padding-bottom: var(--cy-sp-3);
+  margin-bottom: var(--cy-sp-3);
+  border-bottom: 1px solid var(--i-line);
+}
+
+html.cy-clean .cy-lede .cy-status { margin-right: 0.5rem; }
+
+html.cy-clean .cy-list {
+  margin: var(--cy-sp-2) 0 var(--cy-sp-3);
+  padding-left: 1.15rem;
+  list-style: none;
+}
+html.cy-clean .cy-list li {
+  position: relative;
+  margin-bottom: 0.4rem;
+  color: var(--i-ink);
+}
+/* Terminal-style marker, matching .cy-mark elsewhere in the theme. */
+html.cy-clean .cy-list li::before {
+  content: "▸";
+  position: absolute;
+  left: -1.15rem;
+  color: var(--i-signal);
+}
