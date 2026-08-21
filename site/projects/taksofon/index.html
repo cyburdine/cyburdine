@@ -68,8 +68,9 @@ SPDX-License-Identifier: BSD-3-Clause
 
 He asked me how hard it would be to fix it up so he could install it at the bar he owns in Minnesota, The Black Hart of St. Paul. The idea was to put some electronics inside and turn it into an amusement, a curiosity. Put a coin in, dial a number, hear something you weren&rsquo;t expecting.</div>
 <figure class="cy-figure">
-  <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; the AMT-69 as it arrived</div>
-  <figcaption class="cy-meta">// as received</figcaption>
+  <img src="/assets/images/articles/taksofon-front.webp"
+       alt="The front of the AMT-69: pebbled grey enamel, a rotary dial with Cyrillic-era numbering, a black handset hanging on the left, and a metal plate listing the free emergency numbers — fire 01, police 02, ambulance 03, gas service 04." width="1100" height="1467" loading="lazy" decoding="async">
+  <figcaption class="cy-meta">// as received. the plate lists the calls that were always free: 01 fire, 02 police, 03 ambulance, 04 gas</figcaption>
 </figure>
 <h2 class="cy-h">The mistake I made first</h2>
 <div class="project">The coin mechanism was the main problem, and I spent the first few days solving the wrong version of it.
@@ -84,8 +85,14 @@ After a few days I realized I was asking the wrong question. The original mechan
 </ul>
 <div class="project">Once I wrote the requirement down that way, it stopped being a restoration problem. I wasn&rsquo;t modifying the old mechanism. I was building a new one that only had to do one job.</div>
 <figure class="cy-figure">
-  <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; stripped chassis and the removed original parts</div>
-  <figcaption class="cy-meta">// everything that came out</figcaption>
+  <img src="/assets/images/articles/taksofon-kopeck.webp"
+       alt="A worn Soviet kopeck coin resting on the grey enamel of the phone, its face showing the USSR state emblem — a hammer and sickle over a globe, framed by wheat ears — and the letters СССР." width="900" height="1200" loading="lazy" decoding="async">
+  <figcaption class="cy-meta">// the coin it was built for</figcaption>
+</figure>
+<figure class="cy-figure">
+  <img src="/assets/images/articles/taksofon-inside.webp"
+       alt="The open back of the payphone, showing the original coin mechanism bolted in on the left and a porcelain terminal block on the right, its terminals labelled in Cyrillic and wired with cloth-jacketed cable." width="1100" height="1467" loading="lazy" decoding="async">
+  <figcaption class="cy-meta">// inside, before anything came out. the terminal block is labelled for a telephone exchange that no longer exists</figcaption>
 </figure>
 <h2 class="cy-h">If at first you don&rsquo;t succeed&hellip;</h2>
 <div class="project">It took six printed versions before the coin path worked.
@@ -96,17 +103,32 @@ The loop was: measure, print, doesn&rsquo;t fit. Measure again, find where I was
 
 I also had to file down the coin slot on the face of the phone, since it&rsquo;s cut for a kopeck and a quarter won&rsquo;t physically fit. So there&rsquo;s now a hand-filed slot on the front of a Soviet payphone. Call it vandalism or call it restoration, but nobody was going to feed it kopecks in Saint Paul.</div>
 <figure class="cy-figure">
-  <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; the original coin mechanism next to the printed replacement</div>
-  <figcaption class="cy-meta">// version six &mdash; the one that ran coins</figcaption>
+  <img src="/assets/images/articles/taksofon-prints.webp"
+       alt="Six 3D-printed versions of the coin mechanism fanned out on a printer bed, five of them hand-labelled in marker V1 through V5, and the sixth carrying the embossed word Таксофон instead of a number." width="1500" height="1125" loading="lazy" decoding="async">
+  <figcaption class="cy-meta">// V1 through V5, and the one that stopped needing a number</figcaption>
+</figure>
+<figure class="cy-figure">
+  <img src="/assets/images/articles/taksofon-coin-slot.webp"
+       alt="Close-up of the coin slot on the face of the phone. The cast plate is stamped 15 КОП and 2 КОП, and the slot itself has been filed wider, leaving bright bare metal against the weathered surface." width="900" height="1200" loading="lazy" decoding="async">
+  <figcaption class="cy-meta">// filed out for a quarter. the bright metal is the new width</figcaption>
+</figure>
+<figure class="cy-figure">
+  <img src="/assets/images/articles/taksofon-mech.webp"
+       alt="The finished 3D-printed coin mechanism installed inside the phone, a flat grey panel with the word Таксофон embossed on its face and a microswitch wired to it. The original 2-kopeck coin bracket is visible above." width="1100" height="1467" loading="lazy" decoding="async">
+  <figcaption class="cy-meta">// version six, installed &mdash; with the microswitch that reports a coin. the original bracket above it still reads 2 КОП</figcaption>
 </figure>
 <h2 class="cy-h">How the Pi reads the dial</h2>
 <div class="project">This is my favorite part of the build. A rotary dial has no electronics in it. There&rsquo;s nothing to interface with.
 
 What it has is a spring and a cam. You pull the finger hole around to a number and let go. The spring drags the dial back, and on the return, a cam taps a switch open and shut once per number. Dial a 3 and the switch clicks three times. Dial a 7, seven clicks. Dial 0 and it clicks ten times, which is why 0 sits at the end of the dial instead of the start.
 
-So the Pi just counts pulses on a wire. The dial switch goes to GPIO17. The Pi holds that line high with an internal pull-up, and every time the switch breaks the connection, an interrupt fires. The handler increments a counter and records the timestamp.
-
-Two details make the counting reliable.
+So the Pi just counts pulses on a wire. The dial switch goes to GPIO17. The Pi holds that line high with an internal pull-up, and every time the switch breaks the connection, an interrupt fires. The handler increments a counter and records the timestamp.</div>
+<figure class="cy-figure">
+  <img src="/assets/images/articles/taksofon-dial-mech.webp"
+       alt="Macro view of the rotary dial mechanism removed from the phone: a brass gear train, a governor, coiled springs and a set of contact points mounted on a circular alloy plate, all lightly tarnished." width="1500" height="1125" loading="lazy" decoding="async">
+  <figcaption class="cy-meta">// the spring, the gear train and the governor. no electronics anywhere in it</figcaption>
+</figure>
+<div class="project">Two details make the counting reliable.
 
 <strong>Debounce.</strong> A mechanical switch chatters for a few milliseconds on each click, so a naive counter reads one physical click as several. Any edge within 5ms of the last one gets ignored.
 
@@ -141,6 +163,16 @@ That&rsquo;s the whole system: count electrical pulses, and use a pause to decid
 Audio goes out through a MAX98357, an I2S class-D amplifier, and into the original handset earpiece. That choice matters. The voice comes through a 1969 receiver with all the bandwidth limits and coloration that implies. A clean modern speaker would have been easier to install and would have sounded worse for this. The narrow, boxy handset sound is the effect.
 
 I printed a coin bucket too, since the coins have to land somewhere.</div>
+<figure class="cy-figure">
+  <img src="/assets/images/articles/taksofon-bucket.webp"
+       alt="The payphone lying on its side with a white 3D-printed coin bucket sliding out of the base, next to the original cast-metal coin chute." width="1500" height="1125" loading="lazy" decoding="async">
+  <figcaption class="cy-meta">// the printed coin bucket, where the donations land</figcaption>
+</figure>
+<figure class="cy-figure">
+  <img src="/assets/images/articles/taksofon-oled.webp"
+       alt="A small blue I2C OLED module held up in front of the open phone, its screen reading Таксофон above the address 10.10.10.139." width="900" height="1200" loading="lazy" decoding="async">
+  <figcaption class="cy-meta">// a maintenance display inside the case &mdash; it reports the phone&rsquo;s name and its address on the network</figcaption>
+</figure>
 <figure class="cy-figure">
   <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; Pi Zero and MAX98357 on the printed mounting plate</div>
   <figcaption class="cy-meta">// the new brain, in the old cavity</figcaption>

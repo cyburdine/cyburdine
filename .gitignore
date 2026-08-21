@@ -8,3 +8,9 @@ _site/
 
 # Scratch from the brainstorming tool (a server pid + log), not source.
 .superpowers/
+
+# Camera originals for write-ups. 22 MB and climbing, and none of it is served —
+# site/ is the document root, so only the encoded webp in
+# site/assets/images/articles/ ever ships. Keep the raws out of history for the
+# same reason /assets/ is out.
+photos/
