@@ -55,7 +55,7 @@ and no longer are.
 ## THE DUPLICATION RULE — read before editing any page
 
 There are no layouts and no includes. **The `<head>`, the nav header, the footer
-and the script tags are copied literally into all 10 HTML files.** This is the
+and the script tags are copied literally into all 11 HTML files.** This is the
 deliberate trade for having no build step.
 
 That means: **a change to the nav, the footer, the CSP meta tag, the script
@@ -79,10 +79,10 @@ The `:: open channel` contact block is the exception — it is **not** universal
 It lives on `about.html` and `404.html` only. The home gallery ends on the last
 project tile, and the project posts deliberately omit it and close on their own
 `:: get it` links, so a change to those outbound links touches two files, not
-ten.
+eleven.
 
 ```bash
-# after any such change, confirm the count matches the page count (10)
+# after any such change, confirm the count matches the page count (11)
 grep -rl '<nav class="glow">' site --include='*.html' | wc -l
 ```
 
@@ -91,7 +91,9 @@ the build date). It needs a manual bump each January, in every page.
 
 ## Adding a Project
 
-See `README.md` — it is **three** edits, not one.
+See `README.md` — it is **three** edits, not one. The one that gets missed:
+the gallery header's `// NN records` count is hardcoded in `site/index.html` and
+is not derived from the cards, so it goes stale silently.
 
 ## Visual Effects (JavaScript)
 

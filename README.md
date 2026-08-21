@@ -31,8 +31,9 @@ nothing. See `CLAUDE.md` for the server layout and TLS details.
 ## Adding a project
 
 Dropping the build step means the project list is no longer generated from a
-collection. Adding a project is **two edits**, and it is easy to forget the
-second:
+collection. Adding a project is **three edits**, and the easiest one to forget is the
+record count, because nothing breaks when it is wrong — the header just quietly
+lies about how many builds there are:
 
 **1. Create the page.** Copy an existing detail page and edit it. Copying is
 what keeps `<html data-cy-render="off">` on the new page — that attribute
@@ -44,7 +45,12 @@ cp -r site/projects/spirefall-ghost-code site/projects/<new-slug>
 $EDITOR site/projects/<new-slug>/index.html
 ```
 
-**2. Add its card to `site/index.html`.** The project gallery *is* the home
+**2. Bump the record count.** The gallery header hardcodes it —
+`<span class="cy-gallery-head__kicker">// 08 records</span>` in `site/index.html`.
+It is not computed from the cards, so it silently goes stale. Check it whenever
+you add or remove a project.
+
+**3. Add its card to `site/index.html`.** The project gallery *is* the home
 page. Jekyll used to generate this from the `_projects` collection; now it is
 written by hand. Add an `<article>` inside
 `.cy-tiles`, copying the shape of the ones already there — the markup is
@@ -91,13 +97,17 @@ mocked-up screenshot of a site that does not exist.**
 There is no tag filter and no `data-tags` any more — the search box and
 dropdown were removed in August 2026, so a new tag needs no third edit.
 
+Each card also carries a `cy-project__num` — the record id shown oversized on
+the card. It is keyed to the project, not to its position, so it stays put when
+`project_rotate.js` swaps a project into the feature slot.
+
 Then `./deploy.sh`.
 
 ## Editing shared page furniture
 
 There are no layouts or includes — the `<head>`, nav, footer, script tags and
 THE BOOTH's chrome (world/glass layers, top and bottom rails) are duplicated
-across all 10 pages. **Any change to those must be made in every file
+across all 11 pages. **Any change to those must be made in every file
 in `site/`.** The `:: open channel` contact block is the exception: it lives on
 `about.html` and `404.html` only — not on the home gallery and not on the
 project posts. See the duplication rule in `CLAUDE.md`.
