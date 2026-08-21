@@ -2345,3 +2345,66 @@ html.cy-clean .cy-status::before {
 }
 /* On a gallery record the pill sits in the eyebrow row. */
 html.cy-clean .cy-project__eyebrow .cy-status { margin-left: 0.6rem; }
+
+/* ── Таксофон — rotary pulse explainer ──────────────────────────
+   Controls are hidden until dial_pulse.js adds .cy-dial--live, so a
+   reader without JS gets the caption and never a dead slider. Same
+   contract as .cy-retro on the green-screen page. */
+html.cy-clean .cy-dial { margin: var(--cy-sp-4) 0; }
+html.cy-clean .cy-dial__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: rgba(8, 12, 18, 0.5);
+  border: 1px solid var(--i-line);
+}
+html.cy-clean .cy-dial__readout {
+  font-family: var(--cy-font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--i-dim);
+  padding: var(--cy-sp-2) 0 0;
+}
+html.cy-clean .cy-dial__readout strong {
+  font-size: 1.15rem;
+  letter-spacing: 0.1em;
+  color: var(--i-ink);
+}
+/* The readout takes the colour of whichever reading is current, so the
+   verdict and the diagram always agree. */
+html.cy-clean .cy-dial__readout[data-state="split"]  strong { color: var(--i-signal); }
+html.cy-clean .cy-dial__readout[data-state="merged"] strong { color: var(--i-alarm); }
+html.cy-clean .cy-dial__k { color: var(--i-live); }
+html.cy-clean .cy-dial__arrow { padding: 0 0.35em; }
+
+html.cy-clean .cy-dial__controls { display: none; }
+html.cy-clean .cy-dial--live .cy-dial__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cy-sp-2) var(--cy-sp-3);
+  padding: var(--cy-sp-2) 0 0;
+}
+html.cy-clean .cy-dial__ctl {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  color: var(--i-dim);
+}
+html.cy-clean .cy-dial__ctl input[type="range"] { accent-color: var(--i-signal); width: 12rem; max-width: 45vw; }
+html.cy-clean .cy-dial__play {
+  font-family: var(--cy-font-mono);
+  font-size: var(--cy-fs-meta);
+  letter-spacing: var(--cy-tracking-meta);
+  text-transform: uppercase;
+  color: var(--i-signal);
+  background: transparent;
+  border: 1px solid var(--i-line);
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+}
+html.cy-clean .cy-dial__play:hover { border-color: var(--i-signal); color: var(--i-ink); }

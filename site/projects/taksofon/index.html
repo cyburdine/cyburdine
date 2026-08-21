@@ -71,72 +71,124 @@ Not a replica, not a prop &mdash; an AMT-69, the real thing, out of Kazakhstan b
 
 He and I own a bar &mdash; The Black Hart of St. Paul. And a payphone that has been silent for decades, hung on a wall in a room full of people, is not a decoration. It is a question waiting to be answered.
 
-So the plan: make it work again. Not restore it &mdash; make it do something it was never built to do.
+// PUT A COIN IN. DIAL A NUMBER. HEAR SOMETHING YOU WERE NOT EXPECTING.</div>
+<figure class="cy-figure">
+  <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; the AMT-69 as it arrived</div>
+  <figcaption class="cy-meta">// as received, before the strip-down</figcaption>
+</figure>
+<div class="project">:: THE MISTAKE I MADE FIRST
 
-// PUT A COIN IN. DIAL A NUMBER. HEAR SOMETHING YOU WERE NOT EXPECTING.
+The coin mechanism was the whole problem, and for the first few days I was solving the wrong version of it.
 
-:: THE STRIP-DOWN
+The phone wants kopecks. We want quarters. A quarter is bigger. So I started where I think most people would start: how do I make the existing mechanism accept a larger coin? I was sketching metal parts. I was working out which original components I could modify without destroying them, which ones I could shim, which ones I could persuade.
 
-The first pass was subtraction. An AMT-69 is full of apparatus for a job that no longer exists: line interface, the mechanisms that talked to an exchange that has not existed in a generation, relays for billing rules nobody is enforcing any more. All of it came out.
+I spent days on that. And the reason it was hard is that it was the wrong question.
 
-What I kept was what a person actually touches. The handset. The dial. The coin path. The body. Everything a hand meets on the way through is original; everything behind it is new. That division has held up as the organising rule of the whole build &mdash; if you can feel it, it is 1969; if you cannot, it is doing whatever I need it to do.
+What eventually landed is that I was trying to <em>cooperate</em> with a machine that no longer had a job. All that beautiful mechanism &mdash; the linkages, the parts that had to move in a particular order &mdash; existed to satisfy an electromechanical telephone exchange that has not existed in a generation. It was solving for billing. For signalling to a central office. For a whole conversation with infrastructure that is gone.
 
-:: THE COIN MECHANISM
+None of that is load-bearing any more.
 
-This is the part that fought me, and the part I am proudest of.
+So I stopped adapting and started deleting. And once the requirement is written down honestly, it collapses to three signals:
 
-The original coin mechanism was built around coins that are not in anyone&rsquo;s pocket in Saint Paul, and around a set of assumptions about what happens after the coin drops that no longer apply. Rebuilding it meant designing a custom part and printing it &mdash; a piece that lives in the middle of a mechanism designed in the Soviet Union in the sixties and has to cooperate with tolerances I did not choose and cannot change.
+// 1. A COIN WENT IN
+// 2. THE HANDSET IS UP, OR IT IS DOWN
+// 3. THESE ARE THE NUMBERS BEING DIALLED
 
-You do not get to redesign around a problem here. The body is the body. The part has to fit the machine, not the other way round.
+That is the entire machine. Everything else in there was answering a question nobody is asking. Once I could see that, the coin mechanism stopped being a restoration problem and became a design problem &mdash; I was not modifying anything, I was building a new one from scratch that only had to do one job.</div>
+<figure class="cy-figure">
+  <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; stripped chassis + the removed original parts</div>
+  <figcaption class="cy-meta">// everything that came out</figcaption>
+</figure>
+<div class="project">:: FIVE FAILURES
+
+Knowing what to build and being able to build it are different.
+
+It took five versions before the printed part worked. Six tries total.
+
+The gap is measurement. You put calipers on a sixty-year-old steel casting, you write down the numbers, you go build the shape in CAD &mdash; and then you have to hold a fraction of a millimetre across a part that has to drop into a space you cannot redesign. Every version was close. Close does not run coins. A coin either falls through the path cleanly or it hangs up, and the difference between those is smaller than the error you make transferring a physical object into 3D space in your head.
+
+Measure. Print. Doesn&rsquo;t fit. Measure again. Find the place you were half a millimetre out. Print. Doesn&rsquo;t fit for a different reason.
+
+The sixth one worked. Coin in, coin through, switch clicks, coin lands in the bucket. I have written software that took less out of me and gave less back &mdash; that was a genuinely magical moment, standing there feeding the same quarter through over and over just to watch it work.
+
+I also had to file down the coin slot on the face of the phone. It is cut for a kopeck, and a quarter simply does not go in. So there is now a hand-filed slot on the front of a Soviet payphone, which is either vandalism or restoration depending on how you feel about it. I feel fine about it. Nobody was going to feed it kopecks in Saint Paul.</div>
+<figure class="cy-figure">
+  <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; the original coin mechanism beside the printed replacement</div>
+  <figcaption class="cy-meta">// version six &mdash; the one that ran coins</figcaption>
+</figure>
+<div class="project">:: HOW THE PI READS THE DIAL
+
+This is my favourite part of the build, because it turns out a rotary dial is not an input device at all. It has no electronics in it. There is nothing to interface with.
+
+What it has is a spring and a cam. You pull the finger hole round to a number and let go; the spring drags the dial back; and on the way back, a cam taps a switch open and shut &mdash; once per number. Dial a 3 and the switch clicks three times. Dial a 7 and it clicks seven times. Dial 0 and it clicks ten, which is exactly why 0 sits at the end of the dial rather than the start.
+
+So the Pi does not &ldquo;read&rdquo; anything. It counts blips on a wire.
+
+The switch goes to GPIO17. The Pi holds that line high with an internal pull-up and watches it; every time the dial&rsquo;s switch breaks the connection the voltage jumps, an interrupt fires, and the handler does exactly one thing &mdash; increment a counter and remember when it happened.
+
+Two details keep that honest.
+
+// DEBOUNCE. A mechanical switch does not click cleanly. It chatters for a few thousandths of a second, and a naive counter reads one physical click as five. Anything inside 5ms of the last edge is ignored.
+
+// THE GAP. This is the interesting one. The Pi has no idea when a digit ends. The pulses in a 7 are identical to the pulses in a 3 followed by a 4 &mdash; same wire, same switch, same seven clicks. The only thing separating them is time: pulses inside one digit arrive fast, about ten a second, because that is how fast the spring returns the dial. Between digits there is a pause while your finger travels back to the dial. So the rule is a timeout &mdash; once a quarter-second passes with no new clicks, whatever has been counted is the digit.</div>
+<!-- Interactive explainer. Structure only — dial_pulse.js draws the
+     waveform and does the decoding. Degrades to the static caption if the
+     script never runs; the controls stay hidden until it adds .cy-dial--live. -->
+<figure class="cy-figure cy-dial" id="dial">
+  <svg class="cy-dial__svg" role="img"
+       aria-label="A pulse train of seven clicks with an adjustable pause in the middle. When the pause is longer than 250 milliseconds the Pi reads two digits, 3 and 4; when it is shorter it reads a single digit, 7."></svg>
+
+  <div class="cy-dial__readout" role="status" aria-live="polite"></div>
+
+  <div class="cy-dial__controls">
+    <label class="cy-dial__ctl" for="dpGap">pause between bursts
+      <input type="range" id="dpGap" min="60" max="460" step="10" value="320">
+    </label>
+    <button type="button" class="cy-dial__play">&#9656; dial it</button>
+  </div>
+
+  <figcaption class="cy-meta">// the same seven clicks. drag the pause: over 250ms the Pi
+  sees 3 then 4, under it sees a single 7. the pulses carry no information about where a
+  digit ends &mdash; only the silence does.</figcaption>
+</figure>
+<div class="project">Seven pulses, digit 7. Ten or more, digit 0.
+
+Digits stack into a buffer. When the buffer is as long as the number it is watching for, it compares: match plays the payoff, miss plays an error and resets.
+
+The other two pins are the same trick with less arithmetic. GPIO22 is the hook switch &mdash; lifted or hung up, nothing to count. GPIO23 is the coin switch, where one click is one quarter.
+
+That is the whole thing. Count electrical blips; use a pause to decide where one digit ends and the next begins. Which is precisely what a telephone exchange did in 1950, except that was a room full of relays and this is about forty lines of Python.
 
 :: THE BRAIN
 
-A Raspberry Pi Zero, on a mounting plate I printed to fit the cavity the original electronics vacated.
+A Raspberry Pi Zero, on a mounting plate I printed to fit the cavity the original electronics left behind.
 
-Audio goes out through a MAX98357 &mdash; an I2S class-D amplifier &mdash; and into the original handset earpiece. That detail matters more than it sounds: the voice you hear arrives through a 1969 receiver, with all the bandwidth limits and coloration that implies. I could have put a clean modern speaker in the shell. It would have been easier and it would have been worse. The handset&rsquo;s narrow, slightly boxy sound *is* the effect. Anything hi-fi would break the spell instantly.
+Audio goes out through a MAX98357 &mdash; an I2S class-D amplifier &mdash; and into the original handset earpiece. That detail matters more than it sounds. The voice arrives through a 1969 receiver, with every bandwidth limit and coloration that implies. I could have put a clean modern speaker in the shell. It would have been easier and it would have been worse: the handset&rsquo;s narrow, boxy sound <em>is</em> the effect, and anything hi-fi breaks the spell on contact.
 
-I also printed a coin bucket, because coins have to land somewhere, and because where they land turns out to be the whole point.
+I printed a coin bucket too, because coins have to land somewhere, and where they land turns out to be the point.</div>
+<figure class="cy-figure">
+  <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; Pi Zero + MAX98357 on the printed mounting plate</div>
+  <figcaption class="cy-meta">// the new brain, in the old cavity</figcaption>
+</figure>
+<div class="project">:: WHAT IT DOES
 
-:: WHAT IT DOES
+You pick up the handset. You put in a quarter. You dial a number.
 
-You pick up the handset. You put in a coin. You dial a number.
+And someone talks to you &mdash; messages recorded by celebrities and notable people, each sitting behind a number you have to know, or guess, or be told by someone else at the bar. There is no menu. There is no screen. The only interface is a rotary dial and whatever you have heard about which numbers are worth trying.
 
-And someone talks to you &mdash; messages recorded by celebrities and notable people, each one sitting behind a number you have to know or guess or be told by someone else at the bar. There is no menu. There is no screen. The only interface is a rotary dial and whatever you have heard about which numbers are worth trying.
-
-The coins go to a local charity. That was true from the first sketch and it is the reason the coin mechanism had to work properly rather than just click convincingly. A coin slot that is theatre would make the donation theatre too.
+The coins go to a local charity. That was true from the first sketch, and it is the reason the coin mechanism had to actually work rather than just click convincingly. A coin slot that is theatre would make the donation theatre too.
 
 :: WHAT I AM STILL CHEWING ON
 
-The idea I keep coming back to: letting people *leave* messages. Dial a number, hear a tone, record something, and it sits there for whoever dials that number next. A payphone as a dead drop.
+The idea I keep coming back to: letting people <em>leave</em> messages. Dial a number, hear a tone, record something, and it sits there for whoever dials that number next. A payphone as a dead drop.
 
-That is a very different machine from the one I am currently building. It turns a jukebox into a place where strangers talk to each other across time, unsupervised, in a bar. Which is either the best idea I have had this year or a moderation problem with a rotary dial attached. Probably both. I have not decided, and I am not going to decide until the first version is on the wall and I have watched people use it.
+That is a very different machine from the one I am currently building. It turns a jukebox into a place where strangers talk to each other across time, unsupervised, in a bar. Which is either the best idea I have had this year or a moderation problem with a rotary dial attached. Probably both. I am not deciding until the first version is on the wall and I have watched people use it.
 
 :: NEXT
 
 Wall mount. Final wiring. A number plan worth memorising. Then the part I am actually looking forward to &mdash; standing at the other end of the bar watching someone pick up a Soviet payphone in Minnesota to find out who is on the other end.
 
 // build log continues.</div>
-
-<figure class="cy-figure">
-  <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; the AMT-69 as it arrived</div>
-  <figcaption class="cy-meta">// as received, before the strip-down</figcaption>
-</figure>
-
-<figure class="cy-figure">
-  <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; stripped chassis + removed original parts</div>
-  <figcaption class="cy-meta">// everything that came out</figcaption>
-</figure>
-
-<figure class="cy-figure">
-  <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; original coin mechanism beside the printed part</div>
-  <figcaption class="cy-meta">// the rebuilt coin path</figcaption>
-</figure>
-
-<figure class="cy-figure">
-  <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; Pi Zero + MAX98357 on the printed mounting plate</div>
-  <figcaption class="cy-meta">// the new brain, in the old cavity</figcaption>
-</figure>
-
 <figure class="cy-figure">
   <div class="cy-shot-placeholder">photo pending &nbsp;&middot;&nbsp; mounted on the wall at the Black Hart</div>
   <figcaption class="cy-meta">// installed</figcaption>
@@ -164,6 +216,7 @@ Wall mount. Final wiring. A number plan worth memorising. Then the part I am act
   <script src="/assets/js/video_glitch.js"></script>
   <script src="/assets/js/responsive.js"></script>
   <script src="/assets/js/world.js"></script>
+  <script src="/assets/js/dial_pulse.js"></script>
 
 <div class="cy-rail cy-rail--bottom">
   <nav aria-label="Primary">
