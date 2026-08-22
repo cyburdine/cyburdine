@@ -73,3 +73,30 @@ are three answers in here and the right one depends on the photograph:
 
 Then add the tile to `site/index.html` — and remember the gallery header's
 `// NN records` count is hardcoded.
+
+## The Periphony article figure
+
+`site/assets/images/articles/periphony-app2.webp` is not a plate — it is a
+straight `cwebp` of `sources/periphony-converting.png`, the app captured
+four tracks into a ten-track batch. It replaced a **mock**: the old
+`periphony-app.webp` showed invented track names, a window titled
+"Periphony 8D" when the app titles itself "Periphony", and an output path
+that did not exist on the machine.
+
+Re-shooting it means driving the app by hand, because its UI exposes
+nothing but a titlebar to accessibility — there is no way to load the queue
+or press Convert from a script, and no synthetic-click tool installed. Load
+files, press Convert, wait until a few tracks are green, then:
+
+```bash
+b=$(osascript -e 'tell application "System Events" to tell process "Periphony" \
+      to get {position, size} of window 1' | tr -d ' ')
+screencapture -x -R "$b" sources/periphony-converting.png
+cwebp -q 90 -m 6 sources/periphony-converting.png \
+      -o ../../site/assets/images/articles/periphony-appN.webp
+```
+
+Bring the window to the front first: `screencapture -R` shoots a screen
+rectangle, not a window, so anything overlapping that region lands in the
+frame instead. And mind the caption — it quotes the console, so it has to
+be re-read against whatever the new shot actually says.

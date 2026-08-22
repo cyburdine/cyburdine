@@ -91,7 +91,14 @@ for slug in "${PLATES[@]}"; do
 
   [ -s "$png" ] || { echo "render failed: $slug" >&2; exit 1; }
 
-  webp="$OUT/$slug-thumb.webp"
+  # A plate that has already shipped cannot be re-rendered under its own
+  # name — see the cache note above — so it declares the name it wants:
+  #   <meta name="cy-thumb" content="periphony-thumb2.webp">
+  # Keeping that in the plate rather than in a rename step here means the
+  # next run writes the right file on its own instead of quietly rebuilding
+  # a URL nothing points at any more.
+  named="$(sed -n 's/.*<meta name="cy-thumb" content="\([^"]*\)".*/\1/p' "plates/$slug.html" | head -1)"
+  webp="$OUT/${named:-$slug-thumb.webp}"
   cwebp -quiet -q 88 -m 6 "$png" -o "$webp"
   echo "$slug  ->  ${webp#$ROOT/}  ($(du -h "$webp" | cut -f1))"
 done
