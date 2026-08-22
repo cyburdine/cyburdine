@@ -1,0 +1,3 @@
+# Rendered intermediates. The shipped artefact is the .webp under
+# site/assets/images/articles/; these are proofing output.
+*.png

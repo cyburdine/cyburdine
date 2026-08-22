@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>plates :: contact sheet</title>
+<!--
+  Proofing view. The plates are authored at 1600x900 but they are LOOKED at
+  in a ~272px grid cell, through `grayscale(.55) brightness(.82)` and a 1px
+  scanline grid. Judging them at full size is how the first pass ended up
+  with a HUD nobody could read, so this sheet shows both: the tile exactly
+  as the site renders it, and the plate at a third size beside it.
+  Таксофон is first as the reference the others are matched to.
+-->
+<style>
+  body { margin: 0; padding: 26px; background: #0a0f16; color: #cfe0e8;
+         font: 12px/1.5 ui-monospace, monospace; }
+  h1 { font-size: 12px; font-weight: 500; letter-spacing: .16em;
+       color: #63a9b6; margin: 0 0 20px; }
+  .row { display: flex; align-items: flex-start; gap: 20px; margin-bottom: 20px; }
+  .slug { width: 170px; padding-top: 4px; color: #7d95a3; }
+  /* The exact treatment from style.css: the dim is the DEFAULT state and
+     hover clears it, so the dimmed cell is what a visitor actually sees. */
+  .tile { width: 272px; aspect-ratio: 16/9; overflow: hidden; position: relative;
+          border: 1px solid #22323f; flex: none; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; display: block;
+              filter: grayscale(.55) brightness(.82); }
+  .tile::after { content: ''; position: absolute; inset: 0; opacity: .5;
+                 background: repeating-linear-gradient(to bottom,
+                   rgba(0,0,0,.22) 0 1px, rgba(0,0,0,0) 1px 3px); }
+  .big img { width: 470px; display: block; border: 1px solid #22323f; }
+</style>
+<h1>:: plates // tile as rendered &middot; plate at 1/3 &middot; taksofon = reference</h1>
+<div id="sheet"></div>
+<script>
+  /* Proof the encoded webp the site actually ships, not the intermediate
+     PNG — the whole point is to see what a visitor sees. */
+  ['taksofon', 'replay', 'pagepress', 'periphony', 'firepype',
+   'active-green-screen', 'motion-capture', 'spirefall-ghost-code']
+  .forEach(function (slug) {
+    var p = [slug];
+    var f = '/assets/images/articles/' + slug + '-thumb.webp';
+    document.getElementById('sheet').insertAdjacentHTML('beforeend',
+      '<div class="row"><div class="slug">' + p[0] + '</div>' +
+      '<div class="tile"><img src="' + f + '"></div>' +
+      '<div class="big"><img src="' + f + '"></div></div>');
+  });
+</script>

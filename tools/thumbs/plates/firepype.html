@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>plate :: firepype</title>
+<!--
+  Gallery thumbnail source for /projects/firepype/. Rendered to
+  site/assets/images/articles/firepype-thumb.webp by ../build.sh.
+  Shared design and the reasoning behind it: ../plate.css.
+-->
+<link rel="stylesheet" href="/tools/thumbs/plate.css">
+<style>
+  .plate { --ghost-left: 31%; --ghost-size: 200px; --ghost-alpha: 0.20;
+           --ghost-top: 452px; }
+  /* A scene plate, like Spirefall, and for the same reason arrived at the
+     hard way: the first pass cut the drive out with a clip-path and got a
+     featureless slab. The drive reads as a subject in the full frame only
+     because the rack around it gives it scale and the shallow depth of
+     field points at it; isolated, it is an out-of-focus rectangle with
+     nothing in it. The frame keeps its own composition instead, graded
+     off the photograph's teal and toward the palette. */
+  .plate__scene { position: absolute; inset: 0; z-index: 0; }
+  .plate__scene img {
+    width: 100%; height: 100%; object-fit: cover;
+    object-position: 62% 50%;
+    filter: saturate(0.55) hue-rotate(-12deg) contrast(1.06) brightness(0.92);
+  }
+  .plate__scene::after {
+    content: ''; position: absolute; inset: 0;
+    background:
+      linear-gradient(100deg, rgba(9,15,24,0.28) 0%, rgba(10,17,27,0.58) 44%, rgba(8,13,21,0.90) 100%),
+      radial-gradient(96% 80% at 62% 76%, rgba(186,150,98,0.22) 0%, rgba(0,0,0,0) 66%);
+  }
+  .plate__field { display: none; }
+</style>
+
+<div class="plate">
+  <div class="plate__field"></div>
+  <svg class="plate__motif" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+      <path d="M980 450 L1120 450" stroke="rgba(196,150,92,0.22)" stroke-width="2"/>
+      <circle cx="980" cy="450" r="7" fill="rgba(196,150,92,0.30)"/>
+      <path d="M1120 450 C1200 450 1210 214 1290 214" fill="none" stroke="rgba(79,214,214,0.16)" stroke-width="1.5"/>
+      <circle cx="1290" cy="214" r="5" fill="none" stroke="rgba(79,214,214,0.30)" stroke-width="1.5"/>
+      <path d="M1120 450 C1200 450 1210 318 1290 318" fill="none" stroke="rgba(79,214,214,0.16)" stroke-width="1.5"/>
+      <circle cx="1290" cy="318" r="5" fill="none" stroke="rgba(79,214,214,0.30)" stroke-width="1.5"/>
+      <path d="M1120 450 C1200 450 1210 422 1290 422" fill="none" stroke="rgba(79,214,214,0.16)" stroke-width="1.5"/>
+      <circle cx="1290" cy="422" r="5" fill="none" stroke="rgba(79,214,214,0.30)" stroke-width="1.5"/>
+      <path d="M1120 450 C1200 450 1210 526 1290 526" fill="none" stroke="rgba(79,214,214,0.16)" stroke-width="1.5"/>
+      <circle cx="1290" cy="526" r="5" fill="none" stroke="rgba(79,214,214,0.30)" stroke-width="1.5"/>
+      <path d="M1120 450 C1200 450 1210 630 1290 630" fill="none" stroke="rgba(79,214,214,0.16)" stroke-width="1.5"/>
+      <circle cx="1290" cy="630" r="5" fill="none" stroke="rgba(79,214,214,0.30)" stroke-width="1.5"/>
+  </svg>
+  <div class="plate__ghost">FIREPYPE</div>
+  <div class="plate__scene">
+    <img src="/tools/thumbs/photos/firepype-hero.webp"
+         alt="A drive pulled from a server rack.">
+  </div>
+  <div class="plate__lockup">
+    <div class="plate__name plate__name--sm">STARTUP 01</div>
+    <div class="plate__rule"></div>
+    <div class="plate__meta plate__meta--sm">2012&ndash;2016 &middot; MEDIA PIPELINE</div>
+  </div>
+  <div class="plate__vignette"></div>
+</div>
+
+<script src="/tools/thumbs/matte.js"></script>
+<script>
+  /* build.sh shoots on virtual-time idle, so the only requirement here is
+     that nothing settles until the fonts are loaded and every matte has
+     been swapped in. */
+  Promise.all([document.fonts.ready, CyMatte.run()]).then(function () {
+    document.documentElement.setAttribute('data-plate-ready', '1');
+  });
+</script>

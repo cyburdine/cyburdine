@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>plate :: spirefall-ghost-code</title>
+<!--
+  Gallery thumbnail source for /projects/spirefall-ghost-code/. Rendered to
+  site/assets/images/articles/spirefall-ghost-code-thumb.webp by ../build.sh.
+  Shared design and the reasoning behind it: ../plate.css.
+-->
+<link rel="stylesheet" href="/tools/thumbs/plate.css">
+<style>
+  .plate { --ghost-left: 27%; --ghost-size: 194px; --ghost-alpha: 0.22; --ghost-top: 470px; --ghost-left: 34%; }
+  /* The one plate with no cut-out. Its source is a full alley scene with
+     no separable subject in it, so faking one would mean inventing a
+     silhouette; instead the frame itself becomes the field, graded toward
+     the palette, and the lockup sits on a scrim so the type survives the
+     neon behind it. Everything else in the set still matches. */
+  .plate__scene { position: absolute; inset: 0; z-index: 0; }
+  .plate__scene img {
+    width: 100%; height: 100%; object-fit: cover;
+    filter: saturate(0.72) contrast(1.04) brightness(0.82);
+  }
+  .plate__scene::after {
+    content: ''; position: absolute; inset: 0;
+    background:
+      linear-gradient(100deg, rgba(8,14,22,0.20) 0%, rgba(9,16,26,0.62) 46%, rgba(7,12,20,0.88) 100%),
+      radial-gradient(90% 80% at 30% 40%, rgba(40,80,120,0.16) 0%, rgba(0,0,0,0) 70%);
+  }
+  .plate__field { display: none; }
+</style>
+
+<div class="plate">
+  <div class="plate__field"></div>
+  <svg class="plate__motif" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0 640 L1600 640" stroke="rgba(79,214,214,0.10)" stroke-width="1"/>
+      <path d="M980 900 L980 250" stroke="rgba(196,150,92,0.10)" stroke-width="1"/>
+      <path d="M1120 900 L1120 296" stroke="rgba(196,150,92,0.10)" stroke-width="1"/>
+      <path d="M1268 900 L1268 342" stroke="rgba(196,150,92,0.10)" stroke-width="1"/>
+      <path d="M1408 900 L1408 388" stroke="rgba(196,150,92,0.10)" stroke-width="1"/>
+  </svg>
+  <div class="plate__ghost">SPIREFALL</div>
+  <div class="plate__scene">
+    <img src="/tools/thumbs/photos/spirefall-hero.webp"
+         alt="A neon-lit alleyway.">
+  </div>
+  <div class="plate__lockup">
+    <div class="plate__name plate__name--sm">GHOST CODE</div>
+    <div class="plate__rule"></div>
+    <div class="plate__meta plate__meta--sm">ANIMATION &middot; MUSIC &middot; WORLD</div>
+  </div>
+  <div class="plate__vignette"></div>
+</div>
+
+<script src="/tools/thumbs/matte.js"></script>
+<script>
+  /* build.sh shoots on virtual-time idle, so the only requirement here is
+     that nothing settles until the fonts are loaded and every matte has
+     been swapped in. */
+  Promise.all([document.fonts.ready, CyMatte.run()]).then(function () {
+    document.documentElement.setAttribute('data-plate-ready', '1');
+  });
+</script>

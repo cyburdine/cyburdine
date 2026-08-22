@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>plate :: active-green-screen</title>
+<!--
+  Gallery thumbnail source for /projects/active-green-screen/. Rendered to
+  site/assets/images/articles/active-green-screen-thumb.webp by ../build.sh.
+  Shared design and the reasoning behind it: ../plate.css.
+-->
+<link rel="stylesheet" href="/tools/thumbs/plate.css">
+<style>
+  .plate { --ghost-left: 17%; --ghost-size: 178px; --glow-x: 68%; --glow-y: 76%; }
+  /* The camera, not the empty studio the tile used to show, and the lens
+     it is cut around is the exact thing the LED-ring motif rings.
+     The crop is tight to the camera on purpose: wider, the frame includes
+     a dark rig plate and a chair leg that are nowhere near the floor's
+     colour, so the fill cannot reach them and they survive as debris
+     floating on the field. Cropping them out is exact where widening a
+     tolerance to swallow them would also swallow the camera.
+     `seedEdges: "lr"` rather than a handful of points, because what is
+     behind the camera is not one background: pale cloth, bare floor and a
+     warm wood wedge sit far enough apart that a fill starting on any one
+     of them cannot cross to the others without a tolerance loose enough to
+     also enter the camera body. Seeding every pixel down both sides gives
+     each region a seed of its own colour and needs no hand-placing.
+     Left and right only, never top or bottom: the camera is taller than
+     the crop and runs off both, so a seed at top centre lands on the flash
+     and fills the camera from the inside — which is precisely what an
+     earlier eight-point set did. The sides are the only border the subject
+     never touches. */
+  .plate__subject { left: 96px; top: 54px; width: 560px; }
+  .plate__subject img { filter: brightness(1.14) contrast(1.04); }
+</style>
+
+<div class="plate">
+  <div class="plate__field"></div>
+  <svg class="plate__motif" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="1140" cy="452" r="300" fill="none" stroke="rgba(79,214,214,0.18)" stroke-width="2"/>
+      <circle cx="1140" cy="452" r="268" fill="none" stroke="rgba(79,214,214,0.10)" stroke-width="1"/>
+      <circle cx="1140" cy="452" r="196" fill="none" stroke="rgba(79,214,214,0.08)" stroke-width="1"/>
+      <circle cx="1424.0" cy="452.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1414.3" cy="525.5" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1386.0" cy="594.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1340.8" cy="652.8" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1282.0" cy="698.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1213.5" cy="726.3" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1140.0" cy="736.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1066.5" cy="726.3" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="998.0" cy="698.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="939.2" cy="652.8" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="894.0" cy="594.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="865.7" cy="525.5" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="856.0" cy="452.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="865.7" cy="378.5" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="894.0" cy="310.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="939.2" cy="251.2" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="998.0" cy="206.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1066.5" cy="177.7" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1140.0" cy="168.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1213.5" cy="177.7" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1282.0" cy="206.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1340.8" cy="251.2" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1386.0" cy="310.0" r="5.5" fill="rgba(196,150,92,0.20)"/>
+      <circle cx="1414.3" cy="378.5" r="5.5" fill="rgba(196,150,92,0.20)"/>
+  </svg>
+  <div class="plate__ghost">GREENSCREEN</div>
+  <div class="plate__subject">
+    <img src="/tools/thumbs/photos/agreen-dslr-rig.webp"
+         alt="A DSLR on a rig, cut out."
+         data-matte='{"crop":[0.295,0.0,0.42,0.90],
+                     "seedEdges":"lr","tol":15,"hardTol":72,"erode":3,"feather":2}'>
+  </div>
+  <div class="plate__lockup">
+    <div class="plate__name">ACTIVE</div>
+    <div class="plate__rule"></div>
+    <div class="plate__meta plate__meta--sm">RETRO-REFLECTIVE &middot; LED RING</div>
+  </div>
+  <div class="plate__vignette"></div>
+</div>
+
+<script src="/tools/thumbs/matte.js"></script>
+<script>
+  /* build.sh shoots on virtual-time idle, so the only requirement here is
+     that nothing settles until the fonts are loaded and every matte has
+     been swapped in. */
+  Promise.all([document.fonts.ready, CyMatte.run()]).then(function () {
+    document.documentElement.setAttribute('data-plate-ready', '1');
+  });
+</script>

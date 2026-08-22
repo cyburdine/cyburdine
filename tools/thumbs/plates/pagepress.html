@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>plate :: pagepress</title>
+<!--
+  Gallery thumbnail source for /projects/pagepress/. Rendered to
+  site/assets/images/articles/pagepress-thumb.webp by ../build.sh.
+  Shared design and the reasoning behind it: ../plate.css.
+-->
+<link rel="stylesheet" href="/tools/thumbs/plate.css">
+<style>
+  .plate { --ghost-left: 26%; --ghost-size: 186px; --glow-x: 70%; --glow-y: 76%; }
+  /* Cropped to the browser window, not matted off the backdrop. The first
+     pass tried the flood fill and lost the whole subject: the store shot's
+     grey backdrop and the browser's white chrome are about fifteen levels
+     apart, so no tolerance both crosses the backdrop and stops at the
+     window. The window is already a rectangle — a crop states that, and a
+     matte was only ever going to approximate it.
+     The frame is kept rather than cropping to the popup alone: the browser
+     around it is what says "extension" rather than "app". */
+  .plate__subject {
+    left: 26px; top: 182px; width: 1004px; height: 625px;
+    --crop-w: 1071px; --crop-x: -33px; --crop-y: -25px;
+  }
+  .plate__subject img { filter: saturate(1.02) contrast(1.03); }
+</style>
+
+<div class="plate">
+  <div class="plate__field"></div>
+  <svg class="plate__motif" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1206" y="150" width="286" height="112" rx="3" fill="none" stroke="rgba(79,214,214,0.160)" stroke-width="1.5"/>
+      <rect x="1206" y="268" width="286" height="112" rx="3" fill="none" stroke="rgba(79,214,214,0.139)" stroke-width="1.5"/>
+      <rect x="1206" y="386" width="286" height="112" rx="3" fill="none" stroke="rgba(79,214,214,0.118)" stroke-width="1.5"/>
+      <rect x="1206" y="504" width="286" height="112" rx="3" fill="none" stroke="rgba(79,214,214,0.097)" stroke-width="1.5"/>
+      <rect x="1206" y="622" width="286" height="112" rx="3" fill="none" stroke="rgba(79,214,214,0.076)" stroke-width="1.5"/>
+      <rect x="1206" y="740" width="286" height="112" rx="3" fill="none" stroke="rgba(79,214,214,0.055)" stroke-width="1.5"/>
+      <path d="M1160 168 L1160 856" stroke="rgba(196,150,92,0.12)" stroke-width="1" stroke-dasharray="5 9"/>
+  </svg>
+  <div class="plate__ghost">PAGEPRESS</div>
+  <div class="plate__subject plate__window plate__crop">
+    <img src="/tools/thumbs/sources/pagepress-capture.png"
+         alt="The PagePress popup open over a browser window, showing the stitched capture.">
+  </div>
+  <div class="plate__lockup">
+    <div class="plate__name plate__name--sm">FULL PAGE</div>
+    <div class="plate__rule"></div>
+    <div class="plate__meta">CHROME &middot; BRAVE &middot; v1.2.6</div>
+  </div>
+  <div class="plate__vignette"></div>
+</div>
+
+<script src="/tools/thumbs/matte.js"></script>
+<script>
+  /* build.sh shoots on virtual-time idle, so the only requirement here is
+     that nothing settles until the fonts are loaded and every matte has
+     been swapped in. */
+  Promise.all([document.fonts.ready, CyMatte.run()]).then(function () {
+    document.documentElement.setAttribute('data-plate-ready', '1');
+  });
+</script>
